@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BepInEx.Logging;
 using System.Security.Cryptography;
 
 namespace BetterAmongUs.Data;
@@ -13,6 +13,7 @@ internal sealed class SharedSecretExchange
     private int tempKey;
     private byte[] sharedSecret = [];
     private readonly bool cryptoDisabled;
+    private static readonly ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource("BetterAmongUs");
 
     /// <summary>
     /// Gets a value indicating whether cryptographic operations are available.
@@ -39,7 +40,7 @@ internal sealed class SharedSecretExchange
         }
         catch (Exception ex)
         {
-            Logger_.Error("ECDH unavailable, using fallback handshake: " + ex.Message);
+            logger.LogError("ECDH unavailable, using fallback handshake: " + ex.Message); // Prevents BAU Terminal being flooded with expected errors, Fallback is gauranteed to work.
             cryptoDisabled = true;
             dh = null;
             publicKey = [];
@@ -129,7 +130,7 @@ internal sealed class SharedSecretExchange
         }
         catch (Exception ex)
         {
-            Logger_.Error("Error generating shared secret: " + ex.Message);
+            logger.LogError("Error generating shared secret: " + ex.Message); // Prevents BAU Terminal being flooded with expected errors, Fallback is gauranteed to work.
             return [];
         }
     }
