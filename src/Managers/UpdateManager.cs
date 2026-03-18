@@ -49,8 +49,16 @@ internal sealed class UpdateManager : MonoBehaviour
         if (doNotPress != null)
         {
             doNotPress.gameObject.SetActive(UpdateLoader.UpdateInfo?.IsNewUpdate() == true && !WaitForRestart);
-            doNotPress.pressedSprite = doNotPress.transform.Find("ButtonPressed")?.gameObject?.GetComponent<SpriteRenderer>();
-            doNotPress.unpressedSprite = doNotPress.transform.Find("ButtonUnpressed")?.gameObject?.GetComponent<SpriteRenderer>();
+            var buttonPressed = doNotPress.transform.Find("ButtonPressed");
+            if (buttonPressed != null)
+            {
+                doNotPress.pressedSprite = buttonPressed.gameObject.GetComponent<SpriteRenderer>();
+            }
+            var buttonUnpressed = doNotPress.transform.Find("ButtonUnpressed");
+            if (buttonUnpressed != null)
+            {
+                doNotPress.unpressedSprite = buttonUnpressed.gameObject.GetComponent<SpriteRenderer>();
+            }
             doNotPress.pressedSprite.enabled = false;
             doNotPress.pressedSprite.color = new(0.15f, 0.8f, 0.4f);
             doNotPress.unpressedSprite.color = new(0.15f, 0.8f, 0.4f);

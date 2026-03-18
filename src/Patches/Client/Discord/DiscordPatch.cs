@@ -66,7 +66,10 @@ internal static class DiscordPatch
         // Only fetch lobby data when player is in a lobby
         if (GameState.IsLobby)
         {
-            if (GameStartManager.Instance?.GameRoomNameCode != null)
+            if (!GameStartManager.InstanceExists)
+                return;
+
+            if (GameStartManager.Instance.GameRoomNameCode != null)
             {
                 lobbycode = GameStartManager.Instance.GameRoomNameCode.text;
                 region = ServerManager.Instance.CurrentRegion.Name;

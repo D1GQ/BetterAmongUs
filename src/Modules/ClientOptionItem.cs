@@ -253,8 +253,16 @@ internal sealed class ClientOptionItem
     {
         var button = CreateToggleButton("Next >", optionsMenuBehaviour, page.transform);
         button.transform.localPosition = new Vector3(2f, -2.5f, 0f);
-        button.transform.Find("Background")?.localScale = new Vector3(0.5f, 1f, 1f);
-        button.transform.Find("ButtonHighlight")?.localScale = new Vector3(0.5f, 0.95f, 1f);
+        var background = button.transform.Find("Background");
+        if (background != null)
+        {
+            background.localScale = new Vector3(0.5f, 1f, 1f);
+        }
+        var buttonHighlight = button.transform.Find("ButtonHighlight");
+        if (buttonHighlight != null)
+        {
+            buttonHighlight.localScale = new Vector3(0.5f, 0.95f, 1f);
+        }
         var passiveButton = button.GetComponent<PassiveButton>();
         passiveButton.OnClick = new();
         passiveButton.OnClick.AddListener(() =>
@@ -271,8 +279,16 @@ internal sealed class ClientOptionItem
     {
         var button = CreateToggleButton("< Prev", optionsMenuBehaviour, page.transform);
         button.transform.localPosition = new Vector3(-2f, -2.5f, 0f);
-        button.transform.Find("Background")?.localScale = new Vector3(0.5f, 1f, 1f);
-        button.transform.Find("ButtonHighlight")?.localScale = new Vector3(0.5f, 0.95f, 1f);
+        var background = button.transform.Find("Background");
+        if (background != null)
+        {
+            background.localScale = new Vector3(0.5f, 1f, 1f);
+        }
+        var buttonHighlight = button.transform.Find("ButtonHighlight");
+        if (buttonHighlight != null)
+        {
+            buttonHighlight.localScale = new Vector3(0.5f, 0.95f, 1f);
+        }
         var passiveButton = button.GetComponent<PassiveButton>();
         passiveButton.OnClick = new();
         passiveButton.OnClick.AddListener(() =>

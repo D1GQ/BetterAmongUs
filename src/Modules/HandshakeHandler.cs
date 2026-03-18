@@ -40,7 +40,7 @@ internal sealed class HandshakeHandler
     {
         if (!BAUConfigs.SendBetterRpc.Value) yield break;
 
-        while (_extendedData._Data?.Object == null || PlayerControl.LocalPlayer == null)
+        while (_extendedData._Data == null || _extendedData._Data.Object == null || PlayerControl.LocalPlayer == null)
         {
             if (GameState.IsFreePlay) yield break;
             yield return null;

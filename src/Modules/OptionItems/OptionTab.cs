@@ -155,8 +155,11 @@ internal sealed class OptionTab
         float spacingNum = 0f;
         foreach (var opt in Children)
         {
-            if (opt?.Obj == null) continue;
-            if (opt?.Tab.Id != Id || opt.Hide)
+            if (opt == null) continue;
+            if (opt.Obj == null) continue;
+            if (opt.Tab == null) continue;
+
+            if (opt.Tab.Id != Id || opt.Hide)
             {
                 opt.Obj.gameObject.SetActive(false);
                 continue;

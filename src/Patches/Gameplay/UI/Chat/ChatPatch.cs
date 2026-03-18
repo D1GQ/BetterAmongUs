@@ -139,7 +139,10 @@ internal static class ChatPatch
         if (didVote)
             return;
 
-        if (bubble?.NameText == null)
+        if (bubble == null)
+            return;
+
+        if (bubble.NameText == null)
             return;
 
         var sourcePlayer = playerInfo.Object;

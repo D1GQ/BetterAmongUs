@@ -181,8 +181,8 @@ internal static class ClientPatch
             else if (!client.IsReady)
             {
                 // Wait for other clients to be ready
-                int readyClients = clients.CountIl2Cpp(c => c?.Character != null && c.IsReady);
-                int totalClients = clients.CountIl2Cpp(c => c?.Character != null);
+                int readyClients = clients.CountIl2Cpp(c => c != null && c.Character != null && c.IsReady);
+                int totalClients = clients.CountIl2Cpp(c => c != null && c.Character != null);
 
                 loadingText = $"Waiting for Players ({readyClients}/{totalClients})";
                 progress = 0.8f + 0.2f * readyClients / Mathf.Max(1, totalClients);
@@ -245,8 +245,8 @@ internal static class ClientPatch
             else
             {
                 // Wait for other players (including host) to be ready
-                int readyClients = clients.CountIl2Cpp(c => c?.Character != null && c.IsReady);
-                int totalClients = clients.CountIl2Cpp(c => c?.Character != null);
+                int readyClients = clients.CountIl2Cpp(c => c != null && c.Character != null && c.IsReady);
+                int totalClients = clients.CountIl2Cpp(c => c != null && c.Character != null);
 
                 loadingText = $"Waiting for Players ({readyClients}/{totalClients})";
                 progress = 0.85f + 0.15f * readyClients / Mathf.Max(1, totalClients);

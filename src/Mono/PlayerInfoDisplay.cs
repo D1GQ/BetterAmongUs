@@ -75,7 +75,10 @@ internal class PlayerInfoDisplay : MonoBehaviour
         _player = player;
 
         var nameTextTransform = player.gameObject.transform.Find("Names/NameText_TMP");
-        _nameText = nameTextTransform?.GetComponent<TextMeshPro>();
+        if (nameTextTransform == null)
+            return;
+
+        _nameText = nameTextTransform.GetComponent<TextMeshPro>();
 
         _infoText = InstantiatePlayerInfoText("InfoText_Info_TMP", new Vector3(0f, 0.25f), nameTextTransform);
         _topText = InstantiatePlayerInfoText("InfoText_T_TMP", new Vector3(0f, 0.15f), nameTextTransform);
@@ -111,9 +114,20 @@ internal class PlayerInfoDisplay : MonoBehaviour
     /// </summary>
     private void ResetText()
     {
-        _infoText?.SetText(string.Empty);
-        _topText?.SetText(string.Empty);
-        _bottomText?.SetText(string.Empty);
+        if (_infoText != null)
+        {
+            _infoText.SetText(string.Empty);
+        }
+
+        if (_topText != null)
+        {
+            _topText.SetText(string.Empty);
+        }
+
+        if (_bottomText != null)
+        {
+            _bottomText.SetText(string.Empty);
+        }
     }
 
     /// <summary>
@@ -250,7 +264,7 @@ internal class PlayerInfoDisplay : MonoBehaviour
         string newText = Utils.FormatInfo(sb);
         if (newText != lastValue)
         {
-            textMesh?.SetText(newText);
+            textMesh.SetText(newText);
             lastValue = newText;
         }
     }
@@ -263,7 +277,8 @@ internal class PlayerInfoDisplay : MonoBehaviour
     private string ValidateFriendCode(out string color)
     {
         color = "#FFFFFF";
-        if (_player?.Data == null) return string.Empty;
+        if (_player == null || _player.Data == null)
+            return string.Empty;
 
         void TryKick()
         {
@@ -335,7 +350,10 @@ internal class PlayerInfoDisplay : MonoBehaviour
     [HideFromIl2Cpp]
     private void SetPlayerOutline(StringBuilder sbTag)
     {
-        if (_player?.Data == null)
+        if (_player == null)
+            return;
+
+        if (_player.Data == null)
             return;
 
         string hashPuid = Utils.GetHashPuid(_player);

@@ -122,7 +122,14 @@ internal static class BetterNotificationManager
     /// <returns>True if the cheat detection was handled, false otherwise.</returns>
     internal static bool NotifyCheat(PlayerControl player, string reason, string newText = "", bool kickPlayer = true, bool forceBan = false)
     {
-        if (player.IsCheater() || player?.Data == null) return false;
+        if (player == null)
+            return false;
+
+        if (player.Data == null)
+            return false;
+
+        if (player.IsCheater())
+            return false;
 
         if (player.IsLocalPlayer())
         {

@@ -114,8 +114,17 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     /// </summary>
     private void UpdateTextPositions()
     {
-        bool hasInfoText = !string.IsNullOrEmpty(_infoText?.text);
-        bool hasTopText = !string.IsNullOrEmpty(_topText?.text);
+        if (_nameText == null)
+            return;
+
+        if (_infoText == null)
+            return;
+
+        if (_topText == null)
+            return;
+
+        bool hasInfoText = !string.IsNullOrEmpty(_infoText.text);
+        bool hasTopText = !string.IsNullOrEmpty(_topText.text);
 
         if (hasInfoText && hasTopText)
         {
@@ -142,7 +151,7 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     /// </summary>
     private void UpdateInfo()
     {
-        if (_player?.Data == null || _player.BetterData() == null)
+        if (_player == null || _player.Data == null || _player.BetterData() == null)
             return;
 
         SetPlayerTags(_sbTag);
@@ -162,7 +171,10 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     [HideFromIl2Cpp]
     private void SetPlayerTags(StringBuilder sbTag)
     {
-        if (_player?.Data == null)
+        if (_player == null)
+            return;
+
+        if (_player.Data == null)
             return;
 
         if (ContainsPlayerData(BetterDataManager.BetterDataFile.SickoData, _player.Data))
@@ -296,18 +308,32 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
 
         if (disconnectText != _lastInfoText)
         {
-            _infoText?.SetText($"<color=#6b6b6b>{disconnectText}</color>");
-            _lastInfoText = disconnectText;
+            if (_infoText != null)
+            {
+                _infoText.SetText($"<color=#6b6b6b>{disconnectText}</color>");
+                _lastInfoText = disconnectText;
+            }
         }
 
         if (_lastTopText != string.Empty)
         {
-            _topText?.SetText("");
-            _lastTopText = string.Empty;
+            if (_topText != null)
+            {
+                _topText.SetText("");
+                _lastTopText = string.Empty;
+            }
         }
 
-        _pva.transform.Find("votePlayerBase")?.gameObject.SetActive(false);
-        _pva.transform.Find("deadX_border")?.gameObject.SetActive(false);
+        var votePlayerBase = _pva.transform.Find("votePlayerBase");
+        if (votePlayerBase != null)
+        {
+            votePlayerBase.gameObject.SetActive(false);
+        }
+        var deadXBorder = _pva.transform.Find("deadX_border");
+        if (deadXBorder != null)
+        {
+            deadXBorder.gameObject.SetActive(false);
+        }
         _pva.ClearForResults();
         _pva.SetDisabled();
     }
@@ -319,17 +345,32 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     private string GetDisconnectText()
     {
         var playerData = GameData.Instance.GetPlayerById(_pva.TargetPlayerId);
-        var betterData = playerData?.BetterData();
+        if (playerData == null)
+            return string.Empty;
 
-        return betterData?.DisconnectReason switch
+        var betterData = playerData.BetterData();
+        if (betterData == null)
+            return string.Empty;
+
+        switch (betterData.DisconnectReason)
         {
-            DisconnectReasons.ExitGame => _cachedTranslations.DisconnectLeft,
-            DisconnectReasons.Banned => betterData?.AntiCheatInfo?.BannedByAntiCheat == true
-                ? _cachedTranslations.DisconnectAntiCheat
-                : _cachedTranslations.DisconnectBanned,
-            DisconnectReasons.Kicked => _cachedTranslations.DisconnectKicked,
-            DisconnectReasons.Hacking => _cachedTranslations.DisconnectCheater,
-            _ => _cachedTranslations.DisconnectDefault
-        };
+            case DisconnectReasons.ExitGame:
+                return _cachedTranslations.DisconnectLeft;
+
+            case DisconnectReasons.Banned:
+                if (betterData.AntiCheatInfo != null && betterData.AntiCheatInfo.BannedByAntiCheat)
+                    return _cachedTranslations.DisconnectAntiCheat;
+                else
+                    return _cachedTranslations.DisconnectBanned;
+
+            case DisconnectReasons.Kicked:
+                return _cachedTranslations.DisconnectKicked;
+
+            case DisconnectReasons.Hacking:
+                return _cachedTranslations.DisconnectCheater;
+
+            default:
+                return _cachedTranslations.DisconnectDefault;
+        }
     }
 }

@@ -85,7 +85,7 @@ internal sealed class BetterPingTracker : MonoBehaviour
         if (GameState.IsInGamePlay && !GameState.IsFreePlay && AmongUsClient.Instance != null && !GameState.IsMeeting)
         {
             var hostInfo = AmongUsClient.Instance.GetHost();
-            if (hostInfo?.Character != null)
+            if (hostInfo != null && hostInfo.Character != null)
             {
                 sb.AppendFormat("<size=75%>{0}: {1}</size>\n", Translator.GetString("Host"), hostInfo.Character.GetPlayerNameAndColor());
             }

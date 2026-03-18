@@ -20,7 +20,14 @@ internal static class RoleManagerPatch
     {
         return (clientData) =>
         {
-            return clientData.Id != target.GetClientId() && clientData?.BetterData()?.IsVerifiedBetterUser != true;
+            if (clientData.Id == target.GetClientId())
+                return false;
+
+            var betterData = clientData.BetterData();
+            if (betterData == null)
+                return true;
+
+            return !betterData.IsVerifiedBetterUser;
         };
     }
 

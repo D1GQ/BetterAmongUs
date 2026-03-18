@@ -71,12 +71,16 @@ internal static class PrivateLobbyPatch
             aspect.AdjustPosition();
 
             // Update toggle text label
-            var text = toggle.transform.Find("BlackSquare/ModeText")?.GetComponent<TextMeshPro>();
-            if (text != null)
+            var modeText = toggle.transform.Find("BlackSquare/ModeText");
+            if (modeText != null)
             {
-                text.DestroyTextTranslators();
-                text.text = "Private Only Lobby";
-                toggleText = text;
+                var text = modeText.GetComponent<TextMeshPro>();
+                if (text != null)
+                {
+                    text.DestroyTextTranslators();
+                    text.text = "Private Only Lobby";
+                    toggleText = text;
+                }
             }
         }
 
@@ -131,10 +135,14 @@ internal static class PrivateLobbyPatch
                 button.enabled = false;
 
                 // Change inactive sprite to cyan color to indicate locked state
-                var sprite = __instance.HostPrivateButton.transform.Find("Inactive")?.GetComponent<SpriteRenderer>();
-                if (sprite != null)
+                var inactive = __instance.HostPrivateButton.transform.Find("Inactive");
+                if (inactive != null)
                 {
-                    sprite.color = new Color(0.35f, 1f, 1f, 1f); // Corrected colour assignment
+                    var sprite = inactive.GetComponent<SpriteRenderer>();
+                    if (sprite != null)
+                    {
+                        sprite.color = new Color(0.35f, 1f, 1f, 1f); // Corrected colour assignment
+                    }
                 }
             }
         }

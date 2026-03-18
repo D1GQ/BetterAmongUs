@@ -31,6 +31,9 @@ internal static class NetworkManager
     /// <param name="writer">The MessageWriter containing the data to send.</param>
     internal static void SendToServer(MessageWriter writer)
     {
+        if (InnerNetClient == null)
+            return;
+
         try
         {
             StreamlineMessage(writer, writer.SendOption);
@@ -41,7 +44,7 @@ internal static class NetworkManager
         }
         finally
         {
-            if (InnerNetClient?.connection != null)
+            if (InnerNetClient.connection != null)
             {
                 SendErrors sendErrors = InnerNetClient.connection.Send(writer);
                 if (sendErrors != SendErrors.None && !GameState.IsFreePlay)

@@ -179,7 +179,7 @@ public abstract class OptionItem
 
             if (node.Depth > 0)
             {
-                bool parentHasSibling = node.ParentNode?.IsLastChild == false;
+                bool parentHasSibling = node.ParentNode != null && node.ParentNode.IsLastChild == false;
                 indent.Append(parentHasSibling ? $"{vertical} " : "     ");
             }
 
@@ -257,7 +257,7 @@ public abstract class OptionItem
 
             if (node.Depth > 0)
             {
-                bool parentHasSibling = node.ParentNode?.IsLastChild == false;
+                bool parentHasSibling = node.ParentNode != null && node.ParentNode.IsLastChild == false;
                 indent.Append(parentHasSibling ? $"{vertical} " : "  ");
             }
 

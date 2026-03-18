@@ -38,7 +38,7 @@ internal sealed class ExtendedPlayerControl : MonoBehaviour, IMonoExtension<Play
     [HideFromIl2Cpp]
     private IEnumerator CoAddBetterData()
     {
-        while (_Player?.Data == null)
+        while (_Player == null || _Player.Data == null)
         {
             yield return null;
         }

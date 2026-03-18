@@ -30,7 +30,7 @@ internal class PlatformSpoofPatch
                 {
                     var player = BAUPlugin.AllPlayerControls.FirstOrDefault(pc => pc.GetClient().PlatformData == __instance);
 
-                    if (player != null && __instance?.Platform != null)
+                    if (player != null && __instance != null)
                     {
                         // Check Xbox/Windows store players for invalid platform ID length
                         if (__instance.Platform is Platforms.StandaloneWin10 or Platforms.Xbox)

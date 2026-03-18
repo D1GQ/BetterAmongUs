@@ -7,6 +7,28 @@
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
+	<!-- Apply Null Notation Restrictions -->
+	<Target Name="Il2CppRestrictions" BeforeTargets="CoreCompile" Condition="$([MSBuild]::IsOsPlatform(Windows))">
+		<Exec Command="powershell.exe -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\Il2CppRestrictions.ps1&quot;"
+			  IgnoreExitCode="true">
+			<Output TaskParameter="ExitCode" PropertyName="ScriptExitCode" />
+		</Exec>
+
+		<Error Condition="'$(ScriptExitCode)' != '0'"
+			   Text="Il2Cpp compatibility check failed. See errors in error list." />
+	</Target>
+
+	<!-- Git Commit Hash Retrieval -->
+	<Target Name="GetGitCommitHash" BeforeTargets="BeforeBuild">
+		<Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardErrorImportance="low" WorkingDirectory="$(MSBuildProjectDirectory)">
+			<Output TaskParameter="ConsoleOutput" PropertyName="CommitHash" />
+		</Exec>
+		<PropertyGroup Condition="'$(CommitHash)' == ''">
+			<CommitHash>unknown</CommitHash>
+		</PropertyGroup>
+		<Message Text="Git commit hash: $(CommitHash)" Importance="high" />
+	</Target>
+
 	<!-- Git Commit Hash Retrieval -->
 	<Target Name="GetGitCommitHash" BeforeTargets="BeforeBuild">
 		<Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardErrorImportance="low" WorkingDirectory="$(MSBuildProjectDirectory)">

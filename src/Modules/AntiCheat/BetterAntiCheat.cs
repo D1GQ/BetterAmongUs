@@ -20,7 +20,19 @@ internal static class BetterAntiCheat
     /// <summary>
     /// Gets whether anti-cheat is enabled for the current player.
     /// </summary>
-    internal static bool IsEnabled => PlayerControl.LocalPlayer?.Data?.IsIncomplete == false;
+    internal static bool IsEnabled
+    {
+        get
+        {
+            if (PlayerControl.LocalPlayer == null)
+                return false;
+
+            if (PlayerControl.LocalPlayer.Data == null)
+                return false;
+
+            return PlayerControl.LocalPlayer.Data.IsIncomplete == false;
+        }
+    }
 
     /// <summary>
     /// Updates anti-cheat checks for all players in the game.
@@ -90,7 +102,10 @@ internal static class BetterAntiCheat
             !BetterGameSettings.DetectInvalidRPCs.GetBool())
             return;
 
-        if (player?.Data == null)
+        if (player == null)
+            return;
+
+        if (player.Data == null)
             return;
 
         if (player.IsLocalPlayer() && player.IsHost())
@@ -112,7 +127,7 @@ internal static class BetterAntiCheat
     {
         try
         {
-            if (player == null || player?.Data == null) return true;
+            if (player == null || player.Data == null) return true;
             if (!IsEnabled || !BAUConfigs.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !BetterGameSettings.DetectInvalidRPCs.GetBool()) return true;
             if (player.IsLocalPlayer() && player.IsHost()) return true;
 
@@ -234,7 +249,7 @@ internal static class BetterAntiCheat
     /// <param name="oldReader">The MessageReader containing RPC data.</param>
     internal static void HandleRPC(PlayerControl player, byte callId, MessageReader oldReader)
     {
-        if (player?.Data == null || player.IsLocalPlayer())
+        if (player == null || player.Data == null || player.IsLocalPlayer())
             return;
 
         MessageReader reader = MessageReader.Get(oldReader);

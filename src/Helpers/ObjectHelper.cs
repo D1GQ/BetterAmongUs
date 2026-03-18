@@ -149,7 +149,11 @@ internal static class ObjectHelper
         if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Theme))
             return;
 
-        color ??= Color.green;
+        if (color == null)
+        {
+            color = Color.green;
+        }
+
         sprite.color = (sprite.color * 0.6f) + ((Color)color * 0.5f);
     }
 

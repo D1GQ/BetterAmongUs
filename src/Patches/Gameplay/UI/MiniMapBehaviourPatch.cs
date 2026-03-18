@@ -273,13 +273,12 @@ internal static class MiniMapBehaviourPatch
     }
 
     // Helper to position icons on map relative to ship position
-    private static void SetPosFromShip(Vector3 shipPos, Transform mapTransform, Vector3? offset = null)
+    private static void SetPosFromShip(Vector3 shipPos, Transform mapTransform, Vector3 offset = default)
     {
-        offset ??= Vector3.zero;
         Vector3 vector = shipPos;
         vector /= ShipStatus.Instance.MapScale;
         vector.x *= Mathf.Sign(ShipStatus.Instance.transform.localScale.x);
         vector.z = -1f;
-        mapTransform.transform.localPosition = new Vector3(vector.x + offset.Value.x, vector.y + offset.Value.y, offset.Value.z);
+        mapTransform.transform.localPosition = new Vector3(vector.x + offset.x, vector.y + offset.y, offset.z);
     }
 }

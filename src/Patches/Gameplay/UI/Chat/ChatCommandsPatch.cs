@@ -59,7 +59,7 @@ internal static class ChatCommandsPatch
         }
 
         // Check if command can be executed
-        if (!closestCommand.CanRunCommand(out string _))
+        if (closestCommand != null && !closestCommand.CanRunCommand(out string _))
         {
             return false;
         }
@@ -72,7 +72,7 @@ internal static class ChatCommandsPatch
         ChatPatch.CurrentHistorySelection = ChatPatch.ChatHistory.Count;
 
         // Reset chat timer if command sets it
-        if (closestCommand?.SetChatTimer == true)
+        if (closestCommand != null && closestCommand.SetChatTimer == true)
         {
             __instance.timeSinceLastMessage = 0f;
         }

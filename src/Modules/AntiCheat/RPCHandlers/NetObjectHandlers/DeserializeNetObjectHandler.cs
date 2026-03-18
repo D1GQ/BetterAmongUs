@@ -14,7 +14,10 @@ internal sealed class DeserializeNetObjectHandler : RPCHandler
     {
         uint netId = reader.ReadPackedUInt32();
         var innerNetObject = innerNetClient.FindObjectByNetId<InnerNetObject>(netId);
-        if (innerNetObject?.TryCast<CustomNetworkTransform>() && (GameState.IsMeeting && MeetingHudPatch.timeOpen > 5))
+        if (innerNetObject == null)
+            return;
+
+        if (innerNetObject.TryCast<CustomNetworkTransform>() && (GameState.IsMeeting && MeetingHudPatch.timeOpen > 5))
         {
             var player = innerNetObject.Cast<CustomNetworkTransform>()?.myPlayer;
             if (player == null)

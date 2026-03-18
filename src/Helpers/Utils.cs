@@ -158,11 +158,11 @@ internal static class Utils
         if (!GameState.IsInGame)
             return;
 
-        var chat = HudManager.Instance?.Chat;
+        var chat = HudManager.Instance.Chat;
         if (chat == null)
             return;
 
-        var data = PlayerControl.LocalPlayer?.Data;
+        var data = PlayerControl.LocalPlayer.Data;
         if (data == null)
             return;
 
@@ -236,7 +236,13 @@ internal static class Utils
     /// <returns>The hashed PUID string.</returns>
     internal static string GetHashPuid(PlayerControl player)
     {
-        if (player?.Data?.Puid == null)
+        if (player == null)
+            return "";
+
+        if (player.Data == null)
+            return "";
+
+        if (player.Data.Puid == null)
             return "";
 
         return GetHashStr(player.Data.Puid);
@@ -504,8 +510,17 @@ internal static class Utils
     /// <returns>The platform name string.</returns>
     internal static string GetPlatformName(PlayerControl player, bool useTag = false)
     {
-        if (player?.GetClient()?.PlatformData == null) return string.Empty;
-        return GetPlatformName(player.GetClient().PlatformData.Platform, useTag);
+        if (player == null)
+            return string.Empty;
+
+        var client = player.GetClient();
+        if (client == null)
+            return string.Empty;
+
+        if (client.PlatformData == null)
+            return string.Empty;
+
+        return GetPlatformName(client.PlatformData.Platform, useTag);
     }
 
     /// <summary>

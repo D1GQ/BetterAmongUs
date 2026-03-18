@@ -45,8 +45,14 @@ internal static class HudManagerPatch
     private static void HudManager_Update_Postfix(HudManager __instance)
     {
         // Adjust GameStartManager position for better UI layout
-        gameStart ??= GameObject.Find("GameStartManager");
-        gameStart?.transform.SetLocalY(-2.8f);
+        if (gameStart == null)
+        {
+            gameStart = GameObject.Find("GameStartManager");
+        }
+        if (gameStart != null)
+        {
+            gameStart.transform.SetLocalY(-2.8f);
+        }
 
         // Manage in-game chat visibility based on settings and game state
         if (GameState.InGame)

@@ -21,12 +21,13 @@ internal static class PlayerControlHelper
     /// <returns>The ClientData if found, null otherwise.</returns>
     internal static ClientData? GetClient(this PlayerControl player)
     {
-        if (AmongUsClient.Instance?.allClients == null || player == null)
+        if (AmongUsClient.Instance == null || player == null)
             return null;
 
         foreach (var client in AmongUsClient.Instance.allClients)
         {
-            if (client?.Character == null) continue;
+            if (client == null) continue;
+            if (client.Character == null) continue;
 
             if (client.Character.PlayerId == player.PlayerId)
                 return client;
@@ -39,7 +40,17 @@ internal static class PlayerControlHelper
     /// </summary>
     /// <param name="player">The player to get the client ID for.</param>
     /// <returns>The client ID, or -1 if not found.</returns>
-    internal static int GetClientId(this PlayerControl player) => player?.GetClient()?.Id ?? -1;
+    internal static int GetClientId(this PlayerControl player)
+    {
+        if (player == null)
+            return -1;
+
+        var client = player.GetClient();
+        if (client == null)
+            return -1;
+
+        return client.Id;
+    }
 
     /// <summary>
     /// Gets the player's name with color formatting based on their outfit color.
@@ -48,7 +59,10 @@ internal static class PlayerControlHelper
     /// <returns>The colored player name string.</returns>
     internal static string GetPlayerNameAndColor(this PlayerControl player)
     {
-        if (player?.Data == null)
+        if (player == null)
+            return string.Empty;
+
+        if (player.Data == null)
             return string.Empty;
 
         try
@@ -75,7 +89,10 @@ internal static class PlayerControlHelper
             return true;
         }
 
-        if (player.cosmetics?.nameText == null)
+        if (player.cosmetics == null)
+            return false;
+
+        if (player.cosmetics.nameText == null)
             return false;
 
         string loading = Translator.GetString("Player.Loading");
@@ -217,16 +234,38 @@ internal static class PlayerControlHelper
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is alive.</returns>
-    internal static bool IsAlive(this PlayerControl player) =>
-        player?.Data != null && !player.Data.IsDead;
+    internal static bool IsAlive(this PlayerControl player)
+    {
+        if (player == null)
+            return false;
+
+        var data = player.Data;
+        return data != null && !data.IsDead;
+    }
 
     /// <summary>
     /// Checks if a player is in a vent.
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is in a vent.</returns>
-    internal static bool IsInVent(this PlayerControl player) =>
-        player != null && (player.inVent || player.walkingToVent || player.MyPhysics?.Animations?.IsPlayingEnterVentAnimation() == true);
+    internal static bool IsInVent(this PlayerControl player)
+    {
+        if (player == null)
+            return false;
+
+        if (player.inVent || player.walkingToVent)
+            return true;
+
+        var physics = player.MyPhysics;
+        if (physics == null)
+            return false;
+
+        var animations = physics.Animations;
+        if (animations == null)
+            return false;
+
+        return animations.IsPlayingEnterVentAnimation();
+    }
 
     /// <summary>
     /// Gets the role name of a player.
@@ -235,12 +274,15 @@ internal static class PlayerControlHelper
     /// <returns>The role name string.</returns>
     internal static string GetRoleName(this PlayerControl player)
     {
+        if (player == null)
+            return string.Empty;
+
         if (!player.IsAlive() && !player.IsGhostRole())
         {
             return player.BetterData().RoleInfo.DeadDisplayRole.GetRoleName();
         }
 
-        if (player?.Data != null)
+        if (player.Data != null)
         {
             return player.Data.RoleType.GetRoleName();
         }
@@ -301,59 +343,135 @@ internal static class PlayerControlHelper
     /// <param name="player">The player to check.</param>
     /// <param name="role">The role type to check for.</param>
     /// <returns>True if the player has the specified role.</returns>
-    internal static bool Is(this PlayerControl player, RoleTypes role) => player?.Data?.RoleType == role;
+    internal static bool Is(this PlayerControl player, RoleTypes role)
+    {
+        if (player == null)
+            return false;
+
+        var data = player.Data;
+        if (data == null)
+            return false;
+
+        return data.RoleType == role;
+    }
 
     /// <summary>
     /// Checks if a player has a ghost role.
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player has a ghost role.</returns>
-    internal static bool IsGhostRole(this PlayerControl player) => player?.Data?.RoleType is RoleTypes.GuardianAngel;
+    internal static bool IsGhostRole(this PlayerControl player)
+    {
+        if (player == null)
+            return false;
+
+        var data = player.Data;
+        if (data == null)
+            return false;
+
+        return data.RoleType == RoleTypes.GuardianAngel;
+    }
 
     /// <summary>
     /// Checks if a player is on the impostor team.
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is on the impostor team.</returns>
-    internal static bool IsImpostorTeam(this PlayerControl player) => player?.Data?.IsImpostorTeam() == true;
+    internal static bool IsImpostorTeam(this PlayerControl player)
+    {
+        if (player == null)
+            return false;
+
+        var data = player.Data;
+        if (data == null)
+            return false;
+
+        return data.IsImpostorTeam();
+    }
 
     /// <summary>
     /// Checks if player data indicates the player is on the impostor team.
     /// </summary>
     /// <param name="data">The player data to check.</param>
     /// <returns>True if the player is on the impostor team.</returns>
-    internal static bool IsImpostorTeam(this NetworkedPlayerInfo data) => data?.RoleType.GetBehaviourPrefab().IsImpostor == true;
+    internal static bool IsImpostorTeam(this NetworkedPlayerInfo data)
+    {
+        if (data == null)
+            return false;
+
+        var roleBehaviour = data.RoleType.GetBehaviourPrefab();
+        return roleBehaviour != null && roleBehaviour.IsImpostor;
+    }
 
     /// <summary>
     /// Checks if a player is an impostor teammate of the local player.
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is an impostor teammate.</returns>
-    internal static bool IsImpostorTeammate(this PlayerControl player) =>
-        player != null && PlayerControl.LocalPlayer != null &&
-        (player.IsLocalPlayer() && PlayerControl.LocalPlayer.IsImpostorTeam() ||
-        PlayerControl.LocalPlayer.IsImpostorTeam() && player.IsImpostorTeam());
+    internal static bool IsImpostorTeammate(this PlayerControl player)
+    {
+        if (player == null || PlayerControl.LocalPlayer == null)
+            return false;
+
+        bool localIsImpostor = PlayerControl.LocalPlayer.IsImpostorTeam();
+        bool playerIsImpostor = player.IsImpostorTeam();
+
+        return (player.IsLocalPlayer() && localIsImpostor) ||
+               (localIsImpostor && playerIsImpostor);
+    }
 
     /// <summary>
     /// Checks if a player is listed as a cheater in the anti-cheat database.
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is listed as a cheater.</returns>
-    internal static bool IsCheater(this PlayerControl player) => BetterDataManager.BetterDataFile?.CheckPlayerData(player.Data) == true;
+    internal static bool IsCheater(this PlayerControl player)
+    {
+        if (player == null)
+            return false;
+
+        var betterDataFile = BetterDataManager.BetterDataFile;
+        if (betterDataFile == null)
+            return false;
+
+        return betterDataFile.CheckPlayerData(player.Data) == true;
+    }
 
     /// <summary>
     /// Checks if player data is listed as a cheater in the anti-cheat database.
     /// </summary>
     /// <param name="data">The player data to check.</param>
     /// <returns>True if the player data is listed as a cheater.</returns>
-    internal static bool IsCheater(this NetworkedPlayerInfo data) => BetterDataManager.BetterDataFile?.CheckPlayerData(data) == true;
+    internal static bool IsCheater(this NetworkedPlayerInfo data)
+    {
+        if (data == null)
+            return false;
+
+        var betterDataFile = BetterDataManager.BetterDataFile;
+        if (betterDataFile == null)
+            return false;
+
+        return betterDataFile.CheckPlayerData(data) == true;
+    }
 
     /// <summary>
     /// Checks if a player is the game host.
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is the host.</returns>
-    internal static bool IsHost(this PlayerControl player) => player?.Data != null && GameData.Instance?.GetHost() == player.Data;
+    internal static bool IsHost(this PlayerControl player)
+    {
+        if (player == null)
+            return false;
+
+        if (player.Data == null)
+            return false;
+
+        if (GameData.Instance == null)
+            return false;
+
+        return GameData.Instance.GetHost() == player.Data;
+    }
 
     /// <summary>
     /// Gets the hashed PUID of a player.
@@ -372,8 +490,11 @@ internal static class PlayerControlHelper
     /// <returns>The hashed PUID string.</returns>
     internal static string GetHashPuid(this NetworkedPlayerInfo data)
     {
-        if (data?.Puid == null)
-            return "";
+        if (data == null)
+            return string.Empty;
+
+        if (data.Puid == null)
+            return string.Empty;
 
         return Utils.GetHashStr(data.Puid);
     }
@@ -395,7 +516,12 @@ internal static class PlayerControlHelper
     /// <returns>The hashed friend code string.</returns>
     internal static string GetHashFriendcode(this NetworkedPlayerInfo data)
     {
-        if (data?.FriendCode == null) return "";
+        if (data == null)
+            return string.Empty;
+
+        if (data.FriendCode == null)
+            return string.Empty;
+
         return Utils.GetHashStr(data.FriendCode);
     }
 
@@ -406,12 +532,16 @@ internal static class PlayerControlHelper
     /// <param name="reason">The reason for the report.</param>
     internal static void ReportPlayer(this PlayerControl player, ReportReasons reason = ReportReasons.None)
     {
-        if (player?.GetClient() != null)
+        if (player == null)
+            return;
+
+        var client = player.GetClient();
+        if (client == null)
+            return;
+
+        if (client.HasBeenReported)
         {
-            if (!player.GetClient().HasBeenReported)
-            {
-                AmongUsClient.Instance.ReportPlayer(player.GetClientId(), reason);
-            }
+            AmongUsClient.Instance.ReportPlayer(player.GetClientId(), reason);
         }
     }
 }
