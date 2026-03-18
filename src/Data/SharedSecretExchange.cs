@@ -1,4 +1,5 @@
-﻿using BepInEx.Logging;
+using BetterAmongUs.Helpers;
+using BepInEx.Logging;
 using System.Security.Cryptography;
 
 namespace BetterAmongUs.Data;
