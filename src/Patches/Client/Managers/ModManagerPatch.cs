@@ -36,7 +36,7 @@ internal static class ModManagerPatch
                 // unless other mods have disabled custom mod stamps
                 if (!BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomModStamp))
                 {
-                    modStamp.sprite = Utils.LoadSprite("BetterAmongUs.Resources.Images.BetterAmongUs-Mod.png", 250f);
+                    modStamp.sprite = Utils.LoadSprite("BetterAmongUs.Resources.Images.BetterAmongUs-Mod.png", 380f);
                 }
             }
         }
