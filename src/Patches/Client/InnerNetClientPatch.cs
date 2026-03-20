@@ -57,6 +57,12 @@ internal static class InnerNetClientPatch
     [HarmonyPrefix]
     private static void InnerNetClient_KickPlayer_Prefix(ref int clientId, ref bool ban)
     {
+        // Default ban to false if not set
+        if (!ban)
+        {
+            ban = false;
+        }
+
         // When banning a player, add them to BAU's custom ban list if enabled
         if (ban && BetterGameSettings.UseBanPlayerList.GetBool())
         {
