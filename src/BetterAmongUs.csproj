@@ -74,7 +74,7 @@
 	<ItemGroup>
 		<!-- Steam Libs for Windows, Android Libs for Android -->
 		<PackageReference Include="AmongUs.GameLibs.Steam" Version="2025.11.18" Condition="'$(Configuration)' != 'Android'" />
-		<PackageReference Include="AmongUs.GameLibs.Android" Version="2025.10.14" Condition="'$(Configuration)' == 'Android'" />
+		<PackageReference Include="AmongUs.GameLibs.Android" Version="2026.2.17" Condition="'$(Configuration)' == 'Android'" />
 		
 		<PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.0.1">
 			<PrivateAssets>all</PrivateAssets>
