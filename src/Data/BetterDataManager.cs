@@ -120,7 +120,7 @@ internal static class BetterDataManager
     {
         if (UnityEngine.Application.platform == UnityEngine.RuntimePlatform.Android)
         {
-            return UnityEngine.Application.persistentDataPath;
+            return Folders.starLightDataFolderPath;
         }
 
         return Path.GetDirectoryName(Application.dataPath) ?? throw new Exception("Unable to find `Application.dataPath` path!");
