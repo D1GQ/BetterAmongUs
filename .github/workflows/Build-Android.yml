@@ -1,0 +1,48 @@
+name: Build Android
+
+on:
+  workflow_dispatch:
+    
+  push:
+    branches:
+      - 'main'
+      - '**hotfix**'
+      - '**beta**'
+      - '**dev**'
+    paths:
+      - 'src/**'
+  pull_request:
+    branches:
+      - 'main'
+      - '**hotfix**'
+      - '**beta**'
+      - '**dev**'
+    paths:
+      - 'src/**'
+      
+jobs:
+  build-mod-android:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Add BepInEx NuGet source
+      run: |
+        # Add the BepInEx NuGet feed
+        dotnet nuget add source --name bepinex "https://nuget.bepinex.dev/v3/index.json"
+    
+    - name: Build
+      run: dotnet build src/*.csproj --configuration Android -p:CopyToGame=false
+    
+    - name: Archive DLL file
+      uses: actions/upload-artifact@v4
+      with:
+        name: BetterAmongUs.dll
+        path: src/bin/Android/net8.0/BetterAmongUs.dll
