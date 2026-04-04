@@ -1,6 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<!-- Swaps TargetFramework based on build configuration -->
+		<TargetFramework Condition="'$(Configuration)' != 'Android'">net6.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' == 'Android'">net8.0</TargetFramework>
+		
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<OutputType>Library</OutputType>
@@ -12,7 +15,6 @@
 		<Exec Command="powershell.exe -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\Il2CppRestrictions.ps1&quot;" IgnoreExitCode="true">
 			<Output TaskParameter="ExitCode" PropertyName="ScriptExitCode" />
 		</Exec>
-
 		<Error Condition="'$(ScriptExitCode)' != '0'" Text="Il2Cpp compatibility check failed. See errors in error list." />
 	</Target>
 
@@ -21,30 +23,14 @@
 		<Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardErrorImportance="low" WorkingDirectory="$(MSBuildProjectDirectory)">
 			<Output TaskParameter="ConsoleOutput" PropertyName="CommitHash" />
 		</Exec>
-		<PropertyGroup Condition="'$(CommitHash)' == ''">
-			<CommitHash>unknown</CommitHash>
+		<PropertyGroup>
+			<CommitHash Condition="'$(CommitHash)' == ''">unknown</CommitHash>
+			<BuildDate>$([System.DateTime]::UtcNow.ToString("MM.dd.yyyy"))</BuildDate>
 		</PropertyGroup>
 		<Message Text="Git commit hash: $(CommitHash)" Importance="high" />
 	</Target>
 
-	<!-- Git Commit Hash Retrieval -->
-	<Target Name="GetGitCommitHash" BeforeTargets="BeforeBuild">
-		<Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardErrorImportance="low" WorkingDirectory="$(MSBuildProjectDirectory)">
-			<Output TaskParameter="ConsoleOutput" PropertyName="CommitHash" />
-		</Exec>
-		<PropertyGroup Condition="'$(CommitHash)' == ''">
-			<CommitHash>unknown</CommitHash>
-		</PropertyGroup>
-		<Message Text="Git commit hash: $(CommitHash)" Importance="high" />
-	</Target>
-
-	<!-- Build Metadata -->
-	<PropertyGroup>
-		<CommitHash Condition="'$(CommitHash)' == ''">unknown</CommitHash>
-		<BuildDate>$([System.DateTime]::UtcNow.ToString("MM.dd.yyyy"))</BuildDate>
-	</PropertyGroup>
-
-	<!-- Target to add assembly metadata (runs AFTER GetGitCommitHash) -->
+	<!-- Target to add assembly metadata -->
 	<Target Name="AddAssemblyMetadata" AfterTargets="GetGitCommitHash" BeforeTargets="BeforeBuild">
 		<ItemGroup>
 			<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
@@ -60,40 +46,36 @@
 				<_Parameter2>$(Configuration)</_Parameter2>
 			</AssemblyAttribute>
 		</ItemGroup>
-		<Message Text="Added assembly metadata: CommitHash=$(CommitHash), BuildDate=$(BuildDate)" Importance="normal" />
 	</Target>
 
 	<!-- Game Path Configuration -->
 	<PropertyGroup>
+		<!-- Disable auto-copy for Android builds as it usually requires ADB -->
+		<CopyToGame Condition="'$(Configuration)' == 'Android'">false</CopyToGame>
 		<CopyToGame Condition="'$(CopyToGame)' == ''">true</CopyToGame>
 		<ModPathFile>build\mod_folder_path</ModPathFile>
 	</PropertyGroup>
 
-	<!-- Target to read game path (only if CopyToGame is true) -->
 	<Target Name="ReadGamePath">
 		<PropertyGroup>
-			<GamePath Condition="Exists('$(ModPathFile)')">
-				$([System.IO.File]::ReadAllText('$(ModPathFile)').Trim())
-			</GamePath>
+			<GamePath Condition="Exists('$(ModPathFile)')">$([System.IO.File]::ReadAllText('$(ModPathFile)').Trim())</GamePath>
 		</PropertyGroup>
-		<Message Text="Game path read: $(GamePath)" Condition="'$(GamePath)' != ''" Importance="low" />
 	</Target>
 
-	<!-- Copy Mod to Game Folder -->
 	<Target Name="CopyModToGame" AfterTargets="PostBuildEvent" Condition="'$(CopyToGame)' == 'true'" DependsOnTargets="ReadGamePath">
-
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(GamePath)" SkipUnchangedFiles="true" Condition="'$(GamePath)' != '' and Exists('$(GamePath)')">
 			<Output TaskParameter="CopiedFiles" ItemName="CopiedMods" />
 		</Copy>
-
 		<Message Text="Successfully copied mod to: $(GamePath)" Importance="high" Condition="'@(CopiedMods)' != ''" />
-
 		<Warning Text="Game path not found. Create $(ModPathFile) with game folder path." Condition="'$(CopyToGame)' == 'true' and ('$(GamePath)' == '' or !Exists('$(GamePath)'))" />
 	</Target>
 
 	<!-- NuGet Packages -->
 	<ItemGroup>
-		<PackageReference Include="AmongUs.GameLibs.Steam" Version="2025.11.18" />
+		<!-- Steam Libs for Windows, Android Libs for Android -->
+		<PackageReference Include="AmongUs.GameLibs.Steam" Version="2025.11.18" Condition="'$(Configuration)' != 'Android'" />
+		<PackageReference Include="AmongUs.GameLibs.Android" Version="2026.2.17" Condition="'$(Configuration)' == 'Android'" />
+		
 		<PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -101,9 +83,7 @@
 		<PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.692" Private="false" ExcludeAssets="runtime;native" />
 	</ItemGroup>
 
-	<!-- Embedded Resources -->
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\**\*" />
 	</ItemGroup>
-
 </Project>
