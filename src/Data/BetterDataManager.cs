@@ -113,37 +113,29 @@ internal static class BetterDataManager
     ];
 
     /// <summary>
-    /// Gets the game installation path for Among Us.
+    /// Gets the game installation path for Among Us, with Android overrides.
     /// </summary>
     /// <returns>The game installation path string.</returns>
     internal static string GetPathToAmongUs()
     {
-        if (!ModInfo.Starlight)
+        if (UnityEngine.Application.platform == UnityEngine.RuntimePlatform.Android)
         {
-            return Path.GetDirectoryName(Application.dataPath) ?? throw new Exception("Unable to find `Application.dataPath` path!");
+            return UnityEngine.Application.persistentDataPath;
         }
-        else
-        {
-            return Folders.starLightDataFolderPath;
-        }
-    }
 
-    /// <summary>
-    /// Gets the persistent data path for Among Us.
-    /// </summary>
-    /// <returns>The persistent data path string.</returns>
+        return Path.GetDirectoryName(Application.dataPath) ?? throw new Exception("Unable to find `Application.dataPath` path!");
+    }
+    
     internal static string GetPathToAmongUsData()
     {
-        if (!ModInfo.Starlight)
-        {
-            return Application.persistentDataPath;
-        }
-        else
+        if (UnityEngine.Application.platform == UnityEngine.RuntimePlatform.Android)
         {
             return Folders.starLightDataFolderPath;
         }
-    }
 
+        return Application.persistentDataPath;
+    }
+    
     /// <summary>
     /// Initializes the data manager, loading files and ensuring required directories exist.
     /// </summary>
