@@ -19,21 +19,18 @@ internal class RegisterInIl2Cpp(params Type[] interfaces) : Attribute
     /// <summary>
     /// Registers all classes marked with <see cref="RegisterInIl2Cpp"/> from the executing assembly.
     /// </summary>
-    internal static void RegisterAll()
+    internal static void Initialize()
     {
-        var assembly = ModInfo.Assembly;
-
-        var types = assembly.GetTypes()
-            .Where(t => t.GetCustomAttribute<RegisterInIl2Cpp>() != null)
-            .ToList();
-
+        var types = ModInfo.Assembly.GetTypes();
         foreach (var type in types)
         {
+            var attr = type.GetCustomAttribute<RegisterInIl2Cpp>();
+            if (attr == null)
+                continue;
+
             try
             {
-                var attr = type.GetCustomAttribute<RegisterInIl2Cpp>();
-
-                if (attr.Interfaces.Any())
+                if (attr.Interfaces.Length > 0)
                     ClassInjector.RegisterTypeInIl2Cpp(type, new RegisterTypeOptions { Interfaces = attr.Interfaces });
                 else
                     ClassInjector.RegisterTypeInIl2Cpp(type);

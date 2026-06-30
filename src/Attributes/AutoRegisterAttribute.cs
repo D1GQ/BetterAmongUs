@@ -13,21 +13,27 @@ internal abstract class AutoRegisterAttribute : Attribute
     /// <summary>
     /// Scans the entire assembly and registers all instances of classes marked with <see cref="AutoRegisterAttribute"/> subclasses.
     /// </summary>
-    internal static void RegisterAll()
+    internal static void Initialize()
     {
-        var types = ModInfo.Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(AutoRegisterAttribute)) && !t.IsAbstract && t.IsSealed).ToArray();
+        var types = ModInfo.Assembly.GetTypes();
 
         foreach (var type in types)
         {
+            if (type.IsAbstract || !type.IsSealed)
+                continue;
+
+            if (!typeof(AutoRegisterAttribute).IsAssignableFrom(type))
+                continue;
+
             var tempAttribute = (AutoRegisterAttribute)FormatterServices.GetUninitializedObject(type);
-            tempAttribute.RegisterInstances();
+            tempAttribute.Register();
         }
     }
 
     /// <summary>
-    /// When implemented in a derived class, registers instances of a specific type discovered through reflection.
+    /// When implemented in a derived class, registers individual instances.
     /// </summary>
-    protected abstract void RegisterInstances();
+    protected abstract void Register();
 }
 
 /// <summary>
@@ -55,16 +61,20 @@ internal abstract class AutoRegisterAttribute<T> : AutoRegisterAttribute where T
     internal static J? GetInstance<J>() where J : T => (J?)_instances.FirstOrDefault(instance => instance.GetType() == typeof(J));
 
     /// <inheritdoc/>
-    protected override void RegisterInstances()
+    protected override void Register()
     {
-        var attributedTypes = ModInfo.Assembly.GetTypes().Where(t => t.GetCustomAttributes(GetType(), false).Any()).Where(t => !t.IsAbstract && !t.IsInterface);
+        var types = ModInfo.Assembly.GetTypes();
 
-        foreach (var type in attributedTypes)
+        foreach (var type in types)
         {
-            // Check if the type implements the interface or inherits from the base class
+            if (type.GetCustomAttribute(GetType()) == null)
+                continue;
+
+            if (type.IsAbstract || type.IsInterface)
+                continue;
+
             if (typeof(T).IsAssignableFrom(type))
             {
-                // Try to get any parameterless constructor (public, private, or internal)
                 var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, Type.EmptyTypes, null);
 
                 if (constructor != null)

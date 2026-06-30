@@ -135,7 +135,7 @@ internal class BAUPlugin : BasePlugin
                 SetupConsole();
             }
 
-            RegisterInIl2Cpp.RegisterAll();
+            RegisterInIl2Cpp.Initialize();
             IL2CPPChainloader.Instance.Finished += OnChainloaderFinished;
         }
         catch (Exception ex)
@@ -162,7 +162,7 @@ internal class BAUPlugin : BasePlugin
         MonoExtensionPatch.Patch(Harmony);
         GameSettingsPatch.SetupSettings(true);
         BAUModdedSupportEvents.OnBAUOptionsLoadedEvent.InvokeAll([.. OptionItem.AllOptions.Cast<object>()]);
-        AutoRegisterAttribute.RegisterAll();
+        AutoRegisterAttribute.Initialize();
         IMonoExtension.RegisterAll();
         OutfitData.Initialize();
         SceneManager.add_sceneLoaded((Action<Scene, LoadSceneMode>)OnSceneLoaded);
