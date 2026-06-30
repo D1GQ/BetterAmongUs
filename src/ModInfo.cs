@@ -76,7 +76,7 @@ internal static class ModInfo
     internal const string DISCORD = "https://discord.gg/vjYrXpzNAn";
 
     /// <summary>
-    /// Indicator rather that BAU is running on Starlight.
+    /// Indicator rather that BAU is running on Starlight for Android.
     /// </summary>
     internal static readonly bool Starlight = OperatingSystem.IsAndroid();
 
