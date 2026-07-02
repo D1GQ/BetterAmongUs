@@ -137,6 +137,7 @@
   "AntiCheat.Reason.PlatformSpoofer": "Platform Spoofer",
   "AntiCheat.Reason.RPCSentPS": "RPC Spam",
   "AntiCheat.Reason.VoteKick": "Vote Kick Exploit",
+  "AntiCheat.Reason.Initialize": "Failed To Initialize Player",
   "AntiCheat.Reason.SickoMenuUser": "Known Sicko User",
   "AntiCheat.Reason.AUMUser": "Known AUM User",
   "AntiCheat.Reason.KNUser": "Known KN User",

@@ -674,6 +674,11 @@ public static class TranslationStrings
     public static readonly TranslationString AntiCheat_Reason_VoteKick = new("AntiCheat.Reason.VoteKick");
 
     /// <summary>
+    /// Base Translation: Failed To Initialize Player
+    /// </summary>
+    public static readonly TranslationString AntiCheat_Reason_Initialize = new("AntiCheat.Reason.Initialize");
+
+    /// <summary>
     /// Base Translation: Known Sicko User
     /// </summary>
     public static readonly TranslationString AntiCheat_Reason_SickoMenuUser = new("AntiCheat.Reason.SickoMenuUser");

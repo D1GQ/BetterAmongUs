@@ -6,7 +6,7 @@ using HarmonyLib;
 namespace BetterAmongUs.Patches.Gameplay.Anticheat;
 
 [HarmonyPatch]
-internal class CheckPlayerLevelPatch
+internal static class CheckPlayerLevelPatch
 {
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
     [HarmonyPostfix]

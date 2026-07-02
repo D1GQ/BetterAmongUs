@@ -144,7 +144,6 @@ internal sealed class BAUUpdateData
         {
             yield return null;
         }
-        yield break;
     }
 
     /// <summary>

@@ -14,7 +14,7 @@ using UnityEngine;
 namespace BetterAmongUs.Patches.Gameplay.Anticheat;
 
 [HarmonyPatch]
-internal class PlatformSpoofPatch
+internal static class PlatformSpoofPatch
 {
     [HarmonyPatch(typeof(PlatformSpecificData), nameof(PlatformSpecificData.Deserialize))]
     [HarmonyPostfix]

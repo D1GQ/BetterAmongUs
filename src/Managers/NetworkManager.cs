@@ -199,8 +199,6 @@ internal static class NetworkManager
                 HandleInvalidTag(reader);
                 break;
         }
-
-        yield break;
     }
 
     /// <summary>
