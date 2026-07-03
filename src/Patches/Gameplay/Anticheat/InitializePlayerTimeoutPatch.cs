@@ -26,6 +26,7 @@ internal static class InitializePlayerTimeoutPatch
             if (GameState.IsHost)
             {
                 player.Kick(true, TranslationStrings.AntiCheat_Reason_Initialize.LocalizedString, true, forceBan: true);
+                exit = true;
             }
             else
             {
