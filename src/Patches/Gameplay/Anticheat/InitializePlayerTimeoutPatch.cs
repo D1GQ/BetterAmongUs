@@ -32,6 +32,7 @@ internal static class InitializePlayerTimeoutPatch
             {
                 if (GameData.Instance != null && player.Data != null)
                 {
+                    player.Data.PlayerLevel = 0;
                     var outfit = player.Data.DefaultOutfit;
                     outfit.PlayerName = TranslationStrings.Player_Loading.LocalizedString;
                     outfit.HatId = HatData.EmptyId;
