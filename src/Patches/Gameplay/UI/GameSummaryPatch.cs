@@ -191,7 +191,7 @@ internal static class GameSummaryPatch
 
             var playerLine = BuildPlayerLine(playerData);
             stringBuilder.AppendLine($"- {playerLine}\n");
-            Logger_.Log(playerLine.Replace("\n", " "), "GameSummary");
+            Logger_.Log(Utils.RemoveHtmlText(playerLine).Replace("\n", " "), "GameSummary");
         }
 
         return stringBuilder;
