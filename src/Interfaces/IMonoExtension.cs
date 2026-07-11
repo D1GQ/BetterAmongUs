@@ -1,4 +1,6 @@
-﻿using Il2CppInterop.Runtime;
+﻿using BetterAmongUs.Modules;
+using Il2CppInterop.Runtime;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace BetterAmongUs.Interfaces;
@@ -22,11 +24,6 @@ internal interface IMonoExtension
     void OnExtensionAwake(MonoBehaviour baseMono);
 
     /// <summary>
-    /// Called every frame if the extension is enabled.
-    /// </summary>
-    void Update();
-
-    /// <summary>
     /// Called when the extension is being destroyed.
     /// </summary>
     void OnDestroy();
@@ -39,11 +36,10 @@ internal interface IMonoExtension
     /// <summary>
     /// Static dictionary mapping MonoBehaviour instances to their active IMonoExtension instances.
     /// </summary>
-    private static readonly Dictionary<MonoBehaviour, IMonoExtension> MonoToMonoExtensionLookup = [];
+    private static readonly ConditionalWeakTable<MonoBehaviour, List<IMonoExtension>> MonoToMonoExtensionLookup = [];
 
     /// <summary>
     /// Registers all auto-extension types from the assembly.
-    /// Scans for types implementing IAutoMonoExtension&lt;T&gt; and registers them.
     /// </summary>
     internal static void RegisterAll()
     {
@@ -84,9 +80,16 @@ internal interface IMonoExtension
     /// <returns>The extension instance if found, otherwise default(T).</returns>
     internal static T? GetExtension<T>(MonoBehaviour monoBehaviour) where T : IMonoExtension
     {
-        if (MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var monoExtension))
+        if (monoBehaviour == null)
+            return default;
+
+        if (MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var extensions))
         {
-            return (T)monoExtension;
+            foreach (var extension in extensions)
+            {
+                if (extension is T typedExtension)
+                    return typedExtension;
+            }
         }
 
         return default;
@@ -100,10 +103,25 @@ internal interface IMonoExtension
     /// <returns>The newly created extension instance, or null if creation failed.</returns>
     internal static T? AddExtension<T>(MonoBehaviour monoBehaviour) where T : MonoBehaviour, IMonoExtension
     {
+        if (monoBehaviour == null)
+            return null;
+
+        // Check if extension already exists
+        var existing = GetExtension<T>(monoBehaviour);
+        if (existing != null)
+            return existing;
+
         T? monoExtension = monoBehaviour.gameObject.AddComponent<T>();
         if (monoExtension != null)
         {
-            MonoToMonoExtensionLookup[monoBehaviour] = monoExtension;
+            // Get or create the extension list for this MonoBehaviour
+            if (!MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var extensions))
+            {
+                extensions = [];
+                MonoToMonoExtensionLookup.Add(monoBehaviour, extensions);
+            }
+
+            extensions.Add(monoExtension);
             monoExtension.BaseMono = monoBehaviour;
             monoExtension.OnExtensionAwake(monoBehaviour);
             return monoExtension;
@@ -118,47 +136,63 @@ internal interface IMonoExtension
     /// <param name="monoBehaviour">The MonoBehaviour to add an auto-extension to.</param>
     internal static void TryAddAutoExtension(MonoBehaviour monoBehaviour)
     {
-        if (AutoExtensionTypeLookup.TryGetValue(monoBehaviour.GetType(), out var extensionType))
+        if (monoBehaviour == null)
+            return;
+
+        var monoType = monoBehaviour.GetType();
+
+        // Check if this type has an auto-extension registered
+        if (!AutoExtensionTypeLookup.TryGetValue(monoType, out var extensionType))
+            return;
+
+        // Check if extension already exists for this MonoBehaviour instance
+        if (MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var existingExtensions))
+        {
+            foreach (var ext in existingExtensions)
+            {
+                if (ext.GetType() == extensionType)
+                    return;
+            }
+        }
+
+        try
         {
             IMonoExtension monoExtension = (IMonoExtension)monoBehaviour.gameObject.AddComponent(Il2CppType.From(extensionType));
             if (monoExtension != null)
             {
-                MonoToMonoExtensionLookup[monoBehaviour] = monoExtension;
+                // Get or create the extension list for this MonoBehaviour
+                if (!MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var extensions))
+                {
+                    extensions = [];
+                    MonoToMonoExtensionLookup.Add(monoBehaviour, extensions);
+                }
+
+                extensions.Add(monoExtension);
                 monoExtension.BaseMono = monoBehaviour;
                 monoExtension.OnExtensionAwake(monoBehaviour);
             }
         }
+        catch (Exception ex)
+        {
+            Logger_.Error($"Failed to add auto-extension {extensionType.Name} to {monoType.Name}: {ex.Message}");
+        }
     }
 
     /// <summary>
-    /// Removes and destroys an extension from its attached MonoBehaviour.
+    /// Tries to removes an extension from its attached MonoBehaviour.
     /// </summary>
     /// <param name="monoExtension">The extension instance to remove.</param>
-    internal static void RemoveExtension(IMonoExtension monoExtension)
+    internal static void TryRemoveExtension(IMonoExtension monoExtension)
     {
         if (monoExtension == null)
             return;
 
-        if (!MonoToMonoExtensionLookup.ContainsValue(monoExtension))
-            return;
-
-        MonoBehaviour? keyToRemove = null;
-        bool found = false;
-
-        foreach (var kvp in MonoToMonoExtensionLookup)
+        if (monoExtension.BaseMono != null)
         {
-            if (kvp.Value == monoExtension)
+            if (MonoToMonoExtensionLookup.TryGetValue(monoExtension.BaseMono, out var extensions))
             {
-                keyToRemove = kvp.Key;
-                found = true;
-                break;
+                extensions.Remove(monoExtension);
             }
-        }
-
-        if (found)
-        {
-            MonoToMonoExtensionLookup.Remove(keyToRemove);
-            UnityEngine.Object.Destroy((MonoBehaviour)monoExtension);
         }
     }
 }

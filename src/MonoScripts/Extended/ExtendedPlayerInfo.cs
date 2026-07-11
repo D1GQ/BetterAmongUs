@@ -36,24 +36,6 @@ internal sealed class ExtendedPlayerInfo : MonoBehaviour, IAutoMonoExtension<Net
 
     public NetworkedPlayerInfo? BaseMono { get; set; }
 
-    private bool hasSet = false;
-
-    /// <summary>
-    /// Initializes the extended player info.
-    /// </summary>
-    /// <param name="data">The NetworkedPlayerInfo to extend.</param>
-    [HideFromIl2Cpp]
-    internal void SetInfo(NetworkedPlayerInfo data)
-    {
-        if (hasSet)
-            return;
-
-        hasSet = true;
-        _PlayerId = data.PlayerId;
-    }
-
-    private float timeAccumulator = 0f;
-
     public void OnExtensionAwake(NetworkedPlayerInfo networkedPlayerInfo)
     {
         if (HandshakeHandler != null)
@@ -62,7 +44,8 @@ internal sealed class ExtendedPlayerInfo : MonoBehaviour, IAutoMonoExtension<Net
         }
     }
 
-    public void Update()
+    private float timeAccumulator = 0f;
+    internal void Update()
     {
         var time = Time.deltaTime;
 
@@ -127,12 +110,6 @@ internal sealed class ExtendedPlayerInfo : MonoBehaviour, IAutoMonoExtension<Net
     /// </summary>
     [HideFromIl2Cpp]
     internal HandshakeHandler? HandshakeHandler { get; }
-
-    /// <summary>
-    /// Gets the player ID.
-    /// </summary>
-    [HideFromIl2Cpp]
-    internal byte _PlayerId { get; private set; }
 
     /// <summary>
     /// Gets the player's real name.

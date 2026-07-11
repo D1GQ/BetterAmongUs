@@ -9,13 +9,7 @@ namespace BetterAmongUs.Patches.Unity;
 internal static class MonoExtensionPatch
 {
     private static bool _patched = false;
-
-    [HarmonyPatch(typeof(MonoBehaviour), MethodType.Constructor, [typeof(IntPtr)])]
-    [HarmonyPostfix]
-    private static void MonoBehaviour_Constructor_Postfix(MonoBehaviour __instance)
-    {
-        IMonoExtension.TryAddAutoExtension(__instance);
-    }
+    private static readonly HashSet<Type> PatchedTypes = [];
 
     internal static void Patch(Harmony harmony)
     {
@@ -27,20 +21,31 @@ internal static class MonoExtensionPatch
             // Find all types that implement IMonoExtension
             var extensionTypes = FindAllExtensionTypes();
 
-            foreach (var type in extensionTypes)
+            foreach (var extType in extensionTypes)
             {
-                // Patch Update method if it exists
-                var updateMethod = AccessTools.Method(type, nameof(IMonoExtension.Update));
-                if (updateMethod != null)
+                // Get the target MonoBehaviour type from IAutoMonoExtension<T>
+                var targetType = GetTargetMonoBehaviourType(extType);
+                if (targetType == null) continue;
+
+                // Only patch each target type once
+                if (!PatchedTypes.Add(targetType)) continue;
+
+                // Patch the constructor of the target type
+                var constructor = AccessTools.Constructor(targetType, [typeof(IntPtr)]);
+                if (constructor != null)
                 {
-                    harmony.Patch(updateMethod, prefix: new HarmonyMethod(typeof(MonoExtensionPatch), nameof(IMonoExtension_Update_Prefix)));
+                    harmony.Patch(constructor,
+                        postfix: new HarmonyMethod(typeof(MonoExtensionPatch),
+                            nameof(MonoBehaviour_Constructor_Postfix)));
                 }
 
-                // Patch OnDestroy method if it exists
-                var destroyMethod = AccessTools.Method(type, nameof(IMonoExtension.OnDestroy));
+                // Patch OnDestroy method if it exists on the extension type
+                var destroyMethod = AccessTools.Method(extType, nameof(IMonoExtension.OnDestroy));
                 if (destroyMethod != null)
                 {
-                    harmony.Patch(destroyMethod, postfix: new HarmonyMethod(typeof(MonoExtensionPatch), nameof(IMonoExtension_OnDestroy_Postfix)));
+                    harmony.Patch(destroyMethod,
+                        postfix: new HarmonyMethod(typeof(MonoExtensionPatch),
+                            nameof(IMonoExtension_OnDestroy_Postfix)));
                 }
             }
         }
@@ -58,20 +63,22 @@ internal static class MonoExtensionPatch
 
         try
         {
-            // Find all types that implement IMonoExtension
             var extensionTypes = FindAllExtensionTypes();
 
-            foreach (var type in extensionTypes)
+            foreach (var extType in extensionTypes)
             {
-                // Unpatch Update method
-                var updateMethod = AccessTools.Method(type, nameof(IMonoExtension.Update));
-                if (updateMethod != null)
+                var targetType = GetTargetMonoBehaviourType(extType);
+                if (targetType == null) continue;
+
+                // Unpatch constructor
+                var constructor = AccessTools.Constructor(targetType, [typeof(IntPtr)]);
+                if (constructor != null)
                 {
-                    harmony.Unpatch(updateMethod, HarmonyPatchType.Prefix, harmony.Id);
+                    harmony.Unpatch(constructor, HarmonyPatchType.Postfix, harmony.Id);
                 }
 
-                // Unpatch OnDestroy method
-                var destroyMethod = AccessTools.Method(type, nameof(IMonoExtension.OnDestroy));
+                // Unpatch OnDestroy
+                var destroyMethod = AccessTools.Method(extType, nameof(IMonoExtension.OnDestroy));
                 if (destroyMethod != null)
                 {
                     harmony.Unpatch(destroyMethod, HarmonyPatchType.Postfix, harmony.Id);
@@ -83,6 +90,15 @@ internal static class MonoExtensionPatch
             Logger_.Error($"Failed to unpatch MonoExtension methods: {ex.Message}");
             throw;
         }
+    }
+
+    private static Type? GetTargetMonoBehaviourType(Type extensionType)
+    {
+        var genericInterface = extensionType.GetInterfaces()
+            .FirstOrDefault(i => i.IsGenericType &&
+                                i.GetGenericTypeDefinition() == typeof(IAutoMonoExtension<>));
+
+        return genericInterface?.GetGenericArguments()[0];
     }
 
     private static List<Type> FindAllExtensionTypes()
@@ -107,19 +123,21 @@ internal static class MonoExtensionPatch
         return types;
     }
 
-    private static bool IMonoExtension_Update_Prefix(IMonoExtension __instance)
+    private static void MonoBehaviour_Constructor_Postfix(MonoBehaviour __instance)
     {
-        if (__instance.BaseMono == null)
+        try
         {
-            IMonoExtension.RemoveExtension(__instance);
-            return false;
+            if (__instance == null) return;
+            IMonoExtension.TryAddAutoExtension(__instance);
         }
-
-        return true;
+        catch (Exception ex)
+        {
+            Logger_.Error($"Error in MonoExtension constructor patch: {ex.Message}");
+        }
     }
 
     private static void IMonoExtension_OnDestroy_Postfix(IMonoExtension __instance)
     {
-        IMonoExtension.RemoveExtension(__instance);
+        IMonoExtension.TryRemoveExtension(__instance);
     }
 }

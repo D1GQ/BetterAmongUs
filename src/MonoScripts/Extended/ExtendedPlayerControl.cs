@@ -1,8 +1,6 @@
 ﻿using BetterAmongUs.Attributes;
 using BetterAmongUs.Interfaces;
 using HarmonyLib;
-using Il2CppInterop.Runtime.Attributes;
-using System.Collections;
 using UnityEngine;
 
 namespace BetterAmongUs.MonoScripts.Extended;
@@ -23,40 +21,8 @@ internal sealed class ExtendedPlayerControl : MonoBehaviour, IAutoMonoExtension<
         playerControl.gameObject.AddComponent<PlayerInfoDisplay>().Init(playerControl);
     }
 
-    public void Update()
-    {
-    }
-
     public void OnDestroy()
     {
-    }
-
-    /// <summary>
-    /// Coroutine to add extended player data.
-    /// </summary>
-    /// <returns>IEnumerator for coroutine.</returns>
-    [HideFromIl2Cpp]
-    private IEnumerator CoAddBetterData()
-    {
-        while (BaseMono == null || BaseMono.Data == null)
-        {
-            yield return null;
-        }
-
-        TryCreateExtendedData(BaseMono.Data);
-    }
-
-    /// <summary>
-    /// Attempts to create extended data for a player.
-    /// </summary>
-    /// <param name="data">The player data to extend.</param>
-    internal static void TryCreateExtendedData(NetworkedPlayerInfo data)
-    {
-        if (data.ExtendedData() == null)
-        {
-            ExtendedPlayerInfo newBetterData = data.gameObject.AddComponent<ExtendedPlayerInfo>();
-            newBetterData.SetInfo(data);
-        }
     }
 }
 
