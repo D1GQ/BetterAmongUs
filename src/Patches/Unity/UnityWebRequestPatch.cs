@@ -1,9 +1,9 @@
-﻿using BetterAmongUs.Modules.Support;
+﻿using BetterAmongUs.Modules;
+using BetterAmongUs.Modules.Support;
 using HarmonyLib;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
-using BetterAmongUs.Modules;
 
 namespace BetterAmongUs.Patches.Unity;
 

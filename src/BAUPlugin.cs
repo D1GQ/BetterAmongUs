@@ -16,7 +16,7 @@ using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Network;
 using BetterAmongUs.Patches.Client;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
-using BetterAmongUs.Patches.Unity;
+using BetterAmongUs.Patches.Hooks;
 using BetterAmongUs.Utilities;
 using HarmonyLib;
 using UnityEngine;
@@ -159,7 +159,7 @@ internal class BAUPlugin : BasePlugin
         AudioOverrideManager.Initialize();
         Translator.Initialize();
         Harmony.PatchAll();
-        MonoExtensionPatch.Patch(Harmony);
+        MonoExtensionHook.Install();
         GameSettingsPatch.SetupSettings(true);
         BAUModdedSupportEvents.OnBAUOptionsLoadedEvent.InvokeAll([.. OptionItem.AllOptions.Cast<object>()]);
         AutoRegisterAttribute.Initialize();
@@ -186,7 +186,7 @@ internal class BAUPlugin : BasePlugin
         BetterNotificationManager.Detach();
         ClientPatch.Unpatch();
         Harmony.UnpatchAll();
-        MonoExtensionPatch.Unpatch(Harmony);
+        MonoExtensionHook.Uninstall();
         ModManager.Instance.ModStamp.gameObject.SetActive(false);
         SceneChanger.ChangeScene("MainMenu");
     }
