@@ -1,4 +1,5 @@
 ﻿using AmongUs.GameOptions;
+using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Attributes;
 using BetterAmongUs.Generated;
 using BetterAmongUs.Interfaces;
@@ -11,6 +12,7 @@ using HarmonyLib;
 using Hazel;
 using Il2CppInterop.Runtime.Attributes;
 using InnerNet;
+using System.Collections;
 using UnityEngine;
 
 namespace BetterAmongUs.MonoScripts.Extended;
@@ -19,7 +21,7 @@ namespace BetterAmongUs.MonoScripts.Extended;
 /// Extended player information with additional data and anti-cheat features.
 /// </summary>
 [RegisterInIl2Cpp]
-internal sealed class ExtendedPlayerInfo : MonoBehaviour, IAutoMonoExtension<NetworkedPlayerInfo>
+internal sealed class ExtendedPlayerInfo : MonoBehaviour, IMonoExtension<NetworkedPlayerInfo>, IMonoExtensionPatcher<PlayerControl>
 {
     internal ExtendedPlayerInfo()
     {
@@ -32,6 +34,23 @@ internal sealed class ExtendedPlayerInfo : MonoBehaviour, IAutoMonoExtension<Net
             Logger_.Log("Handshake disabled: " + ex.Message);
             HandshakeHandler = null;
         }
+    }
+
+    public IMonoExtensionPatcher.TargetPatch Target => new(typeof(PlayerControl), nameof(PlayerControl.Awake));
+
+    public void AddExtensionPatch(PlayerControl playerControl)
+    {
+        playerControl.StartCoroutine(CoAddExtensionPatch(playerControl));
+    }
+
+    private static IEnumerator CoAddExtensionPatch(PlayerControl playerControl)
+    {
+        while (playerControl.Data == null)
+        {
+            yield return null;
+        }
+
+        IMonoExtension.AddExtension<ExtendedPlayerInfo>(playerControl.Data);
     }
 
     public NetworkedPlayerInfo? BaseMono { get; set; }
@@ -81,6 +100,7 @@ internal sealed class ExtendedPlayerInfo : MonoBehaviour, IAutoMonoExtension<Net
 
     public void OnDestroy()
     {
+        IMonoExtension.TryRemoveExtension(this);
     }
 
     internal void Deserialize(MessageReader reader)

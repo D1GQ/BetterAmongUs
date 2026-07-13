@@ -59,6 +59,7 @@ internal class ExtendedPassiveButton : MonoBehaviour, IMonoExtension<PassiveButt
 
     public void OnDestroy()
     {
+        IMonoExtension.TryRemoveExtension(this);
     }
 
     /// <summary>

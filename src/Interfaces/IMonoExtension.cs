@@ -1,6 +1,7 @@
-﻿using BetterAmongUs.Modules;
-using Il2CppInterop.Runtime;
+﻿using HarmonyLib;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using UnityEngine;
 
 namespace BetterAmongUs.Interfaces;
@@ -29,47 +30,31 @@ internal interface IMonoExtension
     void OnDestroy();
 
     /// <summary>
-    /// Static dictionary mapping MonoBehaviour types to their auto-extension types.
-    /// </summary>
-    private static readonly Dictionary<Type, Type> AutoExtensionTypeLookup = [];
-
-    /// <summary>
     /// Static dictionary mapping MonoBehaviour instances to their active IMonoExtension instances.
     /// </summary>
     private static readonly ConditionalWeakTable<MonoBehaviour, List<IMonoExtension>> MonoToMonoExtensionLookup = [];
 
     /// <summary>
-    /// Registers all auto-extension types from the assembly.
+    /// Determines whether a MonoBehaviour has an extension of the specified type attached to it.
     /// </summary>
-    internal static void RegisterAll()
+    /// <typeparam name="T">The type of IMonoExtension to check for.</typeparam>
+    /// <param name="monoBehaviour">The MonoBehaviour to check for the extension.</param>
+    /// <returns>true if an extension of type T exists on the MonoBehaviour; otherwise, false.</returns>
+    internal static bool HasExtension<T>(MonoBehaviour monoBehaviour) where T : IMonoExtension
     {
-        var assembly = ModInfo.Assembly;
+        if (monoBehaviour == null)
+            return false;
 
-        foreach (var type in assembly.GetTypes())
+        if (MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var extensions))
         {
-            if (type.IsInterface || type.IsAbstract)
-                continue;
-
-            if (!typeof(IMonoExtension).IsAssignableFrom(type))
-                continue;
-
-            if (type.IsGenericTypeDefinition)
-                continue;
-
-            var genericInterface = type.GetInterfaces()
-                .FirstOrDefault(i => i.IsGenericType &&
-                                    i.GetGenericTypeDefinition() == typeof(IAutoMonoExtension<>));
-
-            if (genericInterface == null)
-                continue;
-
-            var monoType = genericInterface.GetGenericArguments()[0];
-
-            if (!monoType.IsSubclassOf(typeof(MonoBehaviour)))
-                continue;
-
-            AutoExtensionTypeLookup[monoType] = type;
+            foreach (var extension in extensions)
+            {
+                if (extension is T)
+                    return true;
+            }
         }
+
+        return false;
     }
 
     /// <summary>
@@ -131,54 +116,6 @@ internal interface IMonoExtension
     }
 
     /// <summary>
-    /// Attempts to add an auto-extension to a MonoBehaviour if one is registered.
-    /// </summary>
-    /// <param name="monoBehaviour">The MonoBehaviour to add an auto-extension to.</param>
-    internal static void TryAddAutoExtension(MonoBehaviour monoBehaviour)
-    {
-        if (monoBehaviour == null)
-            return;
-
-        var monoType = monoBehaviour.GetType();
-
-        // Check if this type has an auto-extension registered
-        if (!AutoExtensionTypeLookup.TryGetValue(monoType, out var extensionType))
-            return;
-
-        // Check if extension already exists for this MonoBehaviour instance
-        if (MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var existingExtensions))
-        {
-            foreach (var ext in existingExtensions)
-            {
-                if (ext.GetType() == extensionType)
-                    return;
-            }
-        }
-
-        try
-        {
-            IMonoExtension monoExtension = (IMonoExtension)monoBehaviour.gameObject.AddComponent(Il2CppType.From(extensionType));
-            if (monoExtension != null)
-            {
-                // Get or create the extension list for this MonoBehaviour
-                if (!MonoToMonoExtensionLookup.TryGetValue(monoBehaviour, out var extensions))
-                {
-                    extensions = [];
-                    MonoToMonoExtensionLookup.Add(monoBehaviour, extensions);
-                }
-
-                extensions.Add(monoExtension);
-                monoExtension.BaseMono = monoBehaviour;
-                monoExtension.OnExtensionAwake(monoBehaviour);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger_.Error($"Failed to add auto-extension {extensionType.Name} to {monoType.Name}: {ex.Message}");
-        }
-    }
-
-    /// <summary>
     /// Tries to removes an extension from its attached MonoBehaviour.
     /// </summary>
     /// <param name="monoExtension">The extension instance to remove.</param>
@@ -237,8 +174,176 @@ internal interface IMonoExtension<T> : IMonoExtension where T : MonoBehaviour
 }
 
 /// <summary>
-/// Marker interface for auto-registering extensions.
-/// When a type implements this interface with a specific MonoBehaviour type T, it will be automatically registered and attached to matching MonoBehaviour instances.
+/// Provides functionality to patch MonoBehaviour methods and apply extension patches.
 /// </summary>
-/// <typeparam name="T">The type of MonoBehaviour this extension automatically attaches to.</typeparam>
-internal interface IAutoMonoExtension<T> : IMonoExtension<T> where T : MonoBehaviour;
+internal interface IMonoExtensionPatcher
+{
+    /// <summary>
+    /// Gets the target patch information.
+    /// </summary>
+    TargetPatch Target { get; }
+
+    /// <summary>
+    /// Adds an extension patch to the specified MonoBehaviour.
+    /// </summary>
+    /// <param name="monoBehaviour">The MonoBehaviour to patch.</param>
+    void AddExtensionPatch(MonoBehaviour monoBehaviour);
+
+    /// <summary>
+    /// Represents a target method to be patched.
+    /// </summary>
+    /// <param name="Type">The type containing the method.</param>
+    /// <param name="MethodName">The name of the method to patch.</param>
+    internal sealed record TargetPatch(Type Type, string MethodName);
+
+    /// <summary>
+    /// Patches all IMonoExtensionPatcher implementations found in the mod assembly.
+    /// </summary>
+    internal static void PatchAll()
+    {
+        var assembly = ModInfo.Assembly;
+        var patcherTypes = assembly.GetTypes()
+            .Where(t => typeof(IMonoExtensionPatcher).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+            .ToList();
+
+        // Group patchers by their target method to avoid duplicate patches
+        var patchersByTarget = patcherTypes
+            .Select(t => (Type: t, Instance: (IMonoExtensionPatcher)FormatterServices.GetUninitializedObject(t)))
+            .GroupBy(x => x.Instance.Target)
+            .ToList();
+
+        foreach (var group in patchersByTarget)
+        {
+            var target = group.Key;
+            var patcherTypesForTarget = group.Select(x => x.Type).ToList();
+
+            var originalMethod = target.Type.GetMethod(target.MethodName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            if (originalMethod == null)
+                continue;
+
+            _monoBehaviourToPatcherMap[target.Type] = patcherTypesForTarget;
+
+            var postfixMethod = typeof(IMonoExtensionPatcher).GetMethod(nameof(Postfix),
+                BindingFlags.Static | BindingFlags.NonPublic);
+
+            BAUPlugin.Harmony.Patch(originalMethod, postfix: new HarmonyMethod(postfixMethod));
+        }
+    }
+
+    /// <summary>
+    /// Patches a specific IMonoExtensionPatcher implementation.
+    /// </summary>
+    /// <param name="harmony">The Harmony instance to use for patching.</param>
+    /// <param name="monoExtensionPatcherType">The patcher type to apply.</param>
+    private static void Patch(Harmony harmony, Type monoExtensionPatcherType)
+    {
+        var instance = (IMonoExtensionPatcher)FormatterServices.GetUninitializedObject(monoExtensionPatcherType);
+        var target = instance.Target;
+
+        var originalMethod = target.Type.GetMethod(target.MethodName,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+        if (originalMethod == null)
+            return;
+
+        if (!_monoBehaviourToPatcherMap.TryGetValue(target.Type, out var patcherTypes))
+        {
+            patcherTypes = [];
+            _monoBehaviourToPatcherMap[target.Type] = patcherTypes;
+        }
+
+        if (!patcherTypes.Contains(monoExtensionPatcherType))
+        {
+            patcherTypes.Add(monoExtensionPatcherType);
+        }
+
+        var postfixMethod = typeof(IMonoExtensionPatcher).GetMethod(nameof(Postfix),
+            BindingFlags.Static | BindingFlags.NonPublic);
+
+        harmony.Patch(originalMethod, postfix: new HarmonyMethod(postfixMethod));
+    }
+
+    /// <summary>
+    /// Postfix method that applies extension patches to MonoBehaviour instances.
+    /// </summary>
+    /// <param name="__instance">The MonoBehaviour instance being patched.</param>
+    private static void Postfix(MonoBehaviour __instance)
+    {
+        var type = __instance.GetType();
+
+        // Try exact match first
+        if (!_monoBehaviourToPatcherMap.TryGetValue(type, out var patcherTypes))
+        {
+            // Check for assignable types (handles inheritance)
+            foreach (var kvp in _monoBehaviourToPatcherMap)
+            {
+                if (kvp.Key.IsAssignableFrom(type))
+                {
+                    patcherTypes = kvp.Value;
+                    _monoBehaviourToPatcherMap[type] = patcherTypes;
+                    break;
+                }
+            }
+
+            if (patcherTypes == null)
+                return;
+        }
+
+        foreach (var patcherType in patcherTypes)
+        {
+            var patcher = GetUninitializedMonoExtensionPatcher(patcherType, __instance);
+            patcher.AddExtensionPatch(__instance);
+        }
+    }
+
+    /// <summary>
+    /// Cache for uninitialized patcher instances.
+    /// </summary>
+    private static readonly Dictionary<Type, IMonoExtensionPatcher> _uninitializedMonoExtensionPatcherLookup = [];
+
+    /// <summary>
+    /// Maps MonoBehaviour types to their corresponding patcher types.
+    /// </summary>
+    private static readonly Dictionary<Type, List<Type>> _monoBehaviourToPatcherMap = [];
+
+    /// <summary>
+    /// Gets or creates an uninitialized patcher instance for the specified type.
+    /// </summary>
+    /// <param name="monoExtensionPatcherType">The patcher type.</param>
+    /// <param name="monoBehaviour">The MonoBehaviour instance.</param>
+    /// <returns>An uninitialized patcher instance.</returns>
+    private static IMonoExtensionPatcher GetUninitializedMonoExtensionPatcher(Type monoExtensionPatcherType, MonoBehaviour monoBehaviour)
+    {
+        if (!_uninitializedMonoExtensionPatcherLookup.TryGetValue(monoExtensionPatcherType, out var uninitialized))
+        {
+            uninitialized = (IMonoExtensionPatcher)FormatterServices.GetUninitializedObject(monoExtensionPatcherType);
+            _uninitializedMonoExtensionPatcherLookup[monoExtensionPatcherType] = uninitialized;
+        }
+
+        return uninitialized;
+    }
+}
+
+/// <summary>
+/// Provides generic functionality to patch MonoBehaviour methods and apply extension patches.
+/// </summary>
+/// <typeparam name="T">The specific MonoBehaviour type to patch.</typeparam>
+internal interface IMonoExtensionPatcher<T> : IMonoExtensionPatcher where T : MonoBehaviour
+{
+    /// <summary>
+    /// Adds an extension patch to the specified MonoBehaviour.
+    /// </summary>
+    /// <param name="monoBehaviour">The MonoBehaviour to patch.</param>
+    void IMonoExtensionPatcher.AddExtensionPatch(MonoBehaviour monoBehaviour)
+    {
+        AddExtensionPatch((T)monoBehaviour);
+    }
+
+    /// <summary>
+    /// Adds an extension patch to the specified MonoBehaviour of type T.
+    /// </summary>
+    /// <param name="monoBehaviour">The MonoBehaviour instance to patch.</param>
+    void AddExtensionPatch(T monoBehaviour);
+}

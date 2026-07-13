@@ -9,20 +9,28 @@ namespace BetterAmongUs.MonoScripts.Extended;
 /// Extends PlayerControl with additional functionality.
 /// </summary>
 [RegisterInIl2Cpp]
-internal sealed class ExtendedPlayerControl : MonoBehaviour, IAutoMonoExtension<PlayerControl>
+internal sealed class ExtendedPlayerControl : MonoBehaviour, IMonoExtension<PlayerControl>, IMonoExtensionPatcher<PlayerControl>
 {
-    /// <summary>
-    /// Gets or sets the base PlayerControl instance.
-    /// </summary>
-    public PlayerControl? BaseMono { get; set; }
+    public IMonoExtensionPatcher.TargetPatch Target => new(typeof(PlayerControl), nameof(PlayerControl.Awake));
+
+    public void AddExtensionPatch(PlayerControl playerControl)
+    {
+        IMonoExtension.AddExtension<ExtendedPlayerControl>(playerControl);
+    }
 
     public void OnExtensionAwake(PlayerControl playerControl)
     {
         playerControl.gameObject.AddComponent<PlayerInfoDisplay>().Init(playerControl);
     }
 
+    /// <summary>
+    /// Gets or sets the base PlayerControl instance.
+    /// </summary>
+    public PlayerControl? BaseMono { get; set; }
+
     public void OnDestroy()
     {
+        IMonoExtension.TryRemoveExtension(this);
     }
 }
 
