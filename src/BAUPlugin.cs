@@ -8,7 +8,6 @@ using BetterAmongUs.Data;
 using BetterAmongUs.Data.Config;
 using BetterAmongUs.Data.Json;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Interfaces;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.OptionItems;
@@ -158,7 +157,6 @@ internal class BAUPlugin : BasePlugin
         AudioOverrideManager.Initialize();
         Translator.Initialize();
         Harmony.PatchAll();
-        IMonoExtensionPatcher.PatchAll();
         GameSettingsPatch.SetupSettings(true);
         BAUModdedSupportEvents.OnBAUOptionsLoadedEvent.InvokeAll([.. OptionItem.AllOptions.Cast<object>()]);
         AutoRegisterAttribute.Initialize();
