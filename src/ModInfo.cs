@@ -11,7 +11,7 @@ internal static class ModInfo
     /// <summary>
     /// Gets the release type of the current build.
     /// </summary>
-    internal static readonly ReleaseTypes ReleaseBuildType = ReleaseTypes.Beta;
+    internal static readonly ReleaseTypes ReleaseBuildType = ReleaseTypes.Release;
 
     /// <summary>
     /// Gets the Git commit hash from assembly metadata.
@@ -26,7 +26,7 @@ internal static class ModInfo
     /// <summary>
     /// The beta number for beta releases.
     /// </summary>
-    internal const string BETA_NUM = "5";
+    internal const string BETA_NUM = "0";
 
     /// <summary>
     /// The hotfix number for hotfix releases.
