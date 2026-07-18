@@ -14,12 +14,10 @@ A client-sided mod that enhances the experience for the popular game Among Us!
 </div>
 
 ## Installation
-Here's the updated guide with clear instructions for downloading the correct zip file and extracting it, as well as replacing the DLL if you've previously installed the mod, as this has been requested to be updated multiple times...
-
 ### For First-Time Installation:
 
 1. **Download the Correct Version**: 
-   - Go to the [Releases](https://github.com/EnhancedNetwork/BetterAmongUs/releases) page
+   - Go to the [Releases](https://github.com/D1GQ/BetterAmongUs/releases) page
    - **Choose the correct zip file** for your platform:
      - Steam and itch.io users: `BAU-SteamItchio-Version.zip `
      - Epic Games and Microsoft Store users: `BAU-EpicMsStore-Version.zip`
@@ -39,7 +37,7 @@ Here's the updated guide with clear instructions for downloading the correct zip
 ### For Updating an Existing Installation:
 
 1. **Download the DLL File**:
-   - Go to the [Releases](https://github.com/EnhancedNetwork/BetterAmongUs/releases) page
+   - Go to the [Releases](https://github.com/D1GQ/BetterAmongUs/releases) page
    - Download just the `BetterAmongUs.dll` file
 
 2. **Replace the Old DLL**:
@@ -51,22 +49,31 @@ Here's the updated guide with clear instructions for downloading the correct zip
    - Launch Among Us
    - Check that the mod version has been updated in the main menu
 
-## Getting Started
+### Linux Setup (Steam Only)
 
-1. **Explore the Features**: Use the pause menu to discover new options and settings.
-2. **Check the Commands**: Type `/commands` in the chat to view a list of all available commands.
-3. **Stay Updated**: Keep an eye on this page for future updates and new features.
+Use Proton (9.0+) with these launch options:
+```
+WINEDLLOVERRIDES="winhttp=n,b" PROTON_NO_ESYNC=1 %command%
+```
+
+**Setup Steps:**
+1. Enable Proton in Steam → Properties → Compatibility → Force Proton 9.0+
+2. Copy all mod files into your Among Us directory
+3. Add the launch options above
+4. Install Protontricks and set `winhttp` as a library override in winecfg
 
 ## Supported Platforms
 - ✅ Steam
+- ✅ Linux + Steam
 - ✅ Epic Games
 - ✅ Microsoft Store
 - ✅ itch.io
-- ⚠️ Android (Unknown)
+- ✅ Android
 - ❌ iOS
 - ❌ Xbox/Playstation/Switch
 
 ## Supported Game Versions
+- ✅ AU **v17.2.0** / **v2026.3.17**: (BAU v1.3.3) >
 - ✅ AU **v17.1.0** / **v2025.11.18**: (BAU v1.3.1) >
 - ✅ AU **v17.0.1** / **v2025.10.14**: (BAU v1.3.0) >
 - ✅ AU **v16.1.0** / **v2025.6.10**: (BAU v1.2.0 Beta 1) >
@@ -123,6 +130,7 @@ BetterAmongUs offers a variety of commands to enhance your control over the game
 A huge thank you to everyone who contributed to making BetterAmongUs a reality!
 
 - **Head Developer**: [D1GQ](https://github.com/D1GQ)
+- **Linux Support**: [Nyx](https://github.com/DeveloperNyx)
 
 ## Contacts
 betterauofficial@gmail.com
@@ -130,7 +138,3 @@ betterauofficial@gmail.com
 ## Disclaimer
 
 **BetterAmongUs** is an unofficial, fan-made mod for **Among Us**. It is not affiliated with, endorsed by, or associated with **InnerSloth LLC** or the official **Among Us** game. All trademarks and copyrights related to **Among Us** are the property of **InnerSloth LLC**. This mod is created purely for entertainment purposes and to enhance the gaming experience. Use of this mod is at your own risk.
-
----
-
-**Important Note**: Always ensure your game version matches the supported versions listed above. If you encounter issues, verify you downloaded the correct zip file for your platform or replaced the DLL in the correct location.
