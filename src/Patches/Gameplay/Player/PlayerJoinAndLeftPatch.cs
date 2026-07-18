@@ -1,11 +1,16 @@
+using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Data;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Data.Config;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Modules;
-using BetterAmongUs.Mono;
+using BetterAmongUs.Modules.Support;
+using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Patches.Gameplay.UI;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 using InnerNet;
+using System.Collections;
 
 namespace BetterAmongUs.Patches.Gameplay.Player;
 
@@ -29,45 +34,52 @@ internal static class PlayerJoinAndLeftPatch
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerJoined))]
     [HarmonyPostfix]
-    private static void AmongUsClient_OnPlayerJoined_Postfix(ClientData data)
+    private static void AmongUsClient_OnPlayerJoined_Postfix(AmongUsClient __instance, ClientData data)
     {
-        // Schedule ban list checks 2.5 seconds after player joins
-        LateTask.Schedule(() =>
+        if (GameState.IsHost)
         {
-            if (GameState.IsHost)
+            __instance.StartCoroutine(CoCheckPlayerOnJoin(data));
+        }
+    }
+
+    private static IEnumerator CoCheckPlayerOnJoin(ClientData data)
+    {
+        while (!data.InScene || data.Character == null || data.Character.Data == null || data.Character.Data.IsIncomplete)
+        {
+            yield return null;
+        }
+
+        if (GameState.IsInGame)
+        {
+            var player = Utils.PlayerFromClientId(data.Id);
+
+            // Check if player is in ban list by friend code or PUID
+            if (BetterGameSettings.UseBanPlayerList.GetBool())
             {
-                if (GameState.IsInGame)
+                if (player != null)
                 {
-                    var player = Utils.PlayerFromClientId(data.Id);
-
-                    // Check if player is in ban list by friend code or PUID
-                    if (BetterGameSettings.UseBanPlayerList.GetBool())
+                    if (TextFileHandler.CompareStringMatch(BetterDataManager.Files.banPlayerListFilePath,
+                        BAUPlugin.AllPlayerControls.Select(player => player.Data.FriendCode)
+                        .Concat(BAUPlugin.AllPlayerControls.Select(player => player.GetHashPuid())).ToArray()))
                     {
-                        if (player != null)
-                        {
-                            if (TextFileHandler.CompareStringMatch(BetterDataManager.banPlayerListFile,
-                                BAUPlugin.AllPlayerControls.Select(player => player.Data.FriendCode)
-                                .Concat(BAUPlugin.AllPlayerControls.Select(player => player.GetHashPuid())).ToArray()))
-                            {
-                                player.Kick(true, Translator.GetString("AntiCheat.BanPlayerListMessage"), bypassDataCheck: true);
-                            }
-                        }
-                    }
-
-                    // Check if player name matches banned name patterns
-                    if (BetterGameSettings.UseBanNameList.GetBool())
-                    {
-                        if (player != null)
-                        {
-                            if (TextFileHandler.CompareStringFilters(BetterDataManager.banNameListFile, [player.Data.PlayerName]))
-                            {
-                                player?.Kick(true, Translator.GetString("AntiCheat.BanPlayerListMessage"), bypassDataCheck: true);
-                            }
-                        }
+                        player.Kick(true, TranslationStrings.AntiCheat_BanPlayerListMessage.LocalizedString, bypassDataCheck: true);
+                        yield break;
                     }
                 }
             }
-        }, 2.5f, "OnPlayerJoinedPatch", false);
+
+            // Check if player name matches banned name patterns
+            if (BetterGameSettings.UseBanNameList.GetBool())
+            {
+                if (player != null)
+                {
+                    if (TextFileHandler.CompareStringFilters(BetterDataManager.Files.banNameListFilePath, [player.Data.PlayerName]))
+                    {
+                        player?.Kick(true, TranslationStrings.AntiCheat_BanPlayerListMessage.LocalizedString, bypassDataCheck: true);
+                    }
+                }
+            }
+        }
     }
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerLeft))]
@@ -77,12 +89,15 @@ internal static class PlayerJoinAndLeftPatch
         // Reclaim favorite color when player leaves in lobby
         if (GameState.IsLobby)
         {
-            var favColorId = (byte)BAUPlugin.FavoriteColor.Value;
-            if (BAUPlugin.FavoriteColor.Value >= 0)
+            if (!BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_FavoriteColor))
             {
-                if (PlayerControl.LocalPlayer.cosmetics.ColorId != favColorId && data.ColorId == favColorId)
+                var favColorId = (byte)BAUConfigs.FavoriteColor.Value;
+                if (BAUConfigs.FavoriteColor.Value >= 0)
                 {
-                    PlayerControl.LocalPlayer.CmdCheckColor(favColorId);
+                    if (PlayerControl.LocalPlayer.cosmetics.ColorId != favColorId && data.ColorId == favColorId)
+                    {
+                        PlayerControl.LocalPlayer.CmdCheckColor(favColorId);
+                    }
                 }
             }
         }
@@ -99,9 +114,9 @@ internal static class PlayerJoinAndLeftPatch
     private static void GameData_HandleDisconnect_Prefix(PlayerControl player, DisconnectReasons reason)
     {
         // Store disconnect reason in player's BetterData
-        if (player.BetterData() != null)
+        if (player.ExtendedData() != null)
         {
-            player.BetterData().DisconnectReason = reason;
+            player.ExtendedData().DisconnectReason = reason;
         }
 
         // Show custom disconnect notification
@@ -118,16 +133,21 @@ internal static class PlayerJoinAndLeftPatch
 
     internal static void BetterShowNotification(NetworkedPlayerInfo playerData, DisconnectReasons reason = DisconnectReasons.Unknown, string forceReasonText = "")
     {
-        // Prevent showing duplicate notifications
-        if (playerData.BetterData().AntiCheatInfo.BannedByAntiCheat || playerData.BetterData().HasShowDcMsg) return;
-        playerData.BetterData().HasShowDcMsg = true;
+        if (playerData == null)
+            return;
 
-        string? playerName = playerData.BetterData().RealName;
+        // Prevent showing duplicate notifications
+        if (playerData.ExtendedData().AntiCheatInfo.BannedByAntiCheat || playerData.ExtendedData().HasShowDcMsg)
+            return;
+
+        playerData.ExtendedData().HasShowDcMsg = true;
+
+        string? playerName = playerData.ExtendedData().RealName;
 
         // Use custom reason text if provided
         if (forceReasonText != "")
         {
-            var ReasonText = $"<color=#ff0>{playerData.BetterData().RealName}</color> {forceReasonText}";
+            var ReasonText = $"<color=#ff0>{playerData.ExtendedData().RealName}</color> {forceReasonText}";
 
             Logger_.Log(ReasonText);
 
@@ -141,28 +161,28 @@ internal static class PlayerJoinAndLeftPatch
             switch (reason)
             {
                 case DisconnectReasons.ExitGame:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Left"), playerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Left.Format(playerName);
                     break;
                 case DisconnectReasons.ClientTimeout:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Disconnect"), playerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Disconnect.Format(playerName);
                     break;
                 case DisconnectReasons.Kicked:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Kicked"), playerName, AmongUsClient.Instance.GetHost().Character.Data.PlayerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Kicked.Format(playerName, AmongUsClient.Instance.GetHost().Character.Data.PlayerName);
                     break;
                 case DisconnectReasons.Banned:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Banned"), playerName, AmongUsClient.Instance.GetHost().Character.Data.PlayerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Banned.Format(playerName, AmongUsClient.Instance.GetHost().Character.Data.PlayerName);
                     break;
                 case DisconnectReasons.Hacking:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Cheater"), playerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Cheater.Format(playerName);
                     break;
                 case DisconnectReasons.Error:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Error"), playerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Error.Format(playerName);
                     break;
                 case DisconnectReasons.Unknown:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Unknown"), playerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Unknown.Format(playerName);
                     break;
                 default:
-                    ReasonText = string.Format(Translator.GetString("DisconnectReason.Left"), playerName);
+                    ReasonText = TranslationStrings.DisconnectReason_Left.Format(playerName);
                     break;
             }
 

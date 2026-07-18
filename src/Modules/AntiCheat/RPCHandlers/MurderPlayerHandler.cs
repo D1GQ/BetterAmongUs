@@ -1,12 +1,13 @@
 using AmongUs.GameOptions;
 using BetterAmongUs.Attributes;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
-using BetterAmongUs.Mono;
+using BetterAmongUs.MonoScripts.Extended;
+using BetterAmongUs.Utilities;
 using Hazel;
 using InnerNet;
 
-namespace BetterAmongUs.Modules.AntiCheat;
+namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers;
 
 [RegisterRPCHandler]
 internal sealed class MurderPlayerHandler : RPCHandler
@@ -21,13 +22,13 @@ internal sealed class MurderPlayerHandler : RPCHandler
         {
             if (target.IsLocalPlayer() && GameOptionsManager.Instance.CurrentGameOptions.GetFloat(FloatOptionNames.KillCooldown) > 2.5f)
             {
-                target.BetterData().AntiCheatInfo.TimesAttemptedKilled++;
+                target.ExtendedData().AntiCheatInfo.TimesAttemptedKilled++;
 
-                if (target.BetterData().AntiCheatInfo.TimesAttemptedKilled >= 10 && !target.IsAlive())
+                if (target.ExtendedData().AntiCheatInfo.TimesAttemptedKilled >= 10 && !target.IsAlive())
                 {
-                    if (BetterNotificationManager.NotifyCheat(player, string.Format(Translator.GetString("AntiCheat.InvalidAction"), Translator.GetString("AntiCheat.TryBanExploit"))))
+                    if (BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_InvalidAction.Format(TranslationStrings.AntiCheat_TryBanExploit)))
                     {
-                        LogRpcInfo($"Ban exploit detected: Player attempted to kill dead target {target.BetterData().AntiCheatInfo.TimesAttemptedKilled} times");
+                        LogRpcInfo($"Ban exploit detected: Player attempted to kill dead target {target.ExtendedData().AntiCheatInfo.TimesAttemptedKilled} times");
                     }
                     return false;
                 }
@@ -35,7 +36,7 @@ internal sealed class MurderPlayerHandler : RPCHandler
                 // Cancel murder on client if not alive
                 if (!target.IsAlive())
                 {
-                    LogRpcInfo($"Murder blocked: Target {target.BetterData()?.RealName} is not alive");
+                    LogRpcInfo($"Murder blocked: Target {target.ExtendedData()?.RealName} is not alive");
                     return false;
                 }
             }

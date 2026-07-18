@@ -1,7 +1,7 @@
 ﻿using BetterAmongUs.Attributes;
 using BetterAmongUs.Commands.Arguments;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Utilities;
 
 namespace BetterAmongUs.Commands;
 
@@ -22,20 +22,24 @@ internal sealed class KickCommand : BaseCommand
     }
     public KickCommand()
     {
-        playerArgument = new PlayerArgument(this);
-        boolArgument = new BoolArgument(this, "{ban}");
-        Arguments = [playerArgument, boolArgument];
+        _playerArgument = new PlayerArgument(this);
+        _boolArgument = new BoolArgument(this, "{ban}");
+        Arguments = [_playerArgument, _boolArgument];
     }
-    private PlayerArgument playerArgument { get; }
-    private BoolArgument boolArgument { get; }
+    private readonly PlayerArgument _playerArgument;
+    private readonly BoolArgument _boolArgument;
 
     internal override void Run()
     {
-        var player = playerArgument.TryGetTarget();
-        var isBan = boolArgument.GetBool();
-        if (player != null && isBan != null && !player.IsHost())
+        if (!_playerArgument.TryParse(out var player))
+            return;
+
+        if (!_boolArgument.TryParse(out var ban))
+            return;
+
+        if (!player.IsHost())
         {
-            player.Kick((bool)isBan);
+            player.Kick(ban);
         }
     }
 }

@@ -1,11 +1,12 @@
 using BetterAmongUs.Attributes;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
-using BetterAmongUs.Mono;
+using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
+using BetterAmongUs.Utilities;
 using Hazel;
 
-namespace BetterAmongUs.Modules.AntiCheat;
+namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers;
 
 [RegisterRPCHandler]
 internal sealed class SetLevelHandler : RPCHandler
@@ -14,7 +15,7 @@ internal sealed class SetLevelHandler : RPCHandler
 
     internal override bool HandleAntiCheatCancel(PlayerControl? sender, MessageReader reader)
     {
-        if (sender.DataIsCollected() == true && sender.BetterData().AntiCheatInfo.HasSetLevel && !GameState.IsLocalGame && GameState.IsVanillaServer)
+        if (sender.DataIsCollected() == true && sender.ExtendedData().AntiCheatInfo.HasSetLevel && !GameState.IsLocalGame && GameState.IsVanillaServer)
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatSetText()))
             {
@@ -24,7 +25,7 @@ internal sealed class SetLevelHandler : RPCHandler
             return false;
         }
 
-        sender.BetterData().AntiCheatInfo.HasSetLevel = true;
+        sender.ExtendedData().AntiCheatInfo.HasSetLevel = true;
 
         return true;
     }
@@ -33,9 +34,9 @@ internal sealed class SetLevelHandler : RPCHandler
     {
         uint level = reader.ReadPackedUInt32() + 1;
 
-        if (level > BetterGameSettings.DetectedLevelAbove.GetInt())
+        if (BetterGameSettings.DetectedLevel.GetBool() && level > BetterGameSettings.DetectedLevelAbove.GetInt())
         {
-            if (BetterNotificationManager.NotifyCheat(sender, string.Format(Translator.GetString("AntiCheat.InvalidLevelRPC"), level)))
+            if (BetterNotificationManager.NotifyCheat(sender, TranslationStrings.AntiCheat_InvalidLevelRPC.Format(level)))
             {
                 LogRpcInfo($"Suspicious level set: {level} (max allowed: {BetterGameSettings.DetectedLevelAbove.GetInt()})");
             }

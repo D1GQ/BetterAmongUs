@@ -1,6 +1,8 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
+using BetterAmongUs.Attributes;
 using BetterAmongUs.Network.Loaders;
 using Il2CppInterop.Runtime.Attributes;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -9,6 +11,7 @@ namespace BetterAmongUs.Network;
 /// <summary>
 /// Manages API connections to GitHub for news, updates, and user data.
 /// </summary>
+[RegisterInIl2Cpp]
 internal sealed class GithubAPI : MonoBehaviour
 {
     /// <summary>
@@ -27,6 +30,10 @@ internal sealed class GithubAPI : MonoBehaviour
     /// </summary>
     internal static bool Finished { get; private set; } = false;
 
+    /// Gets a value indicating whether content is currently being downloaded.
+    /// </summary>
+    internal static bool Downloading { get; private set; }
+
     private static bool hasTryConnect = false;
 
     /// <summary>
@@ -38,7 +45,9 @@ internal sealed class GithubAPI : MonoBehaviour
     /// </remarks>
     internal static void Connect()
     {
-        if (hasTryConnect) return;
+        if (hasTryConnect)
+            return;
+
         hasTryConnect = true;
 
         var obj = new GameObject("GithubAPI(BAU)") { hideFlags = HideFlags.HideAndDontSave };
@@ -57,11 +66,27 @@ internal sealed class GithubAPI : MonoBehaviour
     [HideFromIl2Cpp]
     private void ConnectToAPI()
     {
-        var newsLoader = gameObject.AddComponent<NewsLoader>();
-        this.StartCoroutine(newsLoader.CoFetchNewsData());
+        this.StartCoroutine(CoConnectToAPI());
+    }
 
-        var updateLoader = gameObject.AddComponent<UpdateLoader>();
-        this.StartCoroutine(updateLoader.CoFetchUpdateData());
+    /// <summary>
+    /// Connects to various GitHub API endpoints.
+    /// </summary>
+    private IEnumerator CoConnectToAPI()
+    {
+        Downloading = true;
+
+        var newsLoader = gameObject.AddComponent<NewsLoader>();
+        yield return newsLoader.CoFetchNewsData();
+
+        // Disable auto updating on Starlight
+        if (!ModInfo.Starlight)
+        {
+            var updateLoader = gameObject.AddComponent<BAUUpdateLoader>();
+            yield return updateLoader.CoFetchUpdateData();
+        }
+
+        Downloading = false;
     }
 
     /// <summary>

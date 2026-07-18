@@ -1,7 +1,7 @@
-﻿using BetterAmongUs.Commands.Arguments;
+﻿using BetterAmongUs.Attributes;
+using BetterAmongUs.Commands.Arguments;
 using BetterAmongUs.Data;
-using BetterAmongUs.Helpers;
-using BetterAmongUs.Attributes;
+using BetterAmongUs.Utilities;
 
 namespace BetterAmongUs.Commands;
 
@@ -13,26 +13,29 @@ internal sealed class RemovePlayerCommand : BaseCommand
 
     public RemovePlayerCommand()
     {
-        identifierArgument = new StringArgument(this, "{identifier}")
+        _identifierArgument = new StringArgument(this, "{identifier}")
         {
-            GetArgSuggestions = () =>
-                BetterDataManager.BetterDataFile.AllCheatData
+            ArgSuggestions = () =>
+                BetterDataManager.Files.BetterDataFile.AllCheatData
                     .SelectMany(info => new[] { info.HashPuid.Replace(' ', '_'), info.FriendCode.Replace(' ', '_'), info.PlayerName.Replace(' ', '_') })
                     .ToArray()
         };
-        Arguments = [identifierArgument];
+        Arguments = [_identifierArgument];
     }
-    private StringArgument identifierArgument { get; }
+    private readonly StringArgument _identifierArgument;
 
     internal override void Run()
     {
-        if (BetterDataManager.RemovePlayer(identifierArgument.Arg) == true)
+        if (_identifierArgument.TryParse(out var identifierArgument))
         {
-            Utils.AddChatPrivate($"{identifierArgument.Arg} successfully removed from local <color=#4f92ff>Anti-Cheat</color> data!");
-        }
-        else
-        {
-            Utils.AddChatPrivate($"{identifierArgument.Arg} Could not find player data from identifier");
+            if (BetterDataManager.RemovePlayer(identifierArgument) == true)
+            {
+                Utils.AddChatPrivate($"{identifierArgument} successfully removed from local <color=#4f92ff>Anti-Cheat</color> data!");
+            }
+            else
+            {
+                Utils.AddChatPrivate($"{identifierArgument} Could not find player data from identifier");
+            }
         }
     }
 }

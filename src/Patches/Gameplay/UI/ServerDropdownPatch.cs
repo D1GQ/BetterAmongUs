@@ -3,6 +3,7 @@ using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using BetterAmongUs.Utilities.Extension;
 
 namespace BetterAmongUs.Patches.Gameplay.UI;
 
@@ -13,7 +14,8 @@ internal static class ServerDropdownPatch
     [HarmonyPrefix]
     private static void FindAGameManager_Start_Prefix(FindAGameManager __instance)
     {
-        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_ServerDropDown)) return;
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_ServerDropDown))
+            return;
 
         var aspectPosition = __instance.serverDropdown.transform.parent.GetComponent<AspectPosition>();
         if (aspectPosition != null)
@@ -74,7 +76,7 @@ internal static class ServerDropdownPatch
                 new Il2CppReferenceArray<Il2CppSystem.Object>(0));
             serverListButton.Text.ForceMeshUpdate(false, false);
             serverListButton.Button.OnClick.RemoveAllListeners();
-            serverListButton.Button.OnClick.AddListener((Action)(() => __instance.ChooseOption(region)));
+            serverListButton.Button.OnClick.AddListener(() => __instance.ChooseOption(region));
             __instance.controllerSelectable.Add(serverListButton.Button);
 
             // Move to next column if current column is full

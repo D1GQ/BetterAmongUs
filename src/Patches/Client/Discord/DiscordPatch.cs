@@ -17,14 +17,18 @@ internal static class DiscordPatch
     private static void ActivityManager_UpdateActivity_Prefix(Activity activity)
     {
         // Skip Discord Rich Presence if other mods have disabled it via BAUModdedSupportFlags
-        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_DiscordRP)) return;
-        if (activity == null) return;
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_DiscordRP))
+            return;
+
+        if (activity == null)
+            return;
 
         string details = $"BAU {BAUPlugin.GetVersionText()}";
         activity.Details = details;
 
         // Skip lobby info processing if Discord already shows "In Menus"
-        if (activity.State == "In Menus") return;
+        if (activity.State == "In Menus")
+            return;
 
         try
         {
@@ -62,7 +66,10 @@ internal static class DiscordPatch
         // Only fetch lobby data when player is in a lobby
         if (GameState.IsLobby)
         {
-            if (GameStartManager.Instance?.GameRoomNameCode != null)
+            if (!GameStartManager.InstanceExists)
+                return;
+
+            if (GameStartManager.Instance.GameRoomNameCode != null)
             {
                 lobbycode = GameStartManager.Instance.GameRoomNameCode.text;
                 region = ServerManager.Instance.CurrentRegion.Name;

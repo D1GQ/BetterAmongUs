@@ -1,9 +1,9 @@
 using AmongUs.GameOptions;
 using BetterAmongUs.Attributes;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using Hazel;
 
-namespace BetterAmongUs.Modules.AntiCheat;
+namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers;
 
 [RegisterRPCHandler]
 internal sealed class CheckVanishHandler : RPCHandler

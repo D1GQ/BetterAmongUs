@@ -1,5 +1,5 @@
-﻿using BetterAmongUs.Helpers;
-using BetterAmongUs.Managers;
+﻿using BetterAmongUs.Managers;
+using BetterAmongUs.Modules;
 using Il2CppInterop.Runtime.Attributes;
 using System.Collections;
 using UnityEngine;
@@ -82,13 +82,13 @@ internal static class GitHubFile
     }
 
     /// <summary>
-    /// Downloads a manifest file from the remote repository.
+    /// Downloads a text file from the remote repository.
     /// </summary>
-    /// <param name="url">The URL of the manifest file to download.</param>
-    /// <param name="Callback">Callback to execute with the downloaded manifest content.</param>
+    /// <param name="url">The URL of the text file to download.</param>
+    /// <param name="Callback">Callback to execute with the downloaded text.</param>
     /// <returns>IEnumerator for coroutine execution.</returns>
     [HideFromIl2Cpp]
-    internal static IEnumerator CoDownloadManifest(string url, Action<string> Callback)
+    internal static IEnumerator CoFetchTextFile(string url, Action<string> Callback)
     {
         var www = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET)
         {

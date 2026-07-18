@@ -1,5 +1,5 @@
-﻿using BetterAmongUs.Helpers;
-using BetterAmongUs.Modules;
+﻿using BetterAmongUs.Generated;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Client;
@@ -11,8 +11,8 @@ internal static class VersionShowerPatch
     [HarmonyPostfix]
     private static void VersionShower_Start_Postfix(VersionShower __instance)
     {
-        string mark = Translator.GetString("BAUMark");
-        string bau = Translator.GetString("BAU");
+        string mark = TranslationStrings.BAUMark.LocalizedString;
+        string bau = TranslationStrings.BAU.LocalizedString;
         __instance.text.text = $"<color=#0dff00>{mark}{bau}{mark} {BAUPlugin.GetVersionText()}</color> <color=#ababab>~</color> {Utils.GetPlatformName(BAUPlugin.PlatformData.Platform)} v{BAUPlugin.AmongUsVersion} ({BAUPlugin.AppVersion})";
     }
 }

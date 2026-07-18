@@ -1,8 +1,8 @@
 ﻿using BetterAmongUs.Commands;
-using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Data.Config;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.Support;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
@@ -13,7 +13,7 @@ namespace BetterAmongUs.Patches.Gameplay.UI.Chat;
 internal static class ChatCommandsPatch
 {
     private static bool _enabled = true;
-    internal static string CommandPrefix => BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Force_BAU_Command_Prefix) ? "bau:" : BAUPlugin.CommandPrefix.Value;
+    internal static string CommandPrefix => BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Force_BAU_Command_Prefix) ? "bau:" : BAUConfigs.CommandPrefix.Value;
 
     // Execute command when valid command is typed
     private static void HandleCommand()
@@ -21,6 +21,7 @@ internal static class ChatCommandsPatch
         if (closestCommand != null && isTypedOut)
         {
             closestCommand.Run();
+            closestCommand.ResetArguments();
         }
         else
         {
@@ -58,7 +59,7 @@ internal static class ChatCommandsPatch
         }
 
         // Check if command can be executed
-        if (!closestCommand.CanRunCommand(out string _))
+        if (closestCommand != null && !closestCommand.CanRunCommand(out string _))
         {
             return false;
         }
@@ -71,7 +72,7 @@ internal static class ChatCommandsPatch
         ChatPatch.CurrentHistorySelection = ChatPatch.ChatHistory.Count;
 
         // Reset chat timer if command sets it
-        if (closestCommand?.SetChatTimer == true)
+        if (closestCommand != null && closestCommand.SetChatTimer == true)
         {
             __instance.timeSinceLastMessage = 0f;
         }
@@ -175,6 +176,9 @@ internal static class ChatCommandsPatch
 
     private static void HandleValidSuggestion(ChatController __instance, string[] typedParts)
     {
+        if (closestCommand == null)
+            return;
+
         isTypedOut = true;
 
         // Generate suggestion text
@@ -190,7 +194,7 @@ internal static class ChatCommandsPatch
         // Red text if command cannot be run
         if (!closestCommand.CanRunCommand(out string _))
         {
-            fullSuggestion = fullSuggestion.ToColor("#FF0300".HexToColor());
+            fullSuggestion = fullSuggestion.ToColor("#FF0300");
         }
 
         // Update UI elements
@@ -200,6 +204,9 @@ internal static class ChatCommandsPatch
 
     private static string GenerateSuggestion(string[] typedParts)
     {
+        if (closestCommand == null)
+            return string.Empty;
+
         // If only command name typed, return full command name
         if (typedParts.Length == 1)
             return closestCommand.Name;
@@ -223,9 +230,17 @@ internal static class ChatCommandsPatch
 
     private static void UpdateCommandArguments(string[] typedParts)
     {
+        if (closestCommand == null)
+            return;
+
+        closestCommand.ResetArguments();
+
         for (int i = 1; i < typedParts.Length && i <= closestCommand.Arguments.Length; i++)
         {
-            closestCommand.Arguments[i - 1]?.Arg = typedParts[i];
+            if (closestCommand.Arguments[i - 1] != null)
+            {
+                closestCommand.Arguments[i - 1].Arg = typedParts[i]; // Safe assignment
+            }
         }
     }
 
@@ -254,7 +269,7 @@ internal static class ChatCommandsPatch
     {
         // First try exact match
         var directNormalMatch = BaseCommand.allCommands
-            .FirstOrDefault(c => FilterCommand(c, CommandType.Normal) &&
+            .FirstOrDefault(c => c.IsEnabled() &&
             c.Names.Any(name => string.Equals(name, typedCommand, StringComparison.OrdinalIgnoreCase)));
         if (directNormalMatch != null)
             return directNormalMatch;
@@ -262,17 +277,11 @@ internal static class ChatCommandsPatch
         // Then try partial match
         var closestNormalCommand = BaseCommand.allCommands
             .OrderBy(c => c.Name)
-            .FirstOrDefault(c => FilterCommand(c, CommandType.Normal) &&
+            .FirstOrDefault(c => c.IsEnabled() &&
             c.Names.Any(name => name.StartsWith(typedCommand, StringComparison.OrdinalIgnoreCase)));
         if (closestNormalCommand != null)
             return closestNormalCommand;
 
         return null;
-    }
-
-    private static bool FilterCommand(BaseCommand command, CommandType commandType)
-    {
-        // Check if command is enabled and not disabled by other mods
-        return command.Type == commandType && command.ShowCommand() && !BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Command + command.Name);
     }
 }

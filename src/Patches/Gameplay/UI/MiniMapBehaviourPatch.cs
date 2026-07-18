@@ -1,7 +1,9 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Data.Config;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.Support;
-using BetterAmongUs.Mono;
+using BetterAmongUs.MonoScripts;
+using BetterAmongUs.Utilities;
+using BetterAmongUs.Utilities.Extension;
 using HarmonyLib;
 using UnityEngine;
 
@@ -10,6 +12,7 @@ namespace BetterAmongUs.Patches.Gameplay.UI;
 [HarmonyPatch]
 internal static class MiniMapBehaviourPatch
 {
+    // Layer offsets for different icon types (prevents overlapping)
     private const float VentLayerOffset = -0.1f;
     private const float VentArrowLayerOffset = -0.1f; // VentLayerOffset + VentArrowLayerOffset = -0.2
     private const float UsableLayerOffset = -0.3f;
@@ -17,35 +20,39 @@ internal static class MiniMapBehaviourPatch
     [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.ShowNormalMap))]
     [HarmonyPostfix]
     private static void MapBehaviour_ShowNormalMap_Postfix(MapBehaviour __instance)
-        => __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f));
+        => __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f)); // Blue tint for normal map
 
     [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.ShowDetectiveMap))]
     [HarmonyPostfix]
     private static void MapBehaviour_ShowDetectiveMap_Postfix(MapBehaviour __instance)
-        => __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f));
+        => __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f)); // Blue tint for detective map
 
     [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.ShowSabotageMap))]
     [HarmonyPostfix]
     private static void MapBehaviour_ShowSabotageMap_Postfix(MapBehaviour __instance)
-        => __instance.ColorControl.SetColor(new Color(1f, 0.3f, 0f, 1f));
+        => __instance.ColorControl.SetColor(new Color(1f, 0.3f, 0f, 1f)); // Orange tint for sabotage map
 
     [HarmonyPatch(typeof(MapCountOverlay), nameof(MapCountOverlay.OnEnable))]
     [HarmonyPostfix]
     private static void MapCountOverlay_OnEnable_Postfix(MapCountOverlay __instance)
-    => __instance.BackgroundColor.SetColor(PlayerTask.PlayerHasTaskOfType<IHudOverrideTask>(PlayerControl.LocalPlayer) ? Palette.DisabledGrey : new Color(0.2f, 0.5f, 0f, 1f));
+        // Green background normally, gray if comms sabotaged
+        => __instance.BackgroundColor.SetColor(PlayerTask.PlayerHasTaskOfType<IHudOverrideTask>(PlayerControl.LocalPlayer) ? Palette.DisabledGrey : new Color(0.2f, 0.5f, 0f, 1f));
 
     [HarmonyPatch(typeof(MapCountOverlay), nameof(MapCountOverlay.Update))]
     [HarmonyPrefix]
     private static void MapCountOverlay_Update_Prefix(MapCountOverlay __instance)
     {
+        // Handle comms sabotage effect on map
         if (PlayerTask.PlayerHasTaskOfType<IHudOverrideTask>(PlayerControl.LocalPlayer))
         {
+            // Comms sabotaged - disable map
             __instance.isSab = true;
             __instance.BackgroundColor.SetColor(Palette.DisabledGrey);
             __instance.SabotageText.gameObject.SetActive(true);
         }
-        else if (!PlayerTask.PlayerHasTaskOfType<IHudOverrideTask>(PlayerControl.LocalPlayer))
+        else
         {
+            // Comms working - normal map
             __instance.isSab = false;
             __instance.BackgroundColor.SetColor(new Color(0.2f, 0.5f, 0f, 1f));
             __instance.SabotageText.gameObject.SetActive(false);
@@ -55,24 +62,55 @@ internal static class MiniMapBehaviourPatch
     [HarmonyPatch(typeof(MapConsole), nameof(MapConsole.Use))]
     [HarmonyPostfix]
     private static void MapConsole_ShowCountOverlay_Postfix()
-        => MapBehaviour.Instance.ColorControl.SetColor(new Color(0.2f, 0.5f, 0f, 1f));
+        => MapBehaviour.Instance.ColorControl.SetColor(new Color(0.2f, 0.5f, 0f, 1f)); // Green tint for admin map
 
-    private static Transform? _icons;
+    private static Transform? _icons; // Container for all custom map icons
+
+    /// <summary>
+    /// Clears all map icons to be regenerated
+    /// </summary>
+    internal static void ClearMapIcons()
+    {
+        if (_icons != null)
+        {
+            UnityEngine.Object.Destroy(_icons.gameObject);
+        }
+
+        if (MapBehaviour.Instance != null && MapBehaviour.Instance.IsOpen)
+        {
+            MapBehaviour.Instance.Close();
+        }
+    }
 
     [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.Show))]
     [HarmonyPostfix]
     private static void MapBehaviour_Show_Postfix(MapBehaviour __instance)
     {
-        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_MinimapIcons)) return;
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_MinimapIcons))
+            return;
 
+        if (!BAUConfigs.MinimapIcons.Value)
+        {
+            // Reset infected overlay buttons
+            foreach (var button in __instance.infectedOverlay.allButtons)
+            {
+                button.spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
+                button.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
+            }
+            return;
+        }
+
+        // Make infected overlay buttons semi-transparent and smaller
         foreach (var button in __instance.infectedOverlay.allButtons)
         {
             button.spriteRenderer.color = new Color(1f, 1f, 1f, 0.8f);
             button.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
         }
 
+        // Create icons if they don't exist yet
         if (_icons == null)
         {
+            // Create container for all icons
             var icons = new GameObject("Icons")
             {
                 layer = LayerMask.NameToLayer("UI")
@@ -82,21 +120,25 @@ internal static class MiniMapBehaviourPatch
             icons.transform.localScale = Vector3.one;
             _icons = icons.transform;
 
+            // Add vent icons
             foreach (var vent in BAUPlugin.AllVents)
             {
                 CreateVentIcon(vent);
             }
 
+            // Add map console icons
             foreach (var map in UnityEngine.Object.FindObjectsOfType<MapConsole>())
             {
                 CreateUsableIcon(map.Cast<IUsable>());
             }
 
+            // Add system console icons
             foreach (var system in UnityEngine.Object.FindObjectsOfType<SystemConsole>())
             {
                 CreateSystemConsoleIcon(system);
             }
 
+            // Add zipline icons
             foreach (var zipline in UnityEngine.Object.FindObjectsOfType<ZiplineConsole>())
             {
                 var icon = CreateIcon(zipline.image.sprite, "SystemIcon");
@@ -105,16 +147,20 @@ internal static class MiniMapBehaviourPatch
                 SetPosFromShip(zipline.transform.position, icon.transform, new Vector3(0f, 0.16f, UsableLayerOffset));
             }
 
+            // Add task console icons for critical sabotages
             foreach (var console in UnityEngine.Object.FindObjectsOfType<Console>())
             {
                 foreach (var taskType in console.TaskTypes)
                 {
-                    if (taskType is TaskTypes.FixLights or TaskTypes.FixComms or TaskTypes.RestoreOxy or TaskTypes.ResetReactor or TaskTypes.ResetSeismic)
+                    // Check if this console is for critical sabotage tasks
+                    if (SystemAndTaskTypeUtils.IsSabotageTask(taskType))
                     {
                         var icon = CreateIcon(console.Image.sprite, "ConsoleIcon");
                         icon.color = Color.white * 0.7f;
                         icon.transform.localScale = Vector3.one * 0.5f;
                         SetPosFromShip(console.transform.position, icon.transform, new Vector3(0f, 0f, UsableLayerOffset));
+
+                        // Add animation when player has this task
                         var animatedMapIcon = icon.gameObject.AddComponent<AnimatedMapIcon>();
                         animatedMapIcon.ShouldAnimate += () =>
                         {
@@ -127,6 +173,7 @@ internal static class MiniMapBehaviourPatch
         }
     }
 
+    // Creates a vent icon with connection arrows to neighboring vents
     private static void CreateVentIcon(Vent vent)
     {
         var icon = CreateIcon(Utils.LoadSprite("BetterAmongUs.Resources.Images.Icons.Vent.png", 380), "VentIcon");
@@ -135,11 +182,13 @@ internal static class MiniMapBehaviourPatch
 
         SetPosFromShip(vent.transform.position, icon.transform, new Vector3(0f, 0f, VentLayerOffset));
 
+        // Get connected vents
         Vent[] nearbyVents = [vent.Left, vent.Right, vent.Center];
         float maxSpreadShift = 0.5f;
         float minSpreadShift = 0.2f;
         float closeDistance = 10f;
 
+        // Create arrows to each connected vent
         for (int i = 0; i < nearbyVents.Length; i++)
         {
             Vent neighborVent = nearbyVents[i];
@@ -149,9 +198,11 @@ internal static class MiniMapBehaviourPatch
                 arrowIcon.color = VentGroups.GetVentGroupColor(neighborVent);
                 arrowIcon.transform.SetParent(icon.transform);
 
+                // Calculate arrow position and rotation based on neighbor location
                 Vector3 directionToNeighbor = neighborVent.transform.position - vent.transform.position;
                 float distanceToNeighbor = directionToNeighbor.magnitude;
 
+                // Adjust arrow spread based on distance
                 float spreadShift;
                 if (distanceToNeighbor < closeDistance)
                 {
@@ -168,6 +219,7 @@ internal static class MiniMapBehaviourPatch
 
                 SetPosFromShip(arrowOffset, arrowIcon.transform, new Vector3(0f, 0f, VentArrowLayerOffset));
 
+                // Rotate arrow to point toward neighbor
                 Vector3 ventMapPos = vent.transform.position / ShipStatus.Instance.MapScale;
                 ventMapPos.x *= Mathf.Sign(ShipStatus.Instance.transform.localScale.x);
 
@@ -182,6 +234,7 @@ internal static class MiniMapBehaviourPatch
         }
     }
 
+    // Creates icon for system consoles
     private static void CreateSystemConsoleIcon(SystemConsole systemConsole)
     {
         if (systemConsole.UseIcon is not ImageNames.UseButton)
@@ -197,8 +250,10 @@ internal static class MiniMapBehaviourPatch
         }
     }
 
+    // Creates icon for usables
     private static void CreateUsableIcon(IUsable usable)
     {
+        // Special handling for emergency buttons
         if (usable.TryCast<SystemConsole>(out var systemConsole))
         {
             if (systemConsole.MinigamePrefab.name == "EmergencyMinigame")
@@ -213,11 +268,12 @@ internal static class MiniMapBehaviourPatch
             {
                 if (systemConsole.UseIcon is ImageNames.UseButton)
                 {
-                    return;
+                    return; // Skip default use button icons
                 }
             }
         }
 
+        // Create icon based on use button settings
         if (HudManager.Instance.UseButton.fastUseSettings.TryGetValue(usable.UseIcon, out var settings))
         {
             var icon = CreateIcon(settings.Image, "UsableIcon");
@@ -227,6 +283,7 @@ internal static class MiniMapBehaviourPatch
         }
     }
 
+    // Helper to create a new icon sprite renderer
     private static SpriteRenderer CreateIcon(Sprite sprite, string name = "Icon")
     {
         var go = new GameObject(name)
@@ -240,13 +297,13 @@ internal static class MiniMapBehaviourPatch
         return spriteRenderer;
     }
 
-    private static void SetPosFromShip(Vector3 shipPos, Transform mapTransform, Vector3? offset = null)
+    // Helper to position icons on map relative to ship position
+    private static void SetPosFromShip(Vector3 shipPos, Transform mapTransform, Vector3 offset = default)
     {
-        offset ??= Vector3.zero;
         Vector3 vector = shipPos;
         vector /= ShipStatus.Instance.MapScale;
         vector.x *= Mathf.Sign(ShipStatus.Instance.transform.localScale.x);
         vector.z = -1f;
-        mapTransform.transform.localPosition = new Vector3(vector.x + offset.Value.x, vector.y + offset.Value.y, offset.Value.z);
+        mapTransform.transform.localPosition = new Vector3(vector.x + offset.x, vector.y + offset.y, offset.z);
     }
 }

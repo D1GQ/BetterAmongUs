@@ -1,6 +1,6 @@
-﻿using BetterAmongUs.Commands.Arguments;
-using BetterAmongUs.Helpers;
-using BetterAmongUs.Attributes;
+﻿using BetterAmongUs.Attributes;
+using BetterAmongUs.Commands.Arguments;
+using BetterAmongUs.Utilities;
 using System.Text;
 
 namespace BetterAmongUs.Commands;
@@ -13,27 +13,29 @@ internal sealed class PlayerInfoCommand : BaseCommand
 
     public PlayerInfoCommand()
     {
-        playerArgument = new PlayerArgument(this);
-        Arguments = [playerArgument];
+        _playerArgument = new PlayerArgument(this);
+        Arguments = [_playerArgument];
     }
-    private PlayerArgument playerArgument { get; }
+    private readonly PlayerArgument _playerArgument;
 
     internal override void Run()
     {
-        var player = playerArgument.TryGetTarget();
-        if (player != null)
-        {
-            StringBuilder sb = new();
-            var hexColor = Utils.Color32ToHex(Palette.PlayerColors[player.CurrentOutfit.ColorId]);
-            var format1 = "┌ •";
-            var format2 = "├ •";
-            var format3 = "└ •";
-            sb.Append($"<size=150%><color={hexColor}><b>{player?.Data?.PlayerName}</color> Info:</b></size>\n");
-            sb.Append($"{format1} <color=#c1c1c1>ID: {player?.Data?.PlayerId}</color>\n");
-            sb.Append($"{format2} <color=#c1c1c1>HashPUID: {Utils.GetHashStr($"{player?.Data?.Puid}")}</color>\n");
-            sb.Append($"{format2} <color=#c1c1c1>Platform: {Utils.GetPlatformName(player)}</color>\n");
-            sb.Append($"{format3} <color=#c1c1c1>FriendCode: {player?.Data?.FriendCode}</color>");
-            CommandResultText(sb.ToString());
-        }
+        if (!_playerArgument.TryParse(out var player))
+            return;
+
+        if (player.Data == null)
+            return;
+
+        StringBuilder sb = new();
+        var hexColor = Utils.Color32ToHex(Palette.PlayerColors[player.CurrentOutfit.ColorId]);
+        var format1 = "┌ •";
+        var format2 = "├ •";
+        var format3 = "└ •";
+        sb.Append($"<size=150%><color={hexColor}><b>{player.Data.PlayerName}</color> Info:</b></size>\n");
+        sb.Append($"{format1} <color=#c1c1c1>ID: {player.Data.PlayerId}</color>\n");
+        sb.Append($"{format2} <color=#c1c1c1>HashPUID: {Utils.GetHashStr($"{player.Data.Puid}")}</color>\n");
+        sb.Append($"{format2} <color=#c1c1c1>Platform: {Utils.GetPlatformName(player)}</color>\n");
+        sb.Append($"{format3} <color=#c1c1c1>FriendCode: {player.Data.FriendCode}</color>");
+        CommandResultText(sb.ToString());
     }
 }

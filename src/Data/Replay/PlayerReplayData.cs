@@ -1,36 +1,31 @@
-﻿using AmongUs.GameOptions;
+﻿using System.Text.Json.Serialization;
 using UnityEngine;
 
 namespace BetterAmongUs.Data.Replay;
 
-/// <summary>
-/// Represents player data for replay functionality.
-/// </summary>
 [Serializable]
 internal class PlayerReplayData
 {
-    /// <summary>
-    /// Gets or sets the player's ID.
-    /// </summary>
+    [JsonPropertyName("playerId")]
     public int PlayerId;
 
-    /// <summary>
-    /// Gets or sets the player's name.
-    /// </summary>
+    [JsonPropertyName("playerName")]
     public string PlayerName = "";
 
-    /// <summary>
-    /// Gets or sets the player's role type.
-    /// </summary>
-    public RoleTypes Role;
+    [JsonPropertyName("movementData")]
+    public List<(float timeStamp, Vector2 pos)> MovementDataBuffer = [];
 
-    /// <summary>
-    /// Gets or sets the buffer of movement data containing timestamps and positions.
-    /// </summary>
-    public (float timeStamp, Vector2 pos)[] MovementDataBuffer = [];
-
-    /// <summary>
-    /// Gets or sets the player's cosmetic data.
-    /// </summary>
+    [JsonPropertyName("cosmeticData")]
     public (int colorId, string skinId, string visorId, string petId, string namePlateId) CosmeticData = new();
+
+    internal void Set(PlayerControl player)
+    {
+        PlayerId = player.Data.PlayerId;
+        PlayerName = player.Data.PlayerName;
+    }
+
+    internal void RecordMovement(Vector2 pos)
+    {
+        MovementDataBuffer.Add((0, pos));
+    }
 }

@@ -1,4 +1,6 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Generated;
+using BetterAmongUs.Utilities;
+using BetterAmongUs.Utilities.Extension;
 using UnityEngine;
 
 namespace BetterAmongUs.Modules.OptionItems;
@@ -14,17 +16,16 @@ public sealed class OptionCheckboxItem : OptionItem<bool>
     internal sealed override bool ShowChildren => base.ShowChildren && Value;
 
     /// <summary>
-    /// Creates a new checkbox option item or returns an existing one with the same ID.
+    /// Creates a new checkbox option item.
     /// </summary>
-    /// <param name="id">The unique identifier for this option.</param>
     /// <param name="tab">The tab this option belongs to.</param>
-    /// <param name="tranStr">The translation key for the option name.</param>
+    /// <param name="translationString">The translation key for the option name.</param>
     /// <param name="defaultValue">The default value for the checkbox.</param>
     /// <param name="parent">Optional parent option for hierarchical organization.</param>
     /// <returns>A new or existing OptionCheckboxItem instance.</returns>
-    internal static OptionCheckboxItem Create(int id, OptionTab tab, string tranStr, bool defaultValue, OptionItem? parent = null)
+    internal static OptionCheckboxItem Create(OptionTab tab, TranslationStrings.TranslationString translationString, bool defaultValue, OptionItem? parent = null)
     {
-        if (GetOptionById(id) is OptionCheckboxItem checkboxItem)
+        if (GetOptionByTranslationName(translationString) is OptionCheckboxItem checkboxItem)
         {
             checkboxItem.CreateBehavior();
             return checkboxItem;
@@ -32,9 +33,8 @@ public sealed class OptionCheckboxItem : OptionItem<bool>
 
         OptionCheckboxItem Item = new();
         AllOptions.Add(Item);
-        Item._id = id;
         Item.Tab = tab;
-        Item.Translation = tranStr;
+        Item.TranslationName = translationString;
         Item.DefaultValue = defaultValue;
 
         if (parent != null)
@@ -53,7 +53,9 @@ public sealed class OptionCheckboxItem : OptionItem<bool>
     protected sealed override void CreateBehavior()
     {
         TryLoad();
-        if (!GameSettingMenu.Instance) return;
+        if (!GameSettingMenu.Instance)
+            return;
+
         AllOptionsTemp.Add(this);
         var ToggleOption = UnityEngine.Object.Instantiate(Tab.AUTab.checkboxOrigin, Tab.AUTab.settingsContainer);
         Option = ToggleOption;
@@ -78,7 +80,7 @@ public sealed class OptionCheckboxItem : OptionItem<bool>
             toggleOption.TitleText.text = Name;
             var button = toggleOption.buttons[0];
             button.OnClick = new();
-            button.OnClick.AddListener((Action)(() => SetValue(!Value)));
+            button.OnClick.AddListener(() => SetValue(!Value));
         }
     }
 
@@ -114,12 +116,12 @@ public sealed class OptionCheckboxItem : OptionItem<bool>
     /// Gets the boolean value of this checkbox option.
     /// </summary>
     /// <returns>The current boolean value.</returns>
-    public sealed override bool GetBool() => GetValue();
+    public bool GetBool() => GetValue();
 
     /// <summary>
     /// Checks if the checkbox value matches a specific boolean.
     /// </summary>
-    /// <param name="@bool">The boolean value to compare against.</param>
+    /// <param name="value">The boolean value to compare against.</param>
     /// <returns>True if the checkbox value matches, false otherwise.</returns>
-    public sealed override bool Is(bool @bool) => @bool == GetBool();
+    public sealed override bool Is(bool value) => value == GetBool();
 }

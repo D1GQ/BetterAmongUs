@@ -1,4 +1,5 @@
 ﻿using AmongUs.Data;
+using BetterAmongUs.Modules.Support;
 
 namespace BetterAmongUs.Data.Json;
 
@@ -37,14 +38,16 @@ internal sealed class OutfitData
     /// Gets the outfit data for the currently selected preset.
     /// </summary>
     /// <returns>The outfit data for the current preset.</returns>
-    internal static OutfitData GetOutfitData() => BetterDataManager.BetterDataFile.OutfitData.ElementAt(BetterDataManager.BetterDataFile.SelectedOutfitPreset);
+    internal static OutfitData GetCurrentOutfitData() =>
+        BetterDataManager.Files.BetterDataFile.OutfitData.ElementAt(BetterDataManager.Files.BetterDataFile.SelectedOutfitPreset);
 
     /// <summary>
     /// Gets the outfit data for a specific preset index.
     /// </summary>
     /// <param name="index">The index of the preset to retrieve.</param>
     /// <returns>The outfit data for the specified preset.</returns>
-    internal static OutfitData GetOutfitData(int index) => BetterDataManager.BetterDataFile.OutfitData.ElementAt(index);
+    internal static OutfitData GetOutfitDataAt(int index) =>
+        BetterDataManager.Files.BetterDataFile.OutfitData.ElementAt(index);
 
     private static bool ignoreChange;
 
@@ -53,13 +56,18 @@ internal sealed class OutfitData
     /// </summary>
     internal static void Initialize()
     {
-        FindPreset();
+        FindCurrentPreset();
 
         var Save = () =>
         {
-            if (ignoreChange) return;
-            GetOutfitData().SetFromData();
-            BetterDataManager.BetterDataFile.Save();
+            if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_OutfitPresets))
+                return;
+
+            if (ignoreChange)
+                return;
+
+            GetCurrentOutfitData().UpdateFromCustomizationData();
+            BetterDataManager.Files.BetterDataFile.Save();
         };
 
         DataManager.Player.Customization.OnHatChanged += Save;
@@ -73,31 +81,30 @@ internal sealed class OutfitData
     /// <summary>
     /// Finds the preset that matches the current player customization and sets it as selected.
     /// </summary>
-    internal static void FindPreset()
+    internal static void FindCurrentPreset()
     {
-        var collection = BetterDataManager.BetterDataFile.OutfitData;
-        int i = 0;
-        foreach (var data in collection)
+        var allOutfitData = BetterDataManager.Files.BetterDataFile.OutfitData;
+        for (int i = 0; i < allOutfitData.Count; i++)
         {
+            var data = allOutfitData.ElementAt(i);
             if (data.HatId == DataManager.Player.Customization.Hat &&
                 data.PetId == DataManager.Player.Customization.Pet &&
                 data.SkinId == DataManager.Player.Customization.Skin &&
                 data.VisorId == DataManager.Player.Customization.Visor &&
                 data.NamePlateId == DataManager.Player.Customization.NamePlate)
             {
-                BetterDataManager.BetterDataFile.SelectedOutfitPreset = i;
+                BetterDataManager.Files.BetterDataFile.SelectedOutfitPreset = i;
                 return;
             }
-            i++;
         }
 
-        BetterDataManager.BetterDataFile.SelectedOutfitPreset = 0;
+        BetterDataManager.Files.BetterDataFile.SelectedOutfitPreset = 0;
     }
 
     /// <summary>
     /// Validates the outfit data by ensuring all IDs correspond to unlocked items.
     /// </summary>
-    private void Validate()
+    private void ValidateOutfit()
     {
         if (!HatManager.Instance.GetUnlockedHats().Any(item => item.ProductId == HatId))
             HatId = HatData.EmptyId;
@@ -112,12 +119,12 @@ internal sealed class OutfitData
     }
 
     /// <summary>
-    /// Loads the outfit data into the player's customization and invokes a callback.
+    /// Applies the outfit data to the player's customization, invoking a callback after loading.
     /// </summary>
     /// <param name="callback">The callback to invoke after loading the outfit.</param>
-    internal void Load(Action callback)
+    internal void ApplyToCustomizationData(Action callback)
     {
-        Validate();
+        ValidateOutfit();
 
         ignoreChange = true;
         DataManager.Player.Customization.Hat = HatId;
@@ -128,18 +135,35 @@ internal sealed class OutfitData
         ignoreChange = false;
 
         callback.Invoke();
-        BetterDataManager.BetterDataFile.Save();
+        BetterDataManager.Files.BetterDataFile.Save();
     }
 
     /// <summary>
-    /// Updates the outfit data with the current player customization values.
+    /// Updates the outfit data from the player's current customization.
     /// </summary>
-    internal void SetFromData()
+    internal void UpdateFromCustomizationData()
     {
         HatId = DataManager.Player.Customization.Hat;
         PetId = DataManager.Player.Customization.Pet;
         SkinId = DataManager.Player.Customization.Skin;
         VisorId = DataManager.Player.Customization.Visor;
         NamePlateId = DataManager.Player.Customization.NamePlate;
+    }
+
+    /// <summary>
+    /// Converts to network player outfit.
+    /// </summary>
+    /// <returns></returns>
+    internal NetworkedPlayerInfo.PlayerOutfit ToPlayerOutfit()
+    {
+        return new NetworkedPlayerInfo.PlayerOutfit
+        {
+            HatId = HatId,
+            PetId = PetId,
+            SkinId = SkinId,
+            VisorId = VisorId,
+            NamePlateId = NamePlateId,
+            ColorId = DataManager.Player.Customization.Color
+        };
     }
 }

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using BetterAmongUs.Data.Config;
+using UnityEngine;
 
 namespace BetterAmongUs.Modules;
 
@@ -109,6 +110,11 @@ internal static class VentGroups
     /// </returns>
     internal static Color GetVentGroupColor(Vent vent)
     {
+        if (!BAUConfigs.VentColorGroups.Value)
+        {
+            return Color.gray;
+        }
+
         if (ventToLowestId.TryGetValue(vent.Id, out int lowestId))
         {
             return groupColors[lowestId];

@@ -1,10 +1,11 @@
 using BetterAmongUs.Attributes;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using BetterAmongUs.Managers;
-using BetterAmongUs.Mono;
 using Hazel;
+using BetterAmongUs.Utilities.Extension;
+using BetterAmongUs.MonoScripts.Extended;
 
-namespace BetterAmongUs.Modules.AntiCheat;
+namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers;
 
 [RegisterRPCHandler]
 internal sealed class CompleteTaskHandler : RPCHandler
@@ -16,8 +17,8 @@ internal sealed class CompleteTaskHandler : RPCHandler
         var taskId = reader.ReadPackedUInt32();
 
         if (sender.IsImpostorTeam() || !sender.Data.Tasks.AnyIl2Cpp(task => task.Id == taskId)
-            || sender.BetterData().AntiCheatInfo.LastTaskId == taskId || (sender.BetterData().AntiCheatInfo.LastTaskId != taskId
-            && sender.BetterData().AntiCheatInfo.TimeSinceLastTask < 1.25f))
+            || sender.ExtendedData().AntiCheatInfo.LastTaskId == taskId || sender.ExtendedData().AntiCheatInfo.LastTaskId != taskId
+            && sender.ExtendedData().AntiCheatInfo.TimeSinceLastTask < 1.25f)
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
@@ -26,17 +27,17 @@ internal sealed class CompleteTaskHandler : RPCHandler
             }
         }
 
-        sender.BetterData().AntiCheatInfo.TimeSinceLastTask = 0f;
-        sender.BetterData().AntiCheatInfo.LastTaskId = taskId;
+        sender.ExtendedData().AntiCheatInfo.TimeSinceLastTask = 0f;
+        sender.ExtendedData().AntiCheatInfo.LastTaskId = taskId;
     }
 
     private static string GetCompleteTaskIssue(PlayerControl sender, uint taskId)
     {
         if (sender.IsImpostorTeam()) return "Impostor completing tasks";
         if (!sender.Data.Tasks.AnyIl2Cpp(task => task.Id == taskId)) return $"Task ID {taskId} not assigned to player";
-        if (sender.BetterData().AntiCheatInfo.LastTaskId == taskId) return $"Task ID {taskId} already completed";
-        if (sender.BetterData().AntiCheatInfo.TimeSinceLastTask < 1.25f)
-            return $"Tasks too fast (time since last: {sender.BetterData().AntiCheatInfo.TimeSinceLastTask}s)";
+        if (sender.ExtendedData().AntiCheatInfo.LastTaskId == taskId) return $"Task ID {taskId} already completed";
+        if (sender.ExtendedData().AntiCheatInfo.TimeSinceLastTask < 1.25f)
+            return $"Tasks too fast (time since last: {sender.ExtendedData().AntiCheatInfo.TimeSinceLastTask}s)";
 
         return "Unknown task completion issue";
     }

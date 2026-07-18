@@ -3,45 +3,51 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<OutputType>Library</OutputType>
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
-	<!-- Git Commit Hash Retrieval -->
-	<Target Name="GetGitCommitHash" BeforeTargets="BeforeBuild">
-		<Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardErrorImportance="low" WorkingDirectory="$(MSBuildProjectDirectory)">
-			<Output TaskParameter="ConsoleOutput" PropertyName="CommitHash" />
+	<!-- Apply Null Notation Restrictions -->
+	<Target Name="Il2CppRestrictions" BeforeTargets="CoreCompile" Condition="$([MSBuild]::IsOsPlatform(Windows))">
+		<Exec Command="powershell.exe -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\Il2CppRestrictions.ps1&quot;" IgnoreExitCode="true">
+			<Output TaskParameter="ExitCode" PropertyName="ScriptExitCode" />
 		</Exec>
-		<PropertyGroup Condition="'$(CommitHash)' == ''">
-			<CommitHash>unknown</CommitHash>
-		</PropertyGroup>
-		<Message Text="Git commit hash: $(CommitHash)" Importance="high" />
+
+		<Error Condition="'$(ScriptExitCode)' != '0'" Text="Il2Cpp compatibility check failed. See errors in error list." />
+	</Target>
+
+	<!-- Generate Translation Strings -->
+	<PropertyGroup>
+		<TranslationKeysClassName>TranslationStrings</TranslationKeysClassName>
+		<TranslationJsonPath>$(MSBuildProjectDirectory)\Resources\Lang\en_US.json</TranslationJsonPath>
+		<GeneratedOutputDir>$(MSBuildProjectDirectory)\build\Generated</GeneratedOutputDir>
+	</PropertyGroup>
+
+	<Target Name="GenerateTranslationKeys" BeforeTargets="BeforeBuild">
+		<MakeDir Directories="$(GeneratedOutputDir)" Condition="!Exists('$(GeneratedOutputDir)')" />
+
+		<Exec Command="powershell.exe -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\GenerateTranslationStrings.ps1&quot; -JsonPath &quot;$(TranslationJsonPath)&quot; -OutputPath &quot;$(GeneratedOutputDir)\$(TranslationKeysClassName).cs&quot; -ProjectDir &quot;$(MSBuildProjectDirectory)&quot;" IgnoreExitCode="true">
+			<Output TaskParameter="ExitCode" PropertyName="ScriptExitCode" />
+		</Exec>
+
+		<Error Condition="'$(ScriptExitCode)' != '0'" Text="Translation key generation failed. See errors in error list." />
+	</Target>
+
+	<Target Name="CleanTranslationKeys" AfterTargets="Clean">
+		<Delete Files="$(GeneratedOutputDir)\$(TranslationKeysClassName).cs" />
 	</Target>
 
 	<!-- Build Metadata -->
 	<PropertyGroup>
-		<CommitHash Condition="'$(CommitHash)' == ''">unknown</CommitHash>
-		<BuildDate>$([System.DateTime]::UtcNow.ToString("MM.dd.yyyy"))</BuildDate>
+		<BuildDate>$([System.DateTime]::Now.ToString("MM.dd.yyyy"))</BuildDate>
 	</PropertyGroup>
 
-	<!-- Target to add assembly metadata (runs AFTER GetGitCommitHash) -->
-	<Target Name="AddAssemblyMetadata" AfterTargets="GetGitCommitHash" BeforeTargets="BeforeBuild">
-		<ItemGroup>
-			<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-				<_Parameter1>CommitHash</_Parameter1>
-				<_Parameter2>$(CommitHash)</_Parameter2>
-			</AssemblyAttribute>
-			<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-				<_Parameter1>BuildDate</_Parameter1>
-				<_Parameter2>$(BuildDate)</_Parameter2>
-			</AssemblyAttribute>
-			<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-				<_Parameter1>BuildConfiguration</_Parameter1>
-				<_Parameter2>$(Configuration)</_Parameter2>
-			</AssemblyAttribute>
-		</ItemGroup>
-		<Message Text="Added assembly metadata: CommitHash=$(CommitHash), BuildDate=$(BuildDate)" Importance="normal" />
-	</Target>
+	<!-- Define metadata for ThisAssembly.Metadata -->
+	<ItemGroup>
+		<AssemblyMetadata Include="BuildDate" Value="$(BuildDate)" />
+		<AssemblyMetadata Include="BuildConfiguration" Value="$(Configuration)" />
+	</ItemGroup>
 
 	<!-- Game Path Configuration -->
 	<PropertyGroup>
@@ -71,19 +77,32 @@
 		<Warning Text="Game path not found. Create $(ModPathFile) with game folder path." Condition="'$(CopyToGame)' == 'true' and ('$(GamePath)' == '' or !Exists('$(GamePath)'))" />
 	</Target>
 
-	<!-- NuGet Packages -->
+	<!-- NuGet Core Packages -->
 	<ItemGroup>
-		<PackageReference Include="AmongUs.GameLibs.Steam" Version="2025.11.18" />
+		<PackageReference Include="AmongUs.GameLibs.Steam" Version="2026.6.5" />
 		<PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.692" Private="false" ExcludeAssets="runtime;native" />
+		<PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.735" Private="false" ExcludeAssets="runtime;native" />
+	</ItemGroup>
+
+	<!-- NuGet Info Packages -->
+	<ItemGroup>
+		<PackageReference Include="GitInfo" Version="3.3.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<PackageReference Include="ThisAssembly.Metadata" Version="2.1.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<GeneratePathProperty>true</GeneratePathProperty>
+		</PackageReference>
 	</ItemGroup>
 
 	<!-- Embedded Resources -->
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\**\*" />
 	</ItemGroup>
-
 </Project>

@@ -1,5 +1,4 @@
-﻿using BetterAmongUs.Helpers;
-using BetterAmongUs.Modules;
+﻿using BetterAmongUs.Modules;
 
 namespace BetterAmongUs.Network.Configs;
 

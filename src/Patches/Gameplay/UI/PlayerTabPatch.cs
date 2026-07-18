@@ -1,7 +1,12 @@
-﻿using BetterAmongUs.Data;
+﻿using AmongUs.Data;
+using BetterAmongUs.Data;
+using BetterAmongUs.Data.Config;
 using BetterAmongUs.Data.Json;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Interfaces;
+using BetterAmongUs.Modules.Support;
+using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Patches.Client.Managers;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
@@ -11,87 +16,135 @@ namespace BetterAmongUs.Patches.Gameplay.UI;
 [HarmonyPatch]
 internal static class PlayerTabPatch
 {
-    private static List<PassiveButton> presetButtons = [];
-    private static float cooldown = 0f;
+    private static readonly List<PassiveButton?> _presetButtons = []; // Outfit preset buttons
+    private static readonly List<PoolablePlayer?> _presetPreviews = []; // Outfit previews
+    private static PlayerTab? _presetTabSetup;
+    private static readonly List<SpriteRenderer?> _favoriteIcons = [];
+    private static float cooldown = 0f; // Button click cooldown
 
     [HarmonyPatch(typeof(PlayerTab), nameof(PlayerTab.OnEnable))]
     [HarmonyPrefix]
     private static void PlayerTab_OnEnable_Prefix(PlayerTab __instance)
     {
-        foreach (var button in presetButtons.ToArray())
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_OutfitPresets))
+            return;
+
+        if (_presetTabSetup == null)
         {
-            if (button == null) continue;
-            UnityEngine.Object.Destroy(button.gameObject);
+            _presetTabSetup = __instance;
+            SetupOutfitPresets(__instance);
         }
-        presetButtons.Clear();
-
-        for (int i = 0; i <= 5; i++)
+        else
         {
-            int currentI = i;
-            var name = currentI == 0 ? "Among Us Preset" : $"Preset {i}";
-            var button = __instance.CreateButton(name, new Vector3(2.5f, 1.55f - currentI * 0.45f, 0f), () =>
+            for (int i = 0; i < _presetPreviews.Count; i++)
             {
-                if (cooldown > 0f || BetterDataManager.BetterDataFile.SelectedOutfitPreset == currentI) return;
-                cooldown = 0.5f;
-
-                BetterDataManager.BetterDataFile.SelectedOutfitPreset = currentI;
-
-                foreach (var button in presetButtons)
-                {
-                    if (button == null) continue;
-                    button.SetPassiveButtonHoverStateInactive();
-                }
-
-                var data = OutfitData.GetOutfitData(currentI);
-                data.Load(() =>
-                {
-                    if (LoadPlayerOutfit(data))
-                    {
-                        __instance.PlayerPreview.UpdateFromLocalPlayer(PlayerMaterial.MaskType.None);
-                    }
-                    else
-                    {
-                        __instance.PlayerPreview.UpdateFromDataManager(PlayerMaterial.MaskType.None);
-                    }
-                });
-            });
-            presetButtons.Add(button);
+                var preview = _presetPreviews[i];
+                if (preview == null) continue;
+                var data = OutfitData.GetOutfitDataAt(i);
+                preview.UpdateFromPlayerOutfit(data.ToPlayerOutfit(), PlayerMaterial.MaskType.None, false, true);
+            }
         }
     }
-
-    private static readonly List<SpriteRenderer> _favoriteIcons = [];
 
     [HarmonyPatch(typeof(PlayerTab), nameof(PlayerTab.OnEnable))]
     [HarmonyPostfix]
     private static void PlayerTab_OnEnable_Postfix(PlayerTab __instance)
     {
-        _favoriteIcons.Clear();
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_FavoriteColor))
+            return;
 
-        for (int i = 0; i < __instance.ColorChips.Count; i++)
+        SetupFavoriteColor(__instance);
+    }
+
+    private static void SetupOutfitPresets(PlayerTab playerTab)
+    {
+        // Clean up old preset buttons and previews
+        _presetButtons.Clear();
+        _presetPreviews.Clear();
+
+        // Create preset buttons (0 = Among Us preset, 1-5 = custom presets)
+        for (int i = 0; i <= 5; i++)
         {
-            var index = i;
-            var colorChip = __instance.ColorChips[i];
-            colorChip.Button.OnClick = new();
-            colorChip.Button.OnClick.AddListener((Action)(() =>
+            int currentI = i;
+            var name = currentI == 0 ? "Among Us Preset" : $"Preset {i}";
+            var data = OutfitData.GetOutfitDataAt(currentI);
+            var button = playerTab.CreateOutfitPresetButton(name, new Vector3(2.5f, 1.55f - currentI * 0.45f, 0f), out var playerPreview, () =>
             {
-                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                if (BetterDataManager.Files.BetterDataFile.SelectedOutfitPreset == currentI)
+                    return;
+
+                // Ignore if cooldown active or same preset selected
+                if (cooldown > 0f)
+                    return;
+
+                cooldown = 0.5f;
+
+                // Update selected preset
+                BetterDataManager.Files.BetterDataFile.SelectedOutfitPreset = currentI;
+
+                // Reset all button hover states
+                foreach (var button in _presetButtons)
                 {
-                    if (BAUPlugin.FavoriteColor.Value == index)
+                    if (button == null) continue;
+                    button.SetPassiveButtonHoverStateInactive();
+                }
+
+                // Load and apply outfit from preset
+                data.ApplyToCustomizationData(() =>
+                {
+                    if (LoadPlayerOutfit(data))
                     {
-                        BAUPlugin.FavoriteColor.Value = -1;
+                        playerTab.PlayerPreview.UpdateFromLocalPlayer(PlayerMaterial.MaskType.None);
                     }
                     else
                     {
-                        BAUPlugin.FavoriteColor.Value = index;
+                        playerTab.PlayerPreview.UpdateFromDataManager(PlayerMaterial.MaskType.None);
                     }
+                });
+            });
 
-                    UpdateFavorite();
-                    return;
+            // Set up preview
+            playerPreview.UpdateFromPlayerOutfit(data.ToPlayerOutfit(), PlayerMaterial.MaskType.None, false, true);
+            playerPreview.ToggleName(false);
+            playerPreview.transform.position += new Vector3(0f, 0f, -1f * currentI); // Fix rendering order
+            _presetPreviews.Add(playerPreview);
+
+            _presetButtons.Add(button);
+        }
+    }
+
+    private static void SetupFavoriteColor(PlayerTab playerTab)
+    {
+        foreach (var icon in _favoriteIcons)
+        {
+            if (icon == null) continue;
+            UnityEngine.Object.Destroy(icon);
+        }
+        _favoriteIcons.Clear();
+
+        // Add favorite functionality to color chips
+        for (int i = 0; i < playerTab.ColorChips.Count; i++)
+        {
+            var index = i;
+            var colorChip = playerTab.ColorChips[i];
+
+            // Override click behavior
+            var extendedPassiveButton = IMonoExtension.AddExtension<ExtendedPassiveButton>(colorChip.Button);
+            extendedPassiveButton.OnHoldOrShiftClick += () =>
+            {
+                if (BAUConfigs.FavoriteColor.Value == index)
+                {
+                    BAUConfigs.FavoriteColor.Value = -1; // Remove favorite
+                }
+                else
+                {
+                    BAUConfigs.FavoriteColor.Value = index; // Set favorite
                 }
 
-                __instance.ClickEquip();
-            }));
+                UpdateFavorite();
+            };
 
+            // Add favorite star indicator
             var checkBox = colorChip.PlayerEquippedForeground.transform.Find("CheckMark").GetComponentInChildren<SpriteRenderer>();
             var favoriteIcon = UnityEngine.Object.Instantiate(checkBox, colorChip.transform);
             favoriteIcon.color = Color.yellow;
@@ -102,15 +155,17 @@ internal static class PlayerTabPatch
         UpdateFavorite();
     }
 
+    // Update favorite star visibility
     private static void UpdateFavorite()
     {
         for (int i = 0; i < _favoriteIcons.Count; i++)
         {
             SpriteRenderer? fav = _favoriteIcons[i];
-            fav.gameObject.SetActive(i == BAUPlugin.FavoriteColor.Value);
+            fav.gameObject.SetActive(i == BAUConfigs.FavoriteColor.Value);
         }
     }
 
+    // Apply outfit to local player
     private static bool LoadPlayerOutfit(OutfitData data)
     {
         var player = PlayerControl.LocalPlayer;
@@ -127,18 +182,35 @@ internal static class PlayerTabPatch
         return false;
     }
 
-    private static PassiveButton CreateButton(this PlayerTab __instance, string name, Vector3 pos, Action callback)
+    // Helper to create preset buttons
+    private static PassiveButton CreateOutfitPresetButton(this PlayerTab __instance, string name, Vector3 pos, out PoolablePlayer playerPreview, Action callback)
     {
         var button = UnityEngine.Object.Instantiate(MainMenuManagerPatch.ButtonPrefab, __instance.transform);
         button.gameObject.SetActive(true);
         button.gameObject.SetLayers("UI");
         button.transform.localPosition = pos;
         button.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+        // Create preview
+        button.transform.Find("Highlight/Icon")?.gameObject.DestroyObj();
+        button.transform.Find("Inactive/Icon")?.gameObject.DestroyObj();
+        var outfitPreview = UnityEngine.Object.Instantiate(__instance.PlayerPreview);
+        outfitPreview.transform.SetParent(button.transform);
+        outfitPreview.transform.localPosition = new Vector3(-1.3f, 0.15f, -10f);
+        outfitPreview.transform.localScale = Vector3.one * 0.45f;
+        outfitPreview.ResetCosmetics();
+        foreach (var pet in outfitPreview.GetComponentsInChildren<PetBehaviour>(true))
+        {
+            pet.gameObject.DestroyObj();
+        }
+        playerPreview = outfitPreview;
+
         button.OnClick = new();
         button.OnClick.AddListener(callback);
         button.DestroyTextTranslators();
         var text = button.GetComponentInChildren<TextMeshPro>();
         text?.SetText(name);
+
         return button;
     }
 
@@ -146,6 +218,7 @@ internal static class PlayerTabPatch
     [HarmonyPrefix]
     private static void PlayerTab_Updatee_Postfix(PlayerTab __instance)
     {
+        // Handle cooldown
         if (cooldown > 0f)
         {
             cooldown -= Time.deltaTime;
@@ -155,13 +228,21 @@ internal static class PlayerTabPatch
             cooldown = 0f;
         }
 
-        for (int i = 0; i < presetButtons.Count; i++)
+        // Update preset button hover states
+        for (int i = 0; i < _presetButtons.Count; i++)
         {
-            PassiveButton? button = presetButtons[i];
+            PassiveButton? button = _presetButtons[i];
             if (button == null) continue;
-            if (i == BetterDataManager.BetterDataFile.SelectedOutfitPreset)
+            if (i == BetterDataManager.Files.BetterDataFile.SelectedOutfitPreset)
             {
-                button.SetPassiveButtonHoverStateActive();
+                button.SetPassiveButtonHoverStateActive(); // Highlight selected preset
+            }
+
+            // Update preview color
+            var preview = _presetPreviews[i];
+            if (preview.Cosmetics.ColorId != DataManager.Player.Customization.Color)
+            {
+                preview.SetBodyColor(DataManager.Player.Customization.Color);
             }
         }
     }

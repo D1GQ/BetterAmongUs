@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Utilities;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay.UI;

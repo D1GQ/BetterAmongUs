@@ -5,6 +5,10 @@
 /// </summary>
 internal enum CustomRPC : int
 {
+    // ========================================
+    //            Known Cheat RPCS
+    // ========================================
+
     // Cheat RPC's
     /// <summary>
     /// RPC identifier for Sicko cheat detection.
@@ -31,19 +35,33 @@ internal enum CustomRPC : int
     /// </summary>
     KillNetworkChat = 119,
 
+    /// <summary>
+    /// RPC identifier for ModMenuCrew cheat detection.
+    /// </summary>
+    ModMenuCrew = 202,
 
+    /// <summary>
+    /// RPC identifier for ModMenuCrew chat communication.
+    /// </summary>
+    ModMenuCrewChat = 201,
+
+    // ========================================
+    //                BAU RPCS
+    // ========================================
 
     // Better Among Us
     /// <summary>
     /// Legacy RPC for BetterAmongUs checks (currently unused).
     /// </summary>
     LegacyBetterCheck = 150, // Unused
+
     /// <summary>
     /// RPC for sending a shared secret to another player.
     /// </summary>
-    SendSecretToPlayer,
+    SendSecretToPlayer = 151,
+
     /// <summary>
     /// RPC for checking the hash of a shared secret received from another player.
     /// </summary>
-    CheckSecretHashFromPlayer,
+    CheckSecretHashFromPlayer = 152,
 }

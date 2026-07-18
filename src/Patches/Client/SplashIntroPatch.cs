@@ -1,4 +1,5 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Utilities;
+using BetterAmongUs.Modules.Support;
 using HarmonyLib;
 using UnityEngine;
 
@@ -20,6 +21,9 @@ internal static class SplashIntroPatch
     [HarmonyPrefix]
     private static void SplashManager_Start_Prefix(SplashManager __instance)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomSplashIntro))
+            return;
+
         // Reset all flags when splash screen starts
         Skip = false;
         BetterIntro = false;
@@ -35,6 +39,9 @@ internal static class SplashIntroPatch
     [HarmonyPrefix]
     private static bool SplashManager_Update_Prefix(SplashManager __instance)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomSplashIntro))
+            return true;
+
         if (Skip)
         {
             CheckIfDone(__instance);
@@ -61,7 +68,8 @@ internal static class SplashIntroPatch
 
     private static void HandleAudioDestruction(SplashManager __instance)
     {
-        if (!BetterIntro) return;
+        if (!BetterIntro)
+            return;
 
         if (Time.time - __instance.startTime > AudioDestroyTime)
         {
@@ -86,7 +94,8 @@ internal static class SplashIntroPatch
 
     private static void StartBetterIntro(SplashManager __instance)
     {
-        if (BetterIntro) return;
+        if (BetterIntro)
+            return;
 
         // Start BAU custom intro sequence
         __instance.startTime = Time.time;

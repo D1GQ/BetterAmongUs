@@ -1,12 +1,13 @@
 ﻿using AmongUs.InnerNet.GameDataMessages;
 using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.AntiCheat;
-using BetterAmongUs.Mono;
+using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Network;
+using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using BetterAmongUs.Structs;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 using Hazel;
 using InnerNet;
@@ -23,7 +24,7 @@ internal static class NetworkManager
     /// <summary>
     /// Gets the InnerNetClient instance from AmongUsClient.
     /// </summary>
-    internal static InnerNetClient? InnerNetClient => AmongUsClient.Instance;
+    internal static InnerNetClient InnerNetClient => AmongUsClient.Instance;
 
     /// <summary>
     /// Sends a message to the game server.
@@ -31,6 +32,9 @@ internal static class NetworkManager
     /// <param name="writer">The MessageWriter containing the data to send.</param>
     internal static void SendToServer(MessageWriter writer)
     {
+        if (InnerNetClient == null)
+            return;
+
         try
         {
             StreamlineMessage(writer, writer.SendOption);
@@ -41,7 +45,7 @@ internal static class NetworkManager
         }
         finally
         {
-            if (InnerNetClient?.connection != null)
+            if (InnerNetClient.connection != null)
             {
                 SendErrors sendErrors = InnerNetClient.connection.Send(writer);
                 if (sendErrors != SendErrors.None && !GameState.IsFreePlay)
@@ -68,7 +72,7 @@ internal static class NetworkManager
             return;
         }
 
-        MessageReader[] allReaders = writer.ToReaders();
+        MessageReader[] allReaders = writer.MessagesToReaders();
 
         foreach (MessageReader reader in allReaders)
         {
@@ -97,7 +101,7 @@ internal static class NetworkManager
             ClientId = reader.ReadPackedInt32();
         }
 
-        MessageReader[] allDataReaders = reader.ToReadersNewBuffer();
+        MessageReader[] allDataReaders = reader.MessagesToReadersNewBuffer();
 
         foreach (MessageReader dataReader in allDataReaders)
         {
@@ -195,8 +199,6 @@ internal static class NetworkManager
                 HandleInvalidTag(reader);
                 break;
         }
-
-        yield break;
     }
 
     /// <summary>
@@ -271,11 +273,14 @@ internal static class NetworkManager
                         break;
                     }
 
-                    if (innerNetObject is PlayerControl player && player != null)
+                    if (innerNetObject is PlayerPhysics playerPhysics)
                     {
-                        if (rpcCall == (byte)RpcCalls.SetNamePlateStr)
+                        if (rpcCall == (byte)RPC.CUSTOM_RPC_CALL)
                         {
-                            RPC.HandleCustomRPCPacked(player, reader);
+                            if (RPC.HandleCustomRPCPacked(playerPhysics.myPlayer, reader))
+                            {
+                                break;
+                            }
                         }
                     }
 
@@ -285,7 +290,7 @@ internal static class NetworkManager
                     }
                     else
                     {
-                        if (innerNetObject is PlayerControl player2 && player2 != null)
+                        if (innerNetObject is PlayerControl player2)
                         {
                             RPC.HandleCustomRPCLegacy(player2, rpcCall, reader);
                         }
@@ -448,10 +453,10 @@ internal static class NetworkManager
     /// </summary>
     private static bool PlayerRpc(PlayerControl player, byte callId, MessageReader reader)
     {
-        if (player.BetterData() != null)
+        if (player.ExtendedData() != null && BetterGameSettings.RpcRateLimiting.GetBool())
         {
-            player.BetterData().AntiCheatInfo.RPCSentPS++;
-            if (player.BetterData().AntiCheatInfo.RPCSentPS >= ExtendedAntiCheatInfo.MAX_RPC_SENT)
+            player.ExtendedData().AntiCheatInfo.RPCSentPS++;
+            if (player.ExtendedData().AntiCheatInfo.RPCSentPS >= BetterGameSettings.RpcRateLimit.GetInt())
             {
                 return false;
             }
@@ -459,7 +464,18 @@ internal static class NetworkManager
 
         BetterAntiCheat.HandleCheatRPCBeforeCheck(player, callId, reader);
 
-        if (BetterAntiCheat.CheckCancelRPC(player, callId, reader) != true)
+        if (GameState.IsHost)
+        {
+            var tempReader = MessageReader.Get(reader);
+            if (RPCHandler.HandleRPC(callId, player, tempReader, HandlerFlag.BetterHost) == false)
+            {
+                tempReader.Recycle();
+                return false;
+            }
+            tempReader.Recycle();
+        }
+
+        if (BetterAntiCheat.CheckCancelRPC(player, callId, reader) == false)
         {
             if (!player.IsLocalPlayer()) Logger_.LogCheat($"RPC canceled by Anti-Cheat: {Enum.GetName((RpcCalls)callId)}{Enum.GetName((CustomRPC)callId)} - {callId}");
             return false;
@@ -471,18 +487,24 @@ internal static class NetworkManager
         return true;
     }
 
-    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.UpdateSystem), typeof(SystemTypes), typeof(PlayerControl), typeof(MessageReader))]
+
+    [HarmonyPatch]
     internal static class MessageReaderUpdateSystemPatch
     {
-        internal static bool Prefix([HarmonyArgument(0)] SystemTypes systemType, [HarmonyArgument(1)] PlayerControl player, [HarmonyArgument(2)] MessageReader reader)
+        [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.UpdateSystem), typeof(SystemTypes), typeof(PlayerControl), typeof(MessageReader))]
+        [HarmonyPrefix]
+        internal static bool ShipStatus_UpdateSystem_Prefix(SystemTypes systemType, PlayerControl player, MessageReader msgReader)
         {
-            player.BetterData().AntiCheatInfo.RPCSentPS++;
-            if (player.BetterData().AntiCheatInfo.RPCSentPS >= ExtendedAntiCheatInfo.MAX_RPC_SENT)
+            if (BetterGameSettings.RpcRateLimiting.GetBool())
             {
-                return false;
+                player.ExtendedData().AntiCheatInfo.RPCSentPS++;
+                if (player.ExtendedData().AntiCheatInfo.RPCSentPS >= BetterGameSettings.RpcRateLimit.GetInt())
+                {
+                    return false;
+                }
             }
 
-            if (BetterAntiCheat.RpcUpdateSystemCheck(player, systemType, reader) != true) return false;
+            if (BetterAntiCheat.RpcUpdateSystemCheck(player, systemType, msgReader) != true) return false;
 
             return true;
         }

@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Mono;
+﻿using BetterAmongUs.MonoScripts.Extended;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay;
@@ -10,12 +10,14 @@ internal static class RolePatch
     [HarmonyPrefix]
     private static bool NoisemakerRole_NotifyOfDeath_Prefix(NoisemakerRole __instance)
     {
-        if (__instance.Player.BetterData().RoleInfo.HasNoisemakerNotify)
+        // Prevent duplicate noisemaker notifications
+        if (__instance.Player.ExtendedData().RoleInfo.HasNoisemakerNotify)
         {
             return false;
         }
 
-        __instance.Player.BetterData().RoleInfo.HasNoisemakerNotify = true;
+        // Mark that notification has been sent
+        __instance.Player.ExtendedData().RoleInfo.HasNoisemakerNotify = true;
 
         return true;
     }

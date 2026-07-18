@@ -1,10 +1,10 @@
 using AmongUs.GameOptions;
 using BetterAmongUs.Attributes;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using Hazel;
 using InnerNet;
 
-namespace BetterAmongUs.Modules.AntiCheat;
+namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers;
 
 [RegisterRPCHandler]
 internal sealed class CheckShapeshiftHandler : RPCHandler

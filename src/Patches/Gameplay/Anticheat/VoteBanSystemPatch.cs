@@ -1,7 +1,9 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.Support;
+using BetterAmongUs.Structs;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay.Anticheat;
@@ -9,29 +11,39 @@ namespace BetterAmongUs.Patches.Gameplay.Anticheat;
 [HarmonyPatch]
 internal static class VoteBanSystemPatch
 {
-    private static readonly Dictionary<VoteBanSystem, List<(int ClientId, (ushort HashPuid, string FriendCode) Voter)>> _voteData = [];
+    private static readonly List<(int ClientId, TempClientData Voter)> _voteData = [];
 
-    private static bool DoLog;
+    [HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.Awake))]
+    [HarmonyPrefix]
+    private static void VoteBanSystem_Awake_Prefix()
+    {
+        _voteData.Clear();
+    }
+
 
     [HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.AddVote))]
     [HarmonyPrefix]
-    private static bool VoteBanSystem_AddVote_Prefix(VoteBanSystem __instance, int srcClient, int clientId)
+    private static bool VoteBanSystem_AddVote_Prefix(int srcClient, int clientId, ref bool __state)
     {
+        __state = false;
+
         // Skip BAU anti-cheat if disabled by other mods
         if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat)) return true;
 
         // If not host, allow vote and log it
         if (!GameState.IsHost)
         {
-            DoLog = true;
+            __state = true;
             return true;
         }
 
         var client = Utils.ClientFromClientId(srcClient);
         if (client == null) return false;
 
+        var tempClient = new TempClientData(client);
+
         // Allow host to vote without restrictions
-        if (client.Id == AmongUsClient.Instance.GetHost().Id)
+        if (tempClient.Id == AmongUsClient.Instance.GetHost().Id)
         {
             return true;
         }
@@ -41,7 +53,7 @@ internal static class VoteBanSystemPatch
             var player = client.Character;
             if (player != null)
             {
-                BetterNotificationManager.NotifyCheat(player, string.Format(Translator.GetString("AntiCheat.InvalidLobbyRPC"), "VoteKick"));
+                BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_Reason_VoteKick.LocalizedString, TranslationStrings.AntiCheat_HasBeenDetectedWithCheat.LocalizedString);
             }
         }
 
@@ -52,33 +64,23 @@ internal static class VoteBanSystemPatch
             return false;
         }
 
-        // Initialize vote tracking for this VoteBanSystem instance
-        if (!_voteData.TryGetValue(__instance, out var voters))
-        {
-            _voteData.Clear();
-            _voteData[__instance] = voters = [];
-        }
-
         // If client has no ID, allow vote but log it
-        if (string.IsNullOrEmpty(client.ProductUserId) && string.IsNullOrEmpty(client.FriendCode))
+        if (string.IsNullOrEmpty(tempClient.Puid) && string.IsNullOrEmpty(tempClient.FriendCode))
         {
-            DoLog = true;
+            __state = true;
             return true;
         }
 
-        // Generate hash for client's ProductUserId
-        var clientHash = Utils.GetHashUInt16(client.ProductUserId);
-
         // Check if this client has already voted for the same target
-        foreach (var (targetClientId, (existingHash, existingFriendCode)) in voters)
+        foreach (var (targetClientId, existingVoter) in _voteData)
         {
             if (targetClientId != clientId)
                 continue;
 
             // Detect duplicate votes by comparing hash or friend code
-            bool isDuplicateVote = existingHash == clientHash ||
-                                  !string.IsNullOrEmpty(client.FriendCode) &&
-                                   existingFriendCode == client.FriendCode;
+            bool isDuplicateVote = existingVoter.HashPuid == tempClient.HashPuid ||
+                                  !string.IsNullOrEmpty(tempClient.FriendCode) &&
+                                   existingVoter.FriendCode == tempClient.FriendCode;
 
             if (isDuplicateVote)
             {
@@ -88,33 +90,31 @@ internal static class VoteBanSystemPatch
         }
 
         // Record the vote
-        voters.Add((clientId, (clientHash, client.FriendCode)));
-        DoLog = true;
+        _voteData.Add((clientId, tempClient));
+        __state = true;
         return true;
     }
 
     [HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.AddVote))]
     [HarmonyPostfix]
-    private static void VoteBanSystem_AddVote_Postfix(VoteBanSystem __instance, int srcClient, int clientId)
+    private static void VoteBanSystem_AddVote_Postfix(VoteBanSystem __instance, int srcClient, int clientId, bool __state)
     {
         // Skip logging if anti-cheat disabled
-        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat)) return;
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat))
+            return;
 
         // Log the vote if it was allowed
-        if (DoLog)
+        if (__state)
         {
             LogVote(__instance, srcClient, clientId);
-            DoLog = false;
         }
     }
 
     private static void LogVote(VoteBanSystem voteBanSystem, int srcClient, int clientId)
     {
-        // Get source and target client info
         var src = Utils.ClientFromClientId(srcClient);
         var client = Utils.ClientFromClientId(clientId);
 
-        // Calculate current votes and required votes
         int currentVotes = 0;
         int maxVotes = 0;
 
@@ -124,7 +124,6 @@ internal static class VoteBanSystemPatch
             maxVotes = votes.Length; // Total possible votes
         }
 
-        // Log vote with colored player names and vote count
         Logger_.InGame(
             $"{src.Character?.GetPlayerNameAndColor() ?? src.PlayerName} " +
             $"voted to kick {client.Character?.GetPlayerNameAndColor() ?? client.PlayerName} " +

@@ -1,18 +1,33 @@
 ﻿using BetterAmongUs.Interfaces;
+using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
 
-internal sealed class StartMeetingReplayEvent : IReplayEvent<(int playerId, int targetId)>
+[Serializable]
+internal sealed class StartMeetingReplayEvent : IReplayEvent<StartMeetingReplayEvent.StartMeetingReplayData, StartMeetingReplayEvent.StartMeetingReplayArgs>
 {
+    [JsonPropertyName("id")]
     public string Id => "start_meeting";
-    public (int playerId, int targetId) EventData { get; set; }
+
+    [JsonPropertyName("eventData")]
+    public StartMeetingReplayData? EventData { get; set; }
 
     public void Play()
     {
+        if (EventData == null)
+            return;
     }
 
-    public void Record(PlayerControl player, PlayerControl? target)
+    public void Undo()
     {
-        EventData = (player.PlayerId, target?.PlayerId ?? -1);
     }
+
+    public void Record(StartMeetingReplayArgs args)
+    {
+        EventData = new StartMeetingReplayData(args.Player.PlayerId, args.Target?.PlayerId ?? -1);
+    }
+
+    internal record StartMeetingReplayData(int PlayerId, int TargetId) : IReplayEvent.Data;
+
+    internal record StartMeetingReplayArgs(PlayerControl Player, PlayerControl? Target) : IReplayEvent.Args;
 }

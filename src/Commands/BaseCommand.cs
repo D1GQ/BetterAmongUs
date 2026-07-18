@@ -1,7 +1,7 @@
 ﻿using BetterAmongUs.Attributes;
 using BetterAmongUs.Commands.Arguments;
-using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Modules.Support;
+using BetterAmongUs.Utilities;
 
 namespace BetterAmongUs.Commands;
 
@@ -13,12 +13,7 @@ internal abstract class BaseCommand
     /// <summary>
     /// Gets an array of all registered commands.
     /// </summary>
-    internal static readonly BaseCommand?[] allCommands = [.. RegisterCommandAttribute.Instances];
-
-    /// <summary>
-    /// Gets the type of the command.
-    /// </summary>
-    internal virtual CommandType Type => CommandType.Normal;
+    internal static readonly BaseCommand[] allCommands = [.. RegisterCommandAttribute.Instances];
 
     /// <summary>
     /// Gets all names for this command (including short names).
@@ -31,7 +26,7 @@ internal abstract class BaseCommand
     internal abstract string Name { get; }
 
     /// <summary>
-    /// Gets the short names (aliases) for the command.
+    /// Gets the short names for the command.
     /// </summary>
     internal virtual string[] ShortNames => [];
 
@@ -73,6 +68,17 @@ internal abstract class BaseCommand
     internal abstract void Run();
 
     /// <summary>
+    /// Resets all associated Arguments with Command Back to its default state.
+    /// </summary>
+    internal void ResetArguments()
+    {
+        foreach (var arg in Arguments)
+        {
+            arg.Reset();
+        }
+    }
+
+    /// <summary>
     /// Formats and optionally displays command result text.
     /// </summary>
     /// <param name="text">The result text to display.</param>
@@ -95,5 +101,14 @@ internal abstract class BaseCommand
         string er = "<color=#f50000><size=150%><b>Error:</b></size></color>";
         if (!onlyGetStr) Utils.AddChatPrivate($"<color=#730000>{er}\n{error}");
         return $"<color=#730000>{er}\n{error}";
+    }
+
+    /// <summary>
+    /// Determines whether this command is enabled.
+    /// </summary>
+    /// <returns>True if the command is enabled; otherwise, false.</returns>
+    internal bool IsEnabled()
+    {
+        return ShowCommand() && !BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Command + Name);
     }
 }

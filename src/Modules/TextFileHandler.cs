@@ -259,7 +259,16 @@ internal static class TextFileHandler
     private static string ProcessLinks(string text)
     {
         return Regex.Replace(text, @"\[([^\]]+)\]\(([^)]+)\)",
-            "<link=\"$2\"> <b>$1</b></link> ");
+            match =>
+            {
+                string name = match.Groups[1].Value;
+                string link = match.Groups[2].Value;
+
+                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(link))
+                    return match.Value;
+
+                return $"<link=\"{link}\"> <b>{name}</b></link> ";
+            });
     }
 
     /// <summary>

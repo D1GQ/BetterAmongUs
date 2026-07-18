@@ -1,22 +1,24 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
+﻿#pragma warning disable CS0162
+
+using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
+using BetterAmongUs.Data.Config;
 using BetterAmongUs.Data.Json;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.OptionItems;
 using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Network;
 using BetterAmongUs.Patches.Client;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
-using Il2CppInterop.Runtime.Injection;
-using System.Reflection;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BetterAmongUs;
 
@@ -57,6 +59,11 @@ internal class BAUPlugin : BasePlugin
     }
 
     /// <summary>
+    /// Gets the BAUPlugin instance.
+    /// </summary>
+    internal static BAUPlugin? Instance { get; private set; }
+
+    /// <summary>
     /// Gets the Harmony instance used for patching.
     /// </summary>
     internal static Harmony Harmony { get; } = new Harmony(ModInfo.PLUGIN_GUID);
@@ -82,14 +89,6 @@ internal class BAUPlugin : BasePlugin
     internal static PlatformSpecificData PlatformData => Constants.GetPlatformData();
 
     /// <summary>
-    /// Gets the list of supported Among Us versions.
-    /// </summary>
-    internal static string[] SupportedAmongUsVersions =
-    [
-        "2025.11.18",
-    ];
-
-    /// <summary>
     /// Gets the list of all PlayerControl instances.
     /// </summary>
     internal static List<PlayerControl> AllPlayerControls = [];
@@ -97,12 +96,12 @@ internal class BAUPlugin : BasePlugin
     /// <summary>
     /// Gets the list of all alive PlayerControl instances.
     /// </summary>
-    internal static List<PlayerControl> AllAlivePlayerControls => AllPlayerControls.Where(pc => pc.IsAlive()).ToList();
+    internal static List<PlayerControl> AllAlivePlayerControls => [.. AllPlayerControls.Where(pc => pc.IsAlive())];
 
     /// <summary>
     /// Gets all DeadBody objects in the scene.
     /// </summary>
-    internal static DeadBody[] AllDeadBodys => UnityEngine.Object.FindObjectsOfType<DeadBody>().ToArray();
+    internal static DeadBody[] AllDeadBodys => [.. UnityEngine.Object.FindObjectsOfType<DeadBody>()];
 
     /// <summary>
     /// Gets all Vent objects in the scene.
@@ -116,6 +115,8 @@ internal class BAUPlugin : BasePlugin
 
     public override void Load()
     {
+        Instance = this;
+
         try
         {
             foreach (var listener in BepInEx.Logging.Logger.Listeners)
@@ -127,8 +128,12 @@ internal class BAUPlugin : BasePlugin
                 }
             }
 
-            SetupConsole();
-            RegisterAllMonoBehavioursInAssembly();
+            if (!ModInfo.Starlight)
+            {
+                SetupConsole();
+            }
+
+            RegisterInIl2Cpp.Initialize();
             IL2CPPChainloader.Instance.Finished += OnChainloaderFinished;
         }
         catch (Exception ex)
@@ -142,27 +147,54 @@ internal class BAUPlugin : BasePlugin
     /// </summary>
     private void OnChainloaderFinished()
     {
-        if (!BAUModdedSupportEvents.InvokeAll_OnBAULoad(this)) return;
+        if (BAUModdedSupportEvents.OnBAULoadEvent.InvokeAll(this).Any(b => b == false))
+            return;
 
         BAUModdedSupportFlags.Initialize();
         GithubAPI.Connect();
-        LoadOptions();
+        BAUConfigs.LoadConfigs();
         BetterDataManager.Initialize();
+        AudioOverrideManager.Initialize();
         Translator.Initialize();
         Harmony.PatchAll();
         GameSettingsPatch.SetupSettings(true);
-        BAUModdedSupportEvents.InvokeAll_OnBAUOptionsLoaded([.. OptionItem.AllOptions.Cast<object>()]);
-        InstanceAttribute.RegisterAll();
+        BAUModdedSupportEvents.OnBAUOptionsLoadedEvent.InvokeAll([.. OptionItem.AllOptions.Cast<object>()]);
+        AutoRegisterAttribute.Initialize();
         OutfitData.Initialize();
+        SceneManager.add_sceneLoaded((Action<Scene, LoadSceneMode>)OnSceneLoaded);
 
-        if (File.Exists(Path.Combine(BetterDataManager.filePathFolder, "better-log.txt")))
-            File.WriteAllText(Path.Combine(BetterDataManager.filePathFolder, "better-previous-log.txt"), File.ReadAllText(Path.Combine(BetterDataManager.filePathFolder, "better-log.txt")));
+        if (File.Exists(BetterDataManager.Files.logFilePath))
+            File.WriteAllText(BetterDataManager.Files.previousLogFilePath, File.ReadAllText(BetterDataManager.Files.logFilePath));
 
-        File.WriteAllText(Path.Combine(BetterDataManager.filePathFolder, "better-log.txt"), "");
+        File.WriteAllText(BetterDataManager.Files.logFilePath, "");
         Logger_.Log("Better Among Us successfully loaded!");
 
-        string SupportedVersions = string.Join(" ", SupportedAmongUsVersions);
+        string SupportedVersions = string.Join(" ", ModInfo.SupportedAmongUsVersions);
         Logger_.Log($"BetterAmongUs {BetterAmongUsVersion}-{ModInfo.BuildDate} - [{AppVersion} --> {SupportedVersions}] {Utils.GetPlatformName(PlatformData.Platform)}");
+    }
+
+    /// <summary>
+    /// Unloads the mod to switch to vanilla.
+    /// </summary>
+    internal void UnloadBAU()
+    {
+        ConsoleManager.DetachConsole();
+        BetterNotificationManager.Detach();
+        ClientPatch.Unpatch();
+        Harmony.UnpatchAll();
+        ModManager.Instance.ModStamp.gameObject.SetActive(false);
+        SceneChanger.ChangeScene("MainMenu");
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode _)
+    {
+        if (AmongUsClient.Instance != null)
+        {
+            if (scene.name == AmongUsClient.Instance.MainMenuScene)
+            {
+                BAUModdedSupportFlags.ClearTempFlags();
+            }
+        }
     }
 
     /// <summary>
@@ -181,141 +213,4 @@ internal class BAUPlugin : BasePlugin
         ConsoleManager.SetConsoleColor(ConsoleColor.Green);
         ConsoleManager.ConsoleStream.WriteLine($".--------------------------------------------------------------------------------.\r\n|  ____       _   _                 _                                  _   _     |\r\n| | __ )  ___| |_| |_ ___ _ __     / \\   _ __ ___   ___  _ __   __ _  | | | |___ |\r\n| |  _ \\ / _ \\ __| __/ _ \\ '__|   / _ \\ | '_ ` _ \\ / _ \\| '_ \\ / _` | | | | / __||\r\n| | |_) |  __/ |_| ||  __/ |     / ___ \\| | | | | | (_) | | | | (_| | | |_| \\__ \\|\r\n| |____/ \\___|\\__|\\__\\___|_|    /_/   \\_\\_| |_| |_|\\___/|_| |_|\\__, |  \\___/|___/|\r\n|                                                              |___/             |\r\n'--------------------------------------------------------------------------------'");
     }
-
-    /// <summary>
-    /// Registers all MonoBehaviour classes for IL2CPP injection.
-    /// </summary>
-    private static void RegisterAllMonoBehavioursInAssembly()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-
-        var monoBehaviourTypes = assembly.GetTypes()
-            .Where(type => type.IsSubclassOf(typeof(MonoBehaviour)) && !type.IsAbstract)
-            .OrderBy(type => type.Name);
-
-        foreach (var type in monoBehaviourTypes)
-        {
-            try
-            {
-                ClassInjector.RegisterTypeInIl2Cpp(type);
-            }
-            catch (Exception ex)
-            {
-                Logger_.Error($"Failed to register MonoBehaviour: {type.FullName}\n{ex}");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for private only lobby setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? PrivateOnlyLobby { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for anti-cheat setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? AntiCheat { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for sending Better RPC setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? SendBetterRpc { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for better notifications setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? BetterNotifications { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for force own language setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? ForceOwnLanguage { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for chat dark mode setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? ChatDarkMode { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for chat in gameplay setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? ChatInGameplay { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for lobby player info setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? LobbyPlayerInfo { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for disable lobby theme setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? DisableLobbyTheme { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for unlock FPS setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? UnlockFPS { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for show FPS setting.
-    /// </summary>
-    internal static ConfigEntry<bool>? ShowFPS { get; private set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for command prefix setting.
-    /// </summary>
-    internal static ConfigEntry<string>? CommandPrefix { get; set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for favorite color setting.
-    /// </summary>
-    internal static ConfigEntry<int>? FavoriteColor { get; set; }
-
-    /// <summary>
-    /// Gets or sets the configuration entry for the settings preset.
-    /// </summary>
-    internal static ConfigEntry<int>? SettingsPreset { get; private set; }
-
-    /// <summary>
-    /// Loads configuration options from BepInEx config file.
-    /// </summary>
-    private void LoadOptions()
-    {
-        PrivateOnlyLobby = Config.Bind("Mod", "PrivateOnlyLobby", false);
-        AntiCheat = Config.Bind("Better Options", "AntiCheat", true);
-        SendBetterRpc = Config.Bind("Better Options", "SendBetterRpc", true);
-        BetterNotifications = Config.Bind("Better Options", "BetterNotifications", true);
-        ForceOwnLanguage = Config.Bind("Better Options", "ForceOwnLanguage", false);
-        ChatDarkMode = Config.Bind("Better Options", "ChatDarkMode", true);
-        ChatInGameplay = Config.Bind("Better Options", "ChatInGameplay", true);
-        LobbyPlayerInfo = Config.Bind("Better Options", "LobbyPlayerInfo", true);
-        DisableLobbyTheme = Config.Bind("Better Options", "DisableLobbyTheme", true);
-        UnlockFPS = Config.Bind("Better Options", "UnlockFPS", false);
-        ShowFPS = Config.Bind("Better Options", "ShowFPS", false);
-        CommandPrefix = Config.Bind("Client Options", "CommandPrefix", "/");
-        FavoriteColor = Config.Bind("Mod", "FavoriteColor", -1);
-        SettingsPreset = Config.Bind("Mod", "SettingsPreset", 0);
-
-        BAUModdedSupportEvents.InvokeAll_OnBAUConfigEntriesLoaded([
-            PrivateOnlyLobby, AntiCheat, SendBetterRpc,
-            BetterNotifications, ForceOwnLanguage, ChatDarkMode,
-            ChatInGameplay, LobbyPlayerInfo, DisableLobbyTheme,
-            UnlockFPS, ShowFPS, CommandPrefix,
-            FavoriteColor, SettingsPreset
-        ]);
-
-        OptionsMenuBehaviourPatch.UpdateFrameRate();
-    }
-
-    /// <summary>
-    /// Gets the persistent data path for Among Us.
-    /// </summary>
-    /// <returns>The persistent data path string.</returns>
-    internal static string GetDataPathToAmongUs() => Application.persistentDataPath;
-
-    /// <summary>
-    /// Gets the game installation path for Among Us.
-    /// </summary>
-    /// <returns>The game installation path string.</returns>
-    internal static string GetGamePathToAmongUs() => Path.GetDirectoryName(Application.dataPath) ?? Application.dataPath;
 }

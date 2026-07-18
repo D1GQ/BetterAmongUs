@@ -1,7 +1,7 @@
 ﻿using AmongUs.Data.Player;
 using Assets.InnerNet;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using BetterAmongUs.Modules;
 using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;

@@ -1,5 +1,7 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Generated;
 using BetterAmongUs.Modules.OptionItems.NoneOption;
+using BetterAmongUs.Utilities;
+using BetterAmongUs.Utilities.Extension;
 using TMPro;
 using UnityEngine;
 
@@ -22,22 +24,22 @@ internal sealed class OptionTab
     /// <summary>
     /// Gets the translated name of this tab.
     /// </summary>
-    internal string? Name => Translator.GetString(TranName);
+    internal string Name => TranslationName.LocalizedString;
 
     /// <summary>
     /// Gets or sets the translation key for the tab name.
     /// </summary>
-    internal string? TranName { get; private set; }
+    internal TranslationStrings.TranslationString TranslationName { get; private set; }
 
     /// <summary>
     /// Gets the translated description of this tab.
     /// </summary>
-    internal string? Description => Translator.GetString(TranDescription);
+    internal string Description => TranslationName.LocalizedString;
 
     /// <summary>
     /// Gets or sets the translation key for the tab description.
     /// </summary>
-    internal string? TranDescription { get; private set; }
+    internal TranslationStrings.TranslationString TranslationDescription { get; private set; }
 
     /// <summary>
     /// Gets or sets the Among Us options menu tab instance.
@@ -58,12 +60,12 @@ internal sealed class OptionTab
     /// Creates a new option tab or returns an existing one with the same ID.
     /// </summary>
     /// <param name="Id">The unique identifier for the tab.</param>
-    /// <param name="tranName">Translation key for the tab name.</param>
-    /// <param name="tranDescription">Translation key for the tab description.</param>
+    /// <param name="translationStringName">Translation key for the tab name.</param>
+    /// <param name="translationStringDescription">Translation key for the tab description.</param>
     /// <param name="Color">The color theme for the tab.</param>
     /// <param name="doNotDestroyMapPicker">Whether to preserve the map picker UI.</param>
     /// <returns>A new or existing OptionTab instance.</returns>
-    internal static OptionTab Create(int Id, string tranName, string tranDescription, Color Color, bool doNotDestroyMapPicker = false)
+    internal static OptionTab Create(int Id, TranslationStrings.TranslationString translationStringName, TranslationStrings.TranslationString translationStringDescription, Color Color, bool doNotDestroyMapPicker = false)
     {
         if (GetTabById(Id) is OptionTab optionTab)
         {
@@ -75,8 +77,8 @@ internal sealed class OptionTab
         var Item = new OptionTab
         {
             Id = Id,
-            TranName = tranName,
-            TranDescription = tranDescription,
+            TranslationName = translationStringName,
+            TranslationDescription = translationStringDescription,
             Color = Color
         };
         AllTabs.Add(Item);
@@ -98,7 +100,8 @@ internal sealed class OptionTab
     /// <param name="doNotDestroyMapPicker">Whether to preserve the map picker UI.</param>
     private void CreateBehavior(bool doNotDestroyMapPicker)
     {
-        if (!GameSettingMenu.Instance) return;
+        if (!GameSettingMenu.Instance)
+            return;
 
         var SettingsButton = UnityEngine.Object.Instantiate(GameSettingMenu.Instance.GameSettingsButton, GameSettingMenu.Instance.GameSettingsButton.transform.parent);
         TabButton = SettingsButton;
@@ -121,10 +124,10 @@ internal sealed class OptionTab
 
         SettingsButton.gameObject.GetComponent<BoxCollider2D>().size = new Vector2(2.5f, 0.6176f);
 
-        SettingsButton.OnClick.AddListener(new Action(() =>
+        SettingsButton.OnClick.AddListener(() =>
         {
             GameSettingMenu.Instance.ChangeTab(Id, false);
-        }));
+        });
 
         var SettingsTab = UnityEngine.Object.Instantiate(GameSettingMenu.Instance.GameSettingsTab, GameSettingMenu.Instance.GameSettingsTab.transform.parent);
         AUTab = SettingsTab;
@@ -147,14 +150,18 @@ internal sealed class OptionTab
     /// </summary>
     private void ShowOptions()
     {
-        if (AUTab == null) return;
+        if (AUTab == null)
+            return;
 
         AUTab.gameObject.SetActive(true);
         float spacingNum = 0f;
         foreach (var opt in Children)
         {
-            if (opt?.Obj == null) continue;
-            if (opt?.Tab.Id != Id || opt.Hide)
+            if (opt == null) continue;
+            if (opt.Obj == null) continue;
+            if (opt.Tab == null) continue;
+
+            if (opt.Tab.Id != Id || opt.Hide)
             {
                 opt.Obj.gameObject.SetActive(false);
                 continue;

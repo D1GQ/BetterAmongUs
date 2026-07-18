@@ -1,5 +1,5 @@
 ﻿using BetterAmongUs.Modules.Support;
-using BetterAmongUs.Mono;
+using BetterAmongUs.MonoScripts;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay.UI;

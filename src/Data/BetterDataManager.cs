@@ -1,5 +1,7 @@
-﻿using BetterAmongUs.Data.Json;
-using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Data.Config;
+using BetterAmongUs.Data.Json;
+using BetterAmongUs.Utilities;
+using UnityEngine;
 
 namespace BetterAmongUs.Data;
 
@@ -9,88 +11,151 @@ namespace BetterAmongUs.Data;
 internal static class BetterDataManager
 {
     /// <summary>
-    /// The main data file containing outfit presets and cheat detection data.
+    /// Contains all directory paths used for storing data,
     /// </summary>
-    internal static BetterDataFile BetterDataFile = new();
+    internal static class Folders
+    {
+        /// <summary>
+        /// Root directory for BetterAmongUs data (Starlight mode).
+        /// </summary>
+        internal static readonly string starLightDataFolderPath = Environment.GetEnvironmentVariable("STAR_DATA_PATH") ?? string.Empty;
+
+        /// <summary>
+        /// Root directory for BetterAmongUs data.
+        /// </summary>
+        internal static readonly string fileFolderPath = Path.Combine(GetPathToAmongUs(), $"Better_Data");
+
+        /// <summary>
+        /// Directory for audio overrides files.
+        /// </summary>
+        internal static readonly string audioOverridesFolderPath = Path.Combine(fileFolderPath, $"AudioOverrides");
+
+        /// <summary>
+        /// Directory for save information files.
+        /// </summary>
+        internal static readonly string saveInfoFolderPath = Path.Combine(fileFolderPath, $"SaveInfo");
+
+        /// <summary>
+        /// Directory for settings files.
+        /// </summary>
+        internal static readonly string settingsFolderPath = Path.Combine(fileFolderPath, $"Settings");
+
+        /// <summary>
+        /// Directory for game replay files.
+        /// </summary>
+        internal static readonly string replaysFolderPath = Path.Combine(fileFolderPath, $"Replays");
+    }
 
     /// <summary>
-    /// The game settings file with compressed storage.
+    /// Contains references to all file paths for data.
     /// </summary>
-    internal static BetterGameSettingsFile BetterGameSettingsFile = new();
+    internal static class Files
+    {
+        /// <summary>
+        /// The main data file containing outfit presets and cheat detection data.
+        /// </summary>
+        internal static BetterDataFile BetterDataFile = new();
 
-    /// <summary>
-    /// Legacy data file path (BetterData.json).
-    /// </summary>
-    internal static string dataPath_Legacy = GetFilePath("BetterData");
+        /// <summary>
+        /// The game settings file with compressed storage.
+        /// </summary>
+        internal static BetterGameSettingsFile BetterGameSettingsFile = new();
 
-    /// <summary>
-    /// Current data file path (BetterDataV2.json).
-    /// </summary>
-    internal static string dataPath = GetFilePath("BetterDataV2");
+        /// <summary>
+        /// The log file path.
+        /// </summary>
+        internal static readonly string logFilePath = Path.Combine(Folders.fileFolderPath, "better-log.txt");
 
-    /// <summary>
-    /// Root directory for BetterAmongUs data.
-    /// </summary>
-    internal static string filePathFolder = Path.Combine(BAUPlugin.GetGamePathToAmongUs(), $"Better_Data");
+        /// <summary>
+        /// The previous log file path.
+        /// </summary>
+        internal static readonly string previousLogFilePath = Path.Combine(Folders.fileFolderPath, "better-previous-log.txt");
 
-    /// <summary>
-    /// Directory for save information files.
-    /// </summary>
-    internal static string filePathFolderSaveInfo = Path.Combine(filePathFolder, $"SaveInfo");
+        /// <summary>
+        /// Legacy data file path (BetterData.json).
+        /// </summary>
+        internal static readonly string dataFilePath_Legacy = Path.Combine(GetPathToAmongUsData(), "BetterData.json");
 
-    /// <summary>
-    /// Directory for settings files.
-    /// </summary>
-    internal static string filePathFolderSettings = Path.Combine(filePathFolder, $"Settings");
+        /// <summary>
+        /// Current data file path (BetterDataV2.json).
+        /// </summary>
+        internal static readonly string dataFilePath = Path.Combine(GetPathToAmongUsData(), "BetterDataV2.json");
 
-    /// <summary>
-    /// Directory for game replay files.
-    /// </summary>
-    internal static string filePathFolderReplays = Path.Combine(filePathFolder, $"Replays");
+        /// <summary>
+        /// Legacy settings file path.
+        /// </summary>
+        internal static readonly string settingsFilePath_Legacy = Path.Combine(Folders.settingsFolderPath, "Settings.dat");
 
-    /// <summary>
-    /// Legacy settings file path.
-    /// </summary>
-    internal static string SettingsFile_Legacy = Path.Combine(filePathFolderSettings, "Settings.dat");
+        /// <summary>
+        /// Current compressed settings file path.
+        /// </summary>
+        internal static string SettingsFilePath => GetSettingsFilePathFromPreset(BAUConfigs.SettingsPreset.Value);
 
-    /// <summary>
-    /// Current compressed settings file path.
-    /// </summary>
-    internal static string SettingsFile => Path.Combine(filePathFolderSettings, $"Preset-{BAUPlugin.SettingsPreset?.Value ?? 0}.dat");
+        /// <summary>
+        /// File containing banned player identifiers.
+        /// </summary>
+        internal static readonly string banPlayerListFilePath = Path.Combine(Folders.saveInfoFolderPath, "BanPlayerList.txt");
 
-    /// <summary>
-    /// File containing banned player identifiers.
-    /// </summary>
-    internal static string banPlayerListFile = Path.Combine(filePathFolderSaveInfo, "BanPlayerList.txt");
+        /// <summary>
+        /// File containing banned player names.
+        /// </summary>
+        internal static readonly string banNameListFilePath = Path.Combine(Folders.saveInfoFolderPath, "BanNameList.txt");
 
-    /// <summary>
-    /// File containing banned player names.
-    /// </summary>
-    internal static string banNameListFile = Path.Combine(filePathFolderSaveInfo, "BanNameList.txt");
-
-    /// <summary>
-    /// File containing banned words/patterns.
-    /// </summary>
-    internal static string banWordListFile = Path.Combine(filePathFolderSaveInfo, "BanWordList.txt");
+        /// <summary>
+        /// File containing banned words/patterns.
+        /// </summary>
+        internal static readonly string banWordListFilePath = Path.Combine(Folders.saveInfoFolderPath, "BanWordList.txt");
+    }
 
     /// <summary>
     /// Array of file paths that should be checked during initialization.
     /// </summary>
-    private static string[] Paths =>
+    private static readonly string[] InitPaths =
     [
-        banPlayerListFile,
-        banNameListFile,
-        banWordListFile
+        Files.banPlayerListFilePath,
+        Files.banNameListFilePath,
+        Files.banWordListFilePath
     ];
 
     /// <summary>
-    /// Gets a file path by name in the Among Us data directory.
+    /// Gets the game installation path for Among Us.
     /// </summary>
-    /// <param name="name">The name of the file (without extension).</param>
-    /// <returns>The full file path with .json extension.</returns>
-    internal static string GetFilePath(string name)
+    /// <returns>The game installation path string.</returns>
+    internal static string GetPathToAmongUs()
     {
-        return Path.Combine(BAUPlugin.GetDataPathToAmongUs(), $"{name}.json");
+        if (!ModInfo.Starlight)
+        {
+            return Path.GetDirectoryName(Application.dataPath) ?? throw new Exception("Unable to find `Application.dataPath` path!");
+        }
+        else
+        {
+            return Folders.starLightDataFolderPath;
+        }
+    }
+
+    /// <summary>
+    /// Gets the file path for the settings file associated with a specific preset number.
+    /// </summary>
+    /// <param name="preset">The preset number to get the settings file for.</param>
+    internal static string GetSettingsFilePathFromPreset(int preset)
+    {
+        return Path.Combine(Folders.settingsFolderPath, $"Preset-{preset}.json");
+    }
+
+    /// <summary>
+    /// Gets the persistent data path for Among Us.
+    /// </summary>
+    /// <returns>The persistent data path string.</returns>
+    internal static string GetPathToAmongUsData()
+    {
+        if (!ModInfo.Starlight)
+        {
+            return Application.persistentDataPath;
+        }
+        else
+        {
+            return Folders.starLightDataFolderPath;
+        }
     }
 
     /// <summary>
@@ -99,10 +164,10 @@ internal static class BetterDataManager
     internal static void Initialize()
     {
         LoadLegacyData();
-        BetterDataFile.Init();
-        BetterGameSettingsFile.Init();
+        Files.BetterDataFile.Init();
+        Files.BetterGameSettingsFile.Init();
 
-        foreach (var path in Paths)
+        foreach (var path in InitPaths)
         {
             if (!File.Exists(path))
             {
@@ -113,7 +178,7 @@ internal static class BetterDataManager
                 }
 
                 using var writer = File.CreateText(path);
-                if (path == banPlayerListFile)
+                if (path == Files.banPlayerListFilePath)
                 {
                     writer.WriteLine("// Example ban entries (friend code and/or hashed PUID)");
                     writer.WriteLine("// Format: [FriendCode], [HashedPUID]");
@@ -124,7 +189,7 @@ internal static class BetterDataManager
                     writer.WriteLine("// Example with just hashed PUID:");
                     writer.WriteLine("// , hash123xyz789");
                 }
-                else if (path == banNameListFile)
+                else if (path == Files.banNameListFilePath)
                 {
                     writer.WriteLine("// Example banned player names");
                     writer.WriteLine("// Each name on a new line - supports wildcards with **");
@@ -140,7 +205,7 @@ internal static class BetterDataManager
                     writer.WriteLine("// Exploit**");
                     writer.WriteLine("// **Cheat**");
                 }
-                else if (path == banWordListFile)
+                else if (path == Files.banWordListFilePath)
                 {
                     writer.WriteLine("// Example banned words/patterns");
                     writer.WriteLine("// Each word or pattern on a new line - supports wildcards with **");
@@ -170,33 +235,43 @@ internal static class BetterDataManager
     /// </summary>
     private static void LoadLegacyData()
     {
-        if (File.Exists(SettingsFile_Legacy))
+        if (File.Exists(Files.settingsFilePath_Legacy))
         {
-            BAUPlugin.SettingsPreset.Value = 1;
-            File.Move(SettingsFile_Legacy, SettingsFile);
+            BAUConfigs.SettingsPreset.Value = 1;
+            File.Move(Files.settingsFilePath_Legacy, Files.SettingsFilePath);
+        }
+
+        if (File.Exists(Files.dataFilePath_Legacy))
+        {
+            File.Move(Files.dataFilePath_Legacy, Files.dataFilePath);
         }
     }
 
     /// <summary>
-    /// Saves a setting with the specified ID.
+    /// Saves a setting with the specified identifier to the game settings file.
     /// </summary>
-    /// <param name="id">The setting identifier.</param>
-    /// <param name="input">The setting value to save.</param>
-    internal static void SaveSetting(int id, object? input)
+    /// <param name="id">The unique identifier key for the setting.</param>
+    /// <param name="input">The value to save. Can be any object type that is JSON-serializable.</param>
+    internal static void SaveSetting(string id, object? input)
     {
-        BetterGameSettingsFile.Settings[id] = input;
-        BetterGameSettingsFile.Save();
+        id = id.Split(".").Last();
+        Files.BetterGameSettingsFile.Settings[id] = input;
+        Files.BetterGameSettingsFile.Save();
     }
 
     /// <summary>
-    /// Checks if a setting can be loaded as the specified type.
+    /// Determines whether a setting exists and can be loaded as the specified type.
     /// </summary>
-    /// <typeparam name="T">The type to check against.</typeparam>
-    /// <param name="id">The setting identifier.</param>
-    /// <returns>True if the setting exists and can be cast to type T, false otherwise.</returns>
-    internal static bool CanLoadSetting<T>(int id)
+    /// <typeparam name="T">The target type to check compatibility with.</typeparam>
+    /// <param name="id">The unique identifier key for the setting.</param>
+    /// <returns>
+    /// <see langword="true"/> if the setting exists and the value is of type <typeparamref name="T"/>; 
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    internal static bool CanLoadSetting<T>(string id)
     {
-        if (BetterGameSettingsFile.Settings.TryGetValue(id, out var value))
+        id = id.Split(".").Last();
+        if (Files.BetterGameSettingsFile.Settings.TryGetValue(id, out var value))
         {
             if (value is T)
             {
@@ -208,15 +283,23 @@ internal static class BetterDataManager
     }
 
     /// <summary>
-    /// Loads a setting with the specified ID, returning a default value if not found.
+    /// Loads a setting with the specified identifier, returning a default value if the setting 
+    /// does not exist or cannot be cast to the requested type.
     /// </summary>
-    /// <typeparam name="T">The type of the setting value.</typeparam>
-    /// <param name="id">The setting identifier.</param>
-    /// <param name="Default">The default value to return and save if the setting doesn't exist.</param>
-    /// <returns>The setting value or the default value if not found.</returns>
-    internal static T? LoadSetting<T>(int id, T? Default = default)
+    /// <typeparam name="T">The expected type of the setting value.</typeparam>
+    /// <param name="id">The unique identifier key for the setting.</param>
+    /// <param name="Default">
+    /// The default value to return if the setting is not found. This value will also be 
+    /// automatically saved to the settings file.
+    /// </param>
+    /// <returns>
+    /// The stored setting value cast to type <typeparamref name="T"/>, or the specified 
+    /// <paramref name="Default"/> value if the setting doesn't exist.
+    /// </returns>
+    internal static T? LoadSetting<T>(string id, T? Default = default)
     {
-        if (BetterGameSettingsFile.Settings.TryGetValue(id, out var value))
+        id = id.Split(".").Last();
+        if (Files.BetterGameSettingsFile.Settings.TryGetValue(id, out var value))
         {
             if (value is T castValue)
             {
@@ -255,10 +338,10 @@ internal static class BetterDataManager
             }
 
             // Check if the file already contains the new entry
-            if (!File.Exists(banPlayerListFile) || !File.ReadLines(banPlayerListFile).Any(line => line.Equals(newText)))
+            if (!File.Exists(Files.banPlayerListFilePath) || !File.ReadLines(Files.banPlayerListFilePath).Any(line => line.Equals(newText)))
             {
                 // Append the new string to the file if it's not already present
-                File.AppendAllText(banPlayerListFile, Environment.NewLine + newText);
+                File.AppendAllText(Files.banPlayerListFilePath, Environment.NewLine + newText);
             }
         }
     }
@@ -273,42 +356,50 @@ internal static class BetterDataManager
         identifier = identifier.Replace(' ', '_');
         bool didFind = false;
 
-        foreach (var info in BetterDataFile.CheatData.ToArray())
+        foreach (var info in Files.BetterDataFile.CheatData.ToArray())
         {
             if (info.PlayerName.Replace(' ', '_') == identifier || info.HashPuid == identifier || info.FriendCode == identifier)
             {
-                BetterDataFile.CheatData.Remove(info);
+                Files.BetterDataFile.CheatData.Remove(info);
                 didFind = true;
             }
         }
-        foreach (var info in BetterDataFile.SickoData.ToArray())
+        foreach (var info in Files.BetterDataFile.SickoData.ToArray())
         {
             if (info.PlayerName.Replace(' ', '_') == identifier || info.HashPuid == identifier || info.FriendCode == identifier)
             {
-                BetterDataFile.SickoData.Remove(info);
+                Files.BetterDataFile.SickoData.Remove(info);
                 didFind = true;
             }
         }
-        foreach (var info in BetterDataFile.AUMData.ToArray())
+        foreach (var info in Files.BetterDataFile.AUMData.ToArray())
         {
             if (info.PlayerName.Replace(' ', '_') == identifier || info.HashPuid == identifier || info.FriendCode == identifier)
             {
-                BetterDataFile.AUMData.Remove(info);
+                Files.BetterDataFile.AUMData.Remove(info);
                 didFind = true;
             }
         }
-        foreach (var info in BetterDataFile.KNData.ToArray())
+        foreach (var info in Files.BetterDataFile.KNData.ToArray())
         {
             if (info.PlayerName.Replace(' ', '_') == identifier || info.HashPuid == identifier || info.FriendCode == identifier)
             {
-                BetterDataFile.KNData.Remove(info);
+                Files.BetterDataFile.KNData.Remove(info);
+                didFind = true;
+            }
+        }
+        foreach (var info in Files.BetterDataFile.MMCData.ToArray())
+        {
+            if (info.PlayerName.Replace(' ', '_') == identifier || info.HashPuid == identifier || info.FriendCode == identifier)
+            {
+                Files.BetterDataFile.MMCData.Remove(info);
                 didFind = true;
             }
         }
 
         if (didFind)
         {
-            BetterDataFile.Save();
+            Files.BetterDataFile.Save();
         }
 
         return didFind;
@@ -319,10 +410,11 @@ internal static class BetterDataManager
     /// </summary>
     internal static void ClearCheatData()
     {
-        BetterDataFile.CheatData.Clear();
-        BetterDataFile.SickoData.Clear();
-        BetterDataFile.AUMData.Clear();
-        BetterDataFile.KNData.Clear();
-        BetterDataFile.Save();
+        Files.BetterDataFile.CheatData.Clear();
+        Files.BetterDataFile.SickoData.Clear();
+        Files.BetterDataFile.AUMData.Clear();
+        Files.BetterDataFile.KNData.Clear();
+        Files.BetterDataFile.MMCData.Clear();
+        Files.BetterDataFile.Save();
     }
 }

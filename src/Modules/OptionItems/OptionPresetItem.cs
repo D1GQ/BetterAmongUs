@@ -1,4 +1,6 @@
 ﻿using BetterAmongUs.Data;
+using BetterAmongUs.Data.Config;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
 
 namespace BetterAmongUs.Modules.OptionItems;
@@ -11,15 +13,12 @@ internal sealed class OptionPresetItem : OptionStringItem
     internal override bool CanLoad => false;
 
     /// <summary>
-    /// Creates a new preset item for the options menu. If an item with the preset ID already exists, 
-    /// it reuses the existing item and sets up its behavior.
+    /// Creates a new preset item for the options menu.
     /// </summary>
     /// <returns>The created or reused <see cref="OptionPresetItem"/> instance.</returns>
     internal static OptionPresetItem Create()
     {
-        int id = int.MaxValue;
-
-        if (GetOptionById(id) is OptionPresetItem stringItem)
+        if (GetOptionByTranslationName(TranslationStrings.Setting_Presets) is OptionPresetItem stringItem)
         {
             stringItem.CreateBehavior();
             return stringItem;
@@ -27,13 +26,12 @@ internal sealed class OptionPresetItem : OptionStringItem
 
         OptionPresetItem Item = new();
         AllOptions.Add(Item);
-        Item._id = id;
         Item.Tab = GameSettingsPatch.BetterSettingsTab;
-        Item.Translation = "Setting.Presets";
-        Item.TranslatorStrings = Enumerable.Repeat(string.Empty, 10).ToArray();
+        Item.TranslationName = TranslationStrings.Setting_Presets;
+        Item.TranslatorStrings = Enumerable.Repeat(new TranslationStrings.TranslationString(string.Empty), 10).ToArray();
         Item.Range = new IntRange(0, 10);
         Item.DefaultValue = 0;
-        Item.Value = BAUPlugin.SettingsPreset.Value;
+        Item.Value = BAUConfigs.SettingsPreset.Value;
 
         Item.CreateBehavior();
         return Item;
@@ -41,9 +39,9 @@ internal sealed class OptionPresetItem : OptionStringItem
 
     internal override void OnValueChange(int oldValue, int newValue)
     {
-        BAUPlugin.SettingsPreset.Value = newValue;
-        BetterDataManager.BetterGameSettingsFile = new();
-        BetterDataManager.BetterGameSettingsFile.Init();
+        BAUConfigs.SettingsPreset.Value = newValue;
+        BetterDataManager.Files.BetterGameSettingsFile = new();
+        BetterDataManager.Files.BetterGameSettingsFile.Init();
         foreach (var opt in AllOptions)
         {
             opt.TryLoad(true);
@@ -53,6 +51,6 @@ internal sealed class OptionPresetItem : OptionStringItem
 
     public sealed override string ValueAsString()
     {
-        return Translator.GetString("Setting.Preset", [Value.ToString()]);
+        return TranslationStrings.Setting_Preset.Format(Value.ToString());
     }
 }

@@ -1,36 +1,51 @@
-﻿using BetterAmongUs.Helpers;
-using BetterAmongUs.Interfaces;
+﻿using BetterAmongUs.Interfaces;
+using BetterAmongUs.Utilities;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
 
 [Serializable]
-internal sealed class VentReplayEvent : IReplayEvent<(int playerId, bool exit, int ventId)>
+internal sealed class VentReplayEvent : IReplayEvent<VentReplayEvent.VentReplayData, VentReplayEvent.VentReplayArgs>
 {
+    [JsonPropertyName("id")]
     public string Id => "player_vent";
 
-    [JsonInclude]
-    public (int playerId, bool exit, int ventId) EventData { get; set; }
+    [JsonPropertyName("eventData")]
+    public VentReplayData? EventData { get; set; }
 
     public void Play()
     {
-        var vent = ShipStatus.Instance.AllVents.First(v => v.Id == EventData.ventId);
-        var player = Utils.PlayerFromPlayerId(EventData.playerId);
-        if (vent != null && player != null)
+        if (EventData == null)
+            return;
+
+        var player = Utils.PlayerFromPlayerId(EventData.PlayerId);
+        if (player == null)
+            return;
+
+        var vent = ShipStatus.Instance.AllVents.FirstOrDefault(v => v.Id == EventData.VentId);
+        if (vent == null)
+            return;
+
+        if (EventData.Exit)
         {
-            if (EventData.exit)
-            {
-                vent.ExitVent(player);
-            }
-            else
-            {
-                vent.EnterVent(player);
-            }
+            vent.ExitVent(player);
+        }
+        else
+        {
+            vent.EnterVent(player);
         }
     }
 
-    public void Record(PlayerControl player, bool exit, int ventId)
+    public void Undo()
     {
-        EventData = (player.PlayerId, exit, ventId);
     }
+
+    public void Record(VentReplayArgs args)
+    {
+        EventData = new VentReplayData(args.Player.PlayerId, args.Exit, args.VentId);
+    }
+
+    internal record VentReplayData(int PlayerId, bool Exit, int VentId) : IReplayEvent.Data;
+
+    internal record VentReplayArgs(PlayerControl Player, bool Exit, int VentId) : IReplayEvent.Args;
 }

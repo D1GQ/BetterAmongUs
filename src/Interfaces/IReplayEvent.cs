@@ -1,32 +1,55 @@
-﻿using System.Text.Json.Serialization;
-
-namespace BetterAmongUs.Interfaces;
+﻿namespace BetterAmongUs.Interfaces;
 
 /// <summary>
-/// Interface for replay events in BetterAmongUs.
+/// Base interface for all replay events.
 /// </summary>
 public interface IReplayEvent
 {
     /// <summary>
-    /// Gets the unique identifier for the replay event.
+    /// Base record for all replay event data.
     /// </summary>
-    [JsonIgnore]
-    string Id { get; }
+    public abstract record Data;
 
     /// <summary>
-    /// Plays or executes the replay event.
+    /// Base record for all replay event arguments.
     /// </summary>
-    void Play();
+    public abstract record Args;
 }
 
 /// <summary>
-/// Generic interface for replay events with associated data.
+/// Generic interface for replay events with typed data and arguments.
 /// </summary>
-/// <typeparam name="T">The type of data associated with the event.</typeparam>
-public interface IReplayEvent<T> : IReplayEvent
+/// <typeparam name="EventDataType">The type of event data. Must inherit from <see cref="IReplayEvent.Data"/>.</typeparam>
+/// <typeparam name="EventArgType">The type of event arguments. Must inherit from <see cref="IReplayEvent.Args"/>.</typeparam>
+public interface IReplayEvent<EventDataType, EventArgType> : IReplayEvent
+    where EventDataType : IReplayEvent.Data
+    where EventArgType : IReplayEvent.Args
 {
     /// <summary>
-    /// Gets or sets the event data.
+    /// Gets the unique identifier for the event type.
     /// </summary>
-    T? EventData { get; set; }
+    /// <value>A string that uniquely identifies this type of event.</value>
+    string Id { get; }
+
+    /// <summary>
+    /// Gets the stored event data.
+    /// </summary>
+    /// <value>The event data of type <typeparamref name="EventDataType"/>, or null if not recorded.</value>
+    EventDataType? EventData { get; }
+
+    /// <summary>
+    /// Records the event using the provided arguments.
+    /// </summary>
+    /// <param name="replayEventArg">The arguments used to construct the event data.</param>
+    void Record(EventArgType replayEventArg);
+
+    /// <summary>
+    /// Replays the event using the stored event data.
+    /// </summary>
+    void Play();
+
+    /// <summary>
+    /// Undoes the effects of the replayed event.
+    /// </summary>
+    void Undo();
 }

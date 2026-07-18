@@ -1,11 +1,11 @@
 using AmongUs.GameOptions;
 using BetterAmongUs.Attributes;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using BetterAmongUs.Managers;
 using Hazel;
 using InnerNet;
 
-namespace BetterAmongUs.Modules.AntiCheat;
+namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers;
 
 [RegisterRPCHandler]
 internal sealed class ShapeshiftHandler : RPCHandler

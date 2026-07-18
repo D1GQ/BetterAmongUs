@@ -1,12 +1,14 @@
 ﻿using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
+using BetterAmongUs.Data.Config;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
+using BetterAmongUs.Modules.AntiCheat.RPCHandlers.NetObjectHandlers;
 using BetterAmongUs.Modules.Support;
-using BetterAmongUs.Mono;
-using BetterAmongUs.Network;
+using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
+using BetterAmongUs.Utilities;
 using Hazel;
 
 namespace BetterAmongUs.Modules.AntiCheat;
@@ -17,9 +19,24 @@ namespace BetterAmongUs.Modules.AntiCheat;
 internal static class BetterAntiCheat
 {
     /// <summary>
-    /// Gets whether anti-cheat is enabled for the current player.
+    /// Gets whether anti-cheat is enabled.
     /// </summary>
-    internal static bool IsEnabled => PlayerControl.LocalPlayer?.Data?.IsIncomplete == false;
+    internal static bool IsEnabled
+    {
+        get
+        {
+            if (GameState.IsModdedProtocol)
+                return false;
+
+            if (PlayerControl.LocalPlayer == null)
+                return false;
+
+            if (PlayerControl.LocalPlayer.Data == null)
+                return false;
+
+            return PlayerControl.LocalPlayer.Data.IsIncomplete == false;
+        }
+    }
 
     /// <summary>
     /// Updates anti-cheat checks for all players in the game.
@@ -30,28 +47,34 @@ internal static class BetterAntiCheat
         {
             foreach (var player in BAUPlugin.AllPlayerControls)
             {
-                if (BetterDataManager.BetterDataFile.SickoData.Any(info => info.CheckPlayerData(player.Data)))
+                if (BetterDataManager.Files.BetterDataFile.SickoData.Any(info => info.CheckPlayerData(player.Data)))
                 {
-                    string reason = Translator.GetString("AntiCheat.Reason.SickoMenuUser");
-                    string kickMessage = string.Format(Translator.GetString("AntiCheat.KickMessage"), Translator.GetString("AntiCheat.ByAntiCheat"), reason);
+                    string reason = TranslationStrings.AntiCheat_Reason_SickoMenuUser.LocalizedString;
+                    string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
                     player.Kick(true, kickMessage, true);
                 }
-                else if (BetterDataManager.BetterDataFile.AUMData.Any(info => info.CheckPlayerData(player.Data)))
+                else if (BetterDataManager.Files.BetterDataFile.AUMData.Any(info => info.CheckPlayerData(player.Data)))
                 {
-                    string reason = Translator.GetString("AntiCheat.Reason.AUMUser");
-                    string kickMessage = string.Format(Translator.GetString("AntiCheat.KickMessage"), Translator.GetString("AntiCheat.ByAntiCheat"), reason);
+                    string reason = TranslationStrings.AntiCheat_Reason_AUMUser.LocalizedString;
+                    string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
                     player.Kick(true, kickMessage, true);
                 }
-                else if (BetterDataManager.BetterDataFile.KNData.Any(info => info.CheckPlayerData(player.Data)))
+                else if (BetterDataManager.Files.BetterDataFile.KNData.Any(info => info.CheckPlayerData(player.Data)))
                 {
-                    string reason = Translator.GetString("AntiCheat.Reason.KNUser");
-                    string kickMessage = string.Format(Translator.GetString("AntiCheat.KickMessage"), Translator.GetString("AntiCheat.ByAntiCheat"), reason);
+                    string reason = TranslationStrings.AntiCheat_Reason_KNUser.LocalizedString;
+                    string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
                     player.Kick(true, kickMessage, true);
                 }
-                else if (BetterDataManager.BetterDataFile.CheatData.Any(info => info.CheckPlayerData(player.Data)))
+                else if (BetterDataManager.Files.BetterDataFile.MMCData.Any(info => info.CheckPlayerData(player.Data)))
                 {
-                    string reason = Translator.GetString("AntiCheat.Reason.KnownCheater");
-                    string kickMessage = string.Format(Translator.GetString("AntiCheat.KickMessage"), Translator.GetString("AntiCheat.ByAntiCheat"), reason);
+                    string reason = TranslationStrings.AntiCheat_Reason_MMCUser.LocalizedString;
+                    string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
+                    player.Kick(true, kickMessage, true);
+                }
+                else if (BetterDataManager.Files.BetterDataFile.CheatData.Any(info => info.CheckPlayerData(player.Data)))
+                {
+                    string reason = TranslationStrings.AntiCheat_Reason_KnownCheater.LocalizedString;
+                    string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
                     player.Kick(true, kickMessage, true);
                 }
             }
@@ -66,7 +89,8 @@ internal static class BetterAntiCheat
     /// <param name="oldReader">The MessageReader containing RPC data.</param>
     internal static void HandleCheatRPCBeforeCheck(PlayerControl player, byte callId, MessageReader oldReader)
     {
-        if (!IsEnabled) return;
+        if (!IsEnabled)
+            return;
 
         MessageReader reader = MessageReader.Get(oldReader);
         RPCHandler.HandleRPC(callId, player, reader, HandlerFlag.CheatRpcCheck);
@@ -81,9 +105,21 @@ internal static class BetterAntiCheat
     /// <param name="oldReader">The MessageReader containing RPC data.</param>
     internal static void CheckRPC(PlayerControl player, byte callId, MessageReader oldReader)
     {
-        if (player == null || player?.Data == null) return;
-        if (!IsEnabled || !BAUPlugin.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !BetterGameSettings.DetectInvalidRPCs.GetBool()) return;
-        if (player.IsLocalPlayer() && player.IsHost()) return;
+        if (!IsEnabled || !BAUConfigs.AntiCheat.Value)
+            return;
+
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) ||
+            !BetterGameSettings.DetectInvalidRpcs.GetBool())
+            return;
+
+        if (player == null)
+            return;
+
+        if (player.Data == null)
+            return;
+
+        if (player.IsLocalPlayer() && player.IsHost())
+            return;
 
         MessageReader reader = MessageReader.Get(oldReader);
         RPCHandler.HandleRPC(callId, player, reader, HandlerFlag.AntiCheat);
@@ -101,8 +137,8 @@ internal static class BetterAntiCheat
     {
         try
         {
-            if (player == null || player?.Data == null) return true;
-            if (!IsEnabled || !BAUPlugin.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !BetterGameSettings.DetectInvalidRPCs.GetBool()) return true;
+            if (player == null || player.Data == null) return true;
+            if (!IsEnabled || !BAUConfigs.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !BetterGameSettings.DetectInvalidRpcs.GetBool()) return true;
             if (player.IsLocalPlayer() && player.IsHost()) return true;
 
             MessageReader reader = MessageReader.Get(oldReader);
@@ -120,24 +156,15 @@ internal static class BetterAntiCheat
                 return false;
             }
 
-            if (callId == (byte)RpcCalls.SetNamePlateStr)
-            {
-                if (RPC.IsPackedCustomRpc(reader))
-                {
-                    reader.Recycle();
-                    return false;
-                }
-            }
-
             if (!player.IsHost())
             {
                 if (callId is (byte)RpcCalls.SetTasks
                 or (byte)RpcCalls.ExtendLobbyTimer
                 or (byte)RpcCalls.CloseMeeting)
                 {
-                    if (BetterNotificationManager.NotifyCheat(player, string.Format(Translator.GetString("AntiCheat.InvalidHostRPC"), Enum.GetName((RpcCalls)callId))))
+                    if (BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_InvalidHostRPC.Format(Enum.GetName((RpcCalls)callId))))
                     {
-                        Logger_.LogCheat($"{player.BetterData().RealName} {Enum.GetName((RpcCalls)callId)}: {!player.IsHost()}");
+                        Logger_.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {!player.IsHost()}");
                     }
 
                     reader.Recycle();
@@ -154,9 +181,9 @@ internal static class BetterAntiCheat
                     or (byte)RpcCalls.SetPetStr
                     or (byte)RpcCalls.SetNamePlateStr)
                 {
-                    if (BetterNotificationManager.NotifyCheat(player, string.Format(Translator.GetString("AntiCheat.InvalidSetRPC"), Enum.GetName((RpcCalls)callId))))
+                    if (BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_InvalidSetRPC.Format(Enum.GetName((RpcCalls)callId))))
                     {
-                        Logger_.LogCheat($"{player.BetterData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGamePlay}");
+                        Logger_.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGamePlay}");
                     }
 
                     reader.Recycle();
@@ -194,9 +221,9 @@ internal static class BetterAntiCheat
                     or (byte)RpcCalls.CheckVanish
                     or (byte)RpcCalls.StartVanish)
                 {
-                    if (BetterNotificationManager.NotifyCheat(player, string.Format(Translator.GetString("AntiCheat.InvalidLobbyRPC"), Enum.GetName((RpcCalls)callId))))
+                    if (BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_InvalidLobbyRPC.Format(Enum.GetName((RpcCalls)callId))))
                     {
-                        Logger_.LogCheat($"{player.BetterData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGame} && {GameState.IsLobby}");
+                        Logger_.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGame} && {GameState.IsLobby}");
                     }
 
                     reader.Recycle();
@@ -223,7 +250,8 @@ internal static class BetterAntiCheat
     /// <param name="oldReader">The MessageReader containing RPC data.</param>
     internal static void HandleRPC(PlayerControl player, byte callId, MessageReader oldReader)
     {
-        if (player == null || player?.Data == null || player.IsLocalPlayer()) return;
+        if (player == null || player.Data == null || player.IsLocalPlayer())
+            return;
 
         MessageReader reader = MessageReader.Get(oldReader);
         RPCHandler.HandleRPC(callId, player, reader, HandlerFlag.Handle);
@@ -239,24 +267,24 @@ internal static class BetterAntiCheat
     /// <returns>True if the sabotage should be allowed, false otherwise.</returns>
     internal static bool RpcUpdateSystemCheck(PlayerControl player, SystemTypes systemType, MessageReader oldReader)
     {
-        if (Utils.SystemTypeIsSabotage(systemType) || systemType is SystemTypes.Doors)
-        {
-            if (GameState.IsPrivateOnlyLobby && BetterGameSettings.DisableSabotages.GetBool()) return false;
-        }
-
         MessageReader reader = MessageReader.Get(oldReader);
-
-        RegisterRPCHandlerAttribute.GetClassInstance<UpdateSystemHandler>().CatchedSystemType = systemType;
-        bool notCanceled = RPCHandler.HandleRPC((byte)RpcCalls.UpdateSystem, player, reader, HandlerFlag.AntiCheatCancel);
-        if (!notCanceled)
+        RegisterRPCHandlerAttribute.GetInstance<UpdateSystemHandler>().CatchedSystemType = systemType;
+        if (!RPCHandler.HandleRPC((byte)RpcCalls.UpdateSystem, player, reader, HandlerFlag.AntiCheatCancel))
         {
-            var tempReader = MessageReader.Get(reader);
-            Logger_.LogCheat($"RPC canceled by Anti-Cheat: {Enum.GetName(typeof(SystemTypes), (int)systemType)} - {tempReader.ReadByte()}");
-            tempReader.Recycle();
+            reader.Recycle();
+            return false;
         }
-
         reader.Recycle();
-        return notCanceled;
+
+        MessageReader reader2 = MessageReader.Get(oldReader);
+        if (!RPCHandler.HandleRPC((byte)RpcCalls.UpdateSystem, player, reader2, HandlerFlag.BetterHost))
+        {
+            reader2.Recycle();
+            return false;
+        }
+        reader2.Recycle();
+
+        return true;
     }
 
     /// <summary>

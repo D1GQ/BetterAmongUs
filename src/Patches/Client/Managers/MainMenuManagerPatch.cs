@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Utilities;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules.Support;
 using HarmonyLib;
@@ -54,7 +54,7 @@ internal static class MainMenuManagerPatch
         }
 
         // Apply custom colors to main menu background
-        __instance.transform.Find("MainUI/AspectScaler/BackgroundTexture")?.gameObject?.SetSpriteColors(sprite => ObjectHelper.AddColor(sprite));
+        __instance.transform.Find("MainUI/AspectScaler/BackgroundTexture")?.gameObject?.SetSpriteColors(sprite => GameObjectUtils.AddColor(sprite));
 
         // Create a reusable button prefab if it doesn't exist yet
         if (ButtonPrefab == null)
@@ -66,6 +66,15 @@ internal static class MainMenuManagerPatch
         }
 
         // Notify UpdateManager that we're in the main menu
-        UpdateManager.Instance?.OnMainMenu();
+        BAUUpdateManager.Instance?.OnMainMenu();
+    }
+
+    // Disable eject button to prevent it from blocking update button
+    [HarmonyPatch(typeof(EjectMainMenu), nameof(EjectMainMenu.Start))]
+    [HarmonyPrefix]
+    private static bool EjectMainMenu_Start_Prefix(EjectMainMenu __instance)
+    {
+        __instance.gameObject.SetActive(false);
+        return false;
     }
 }

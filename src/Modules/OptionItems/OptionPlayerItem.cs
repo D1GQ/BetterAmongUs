@@ -1,4 +1,6 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Generated;
+using BetterAmongUs.Utilities;
+using BetterAmongUs.Utilities.Extension;
 using UnityEngine;
 
 namespace BetterAmongUs.Modules.OptionItems;
@@ -33,20 +35,19 @@ public sealed class OptionPlayerItem : OptionItem<int>
     /// </summary>
     internal override bool CanLoad => false;
 
-    private static List<OptionPlayerItem> optionPlayerItems = [];
+    private static readonly List<OptionPlayerItem> optionPlayerItems = [];
 
     /// <summary>
-    /// Creates a new player option item or returns an existing one with the same ID.
+    /// Creates a new player option item.
     /// </summary>
-    /// <param name="id">The unique identifier for this option.</param>
     /// <param name="tab">The tab this option belongs to.</param>
-    /// <param name="tranStr">The translation key for the option name.</param>
+    /// <param name="translationString">The translation key for the option name.</param>
     /// <param name="parent">Optional parent option for hierarchical organization.</param>
     /// <param name="canBeRandom">Whether this option allows random player selection.</param>
     /// <returns>A new or existing OptionPlayerItem instance.</returns>
-    internal static OptionPlayerItem Create(int id, OptionTab tab, string tranStr, OptionItem? parent = null, bool canBeRandom = true)
+    internal static OptionPlayerItem Create(OptionTab tab, TranslationStrings.TranslationString translationString, OptionItem? parent = null, bool canBeRandom = true)
     {
-        if (optionPlayerItems.FirstOrDefault(opt => opt.Id == id) is OptionPlayerItem playerItem)
+        if (optionPlayerItems.FirstOrDefault(opt => opt.TranslationName.Key == translationString.Key) is OptionPlayerItem playerItem)
         {
             playerItem.CreateBehavior();
             return playerItem;
@@ -55,9 +56,8 @@ public sealed class OptionPlayerItem : OptionItem<int>
         OptionPlayerItem Item = new();
         optionPlayerItems.Add(Item);
         Item.Value = canBeRandom ? -1 : 0; ;
-        Item._id = id;
         Item.Tab = tab;
-        Item.Translation = tranStr;
+        Item.TranslationName = translationString;
         Item.CanBeRandom = canBeRandom;
 
         if (parent != null)
@@ -82,7 +82,9 @@ public sealed class OptionPlayerItem : OptionItem<int>
     /// </summary>
     protected sealed override void CreateBehavior()
     {
-        if (!GameSettingMenu.Instance) return;
+        if (!GameSettingMenu.Instance)
+            return;
+
         AllOptionsTemp.Add(this);
         var numberOption = UnityEngine.Object.Instantiate(Tab.AUTab.numberOptionOrigin, Tab.AUTab.settingsContainer);
         Option = numberOption;
@@ -107,9 +109,9 @@ public sealed class OptionPlayerItem : OptionItem<int>
             numberOption.DestroyTextTranslators();
             numberOption.TitleText.text = Name;
             numberOption.PlusBtn.OnClick = new();
-            numberOption.PlusBtn.OnClick.AddListener((Action)(() => Increase()));
+            numberOption.PlusBtn.OnClick.AddListener(Increase);
             numberOption.MinusBtn.OnClick = new();
-            numberOption.MinusBtn.OnClick.AddListener((Action)(() => Decrease()));
+            numberOption.MinusBtn.OnClick.AddListener(Decrease);
         }
     }
 
@@ -202,7 +204,8 @@ public sealed class OptionPlayerItem : OptionItem<int>
     /// <param name="updateTabVisuals">Whether to update the parent tab visuals as well.</param>
     internal sealed override void UpdateVisuals(bool updateTabVisuals = true)
     {
-        if (!GameSettingMenu.Instance) return;
+        if (!GameSettingMenu.Instance)
+            return;
 
         if (Option is NumberOption numberOption)
         {
@@ -251,25 +254,12 @@ public sealed class OptionPlayerItem : OptionItem<int>
     /// Gets the integer value (player index) of this option.
     /// </summary>
     /// <returns>The current player index.</returns>
-    public sealed override int GetInt() => GetValue();
-
-    /// <summary>
-    /// Gets the float representation of the player index.
-    /// </summary>
-    /// <returns>The current player index as a float.</returns>
-    public sealed override float GetFloat() => GetValue();
+    public int GetInt() => GetValue();
 
     /// <summary>
     /// Checks if the option value matches a specific integer.
     /// </summary>
-    /// <param name="@int">The integer value to compare against.</param>
+    /// <param name="value">The integer value to compare against.</param>
     /// <returns>True if the option value matches, false otherwise.</returns>
-    public sealed override bool Is(int @int) => @int == GetInt();
-
-    /// <summary>
-    /// Checks if the option value matches a specific float.
-    /// </summary>
-    /// <param name="@float">The float value to compare against.</param>
-    /// <returns>True if the option value matches (as integer), false otherwise.</returns>
-    public sealed override bool Is(float @float) => @float == GetFloat();
+    public sealed override bool Is(int value) => value == GetInt();
 }

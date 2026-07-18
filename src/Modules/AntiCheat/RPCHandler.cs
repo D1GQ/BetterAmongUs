@@ -1,8 +1,8 @@
 ﻿using BetterAmongUs.Attributes;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Modules.Support;
-using BetterAmongUs.Mono;
+using BetterAmongUs.MonoScripts.Extended;
 using Hazel;
 using InnerNet;
 using UnityEngine;
@@ -181,7 +181,7 @@ internal abstract class RPCHandler
     {
         string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRPC)CallId) ?? $"Unregistered({CallId})";
         Name = $"[{Enum.GetName(catchedHandlerFlag)}] > " + Name;
-        Logger_.LogCheat($"{catchedSender?.BetterData()?.RealName ?? player.BetterData()?.RealName ?? string.Empty} {Name}: {info}");
+        Logger_.LogCheat($"{catchedSender?.ExtendedData()?.RealName ?? player.ExtendedData()?.RealName ?? string.Empty} {Name}: {info}");
     }
 
     /// <summary>
@@ -191,7 +191,7 @@ internal abstract class RPCHandler
     internal string GetFormatActionText()
     {
         string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRPC)CallId) ?? $"Unregistered({CallId})";
-        return string.Format(Translator.GetString("AntiCheat.InvalidActionRPC"), Name);
+        return TranslationStrings.AntiCheat_InvalidActionRPC.Format(Name);
     }
 
     /// <summary>
@@ -201,6 +201,6 @@ internal abstract class RPCHandler
     internal string GetFormatSetText()
     {
         string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRPC)CallId) ?? $"Unregistered({CallId})";
-        return string.Format(Translator.GetString("AntiCheat.InvalidSetRPC"), Name);
+        return TranslationStrings.AntiCheat_InvalidSetRPC.Format(Name);
     }
 }

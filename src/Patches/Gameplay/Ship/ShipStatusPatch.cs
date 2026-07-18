@@ -10,6 +10,7 @@ internal static class ShipStatusPatch
     [HarmonyPostfix]
     private static void ShipStatus_Awake_Postfix(ShipStatus __instance)
     {
+        // Calculate vent groups when ship initializes
         VentGroups.CalculateAllVentGroups(__instance.AllVents);
     }
 }

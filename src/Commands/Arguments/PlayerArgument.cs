@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Utilities;
 
 namespace BetterAmongUs.Commands.Arguments;
 
@@ -7,33 +7,64 @@ namespace BetterAmongUs.Commands.Arguments;
 /// </summary>
 /// <param name="command">The command this argument belongs to.</param>
 /// <param name="argInfo">Information about the argument (default: "{player}").</param>
-internal sealed class PlayerArgument(BaseCommand? command, string argInfo = "{player}") : BaseArgument(command, argInfo)
+internal sealed class PlayerArgument(BaseCommand command, string argInfo = "{player}") : BaseArgument<PlayerControl>(command, argInfo)
 {
-    /// <summary>
-    /// Gets the player argument suggestions for auto-completion.
-    /// </summary>
-    /// <remarks>
-    /// Suggestions are ordered with the local player first, then other players.
-    /// Spaces in player names are replaced with underscores for command parsing.
-    /// </remarks>
-    protected override string[] ArgSuggestions => BAUPlugin.AllPlayerControls.OrderBy(pc => pc.IsLocalPlayer() ? 0 : 1).Select(pc => pc.Data.PlayerName.Replace(' ', '_')).ToArray();
-
-    /// <summary>
-    /// Attempts to get a PlayerControl instance based on the argument value.
-    /// </summary>
-    /// <returns>
-    /// The PlayerControl if found; otherwise, null.
-    /// Displays an error message if the player is not found.
-    /// </returns>
-    internal PlayerControl? TryGetTarget()
+    protected override string[] GetArgSuggestions()
     {
-        var player = BAUPlugin.AllPlayerControls.FirstOrDefault(pc => pc.Data.PlayerName.ToLower().Replace(' ', '_') == Arg.ToLower());
-
-        if (player == null)
+        List<string> suggestions = [];
+        foreach (var player in BAUPlugin.AllPlayerControls.OrderBy(pc => pc.IsLocalPlayer() ? 0 : 1))
         {
-            BaseCommand.CommandErrorText($"Player not found!");
+            if (player.Data == null)
+                continue;
+
+            if (!string.IsNullOrEmpty(player.Data.PlayerName))
+            {
+                suggestions.Add(player.Data.PlayerName.Replace(' ', '_'));
+            }
+
+            if (!string.IsNullOrEmpty(player.Data.FriendCode))
+            {
+                suggestions.Add(player.Data.FriendCode);
+            }
+
+            suggestions.Add($"ID{player.Data.PlayerId}");
         }
 
-        return player;
+        return [.. suggestions];
+    }
+
+    /// <summary>
+    /// Tries to parse the player argument and find the corresponding PlayerControl. 
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    internal override bool TryParse(out PlayerControl result)
+    {
+        foreach (var player in BAUPlugin.AllPlayerControls)
+        {
+            if (player.Data == null) continue;
+
+            if (IsMatchingPlayer(player.Data))
+            {
+                result = player;
+                return true;
+            }
+        }
+
+        result = default!;
+        BaseCommand.CommandErrorText("Player not found!");
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if the given player info matches the argument value.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    private bool IsMatchingPlayer(NetworkedPlayerInfo data)
+    {
+        return Arg.Equals(data.PlayerName.Replace(' ', '_'), StringComparison.OrdinalIgnoreCase)
+            || Arg.Equals(data.FriendCode, StringComparison.OrdinalIgnoreCase)
+            || Arg.Equals($"ID{data.PlayerId}", StringComparison.OrdinalIgnoreCase);
     }
 }

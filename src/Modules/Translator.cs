@@ -1,4 +1,6 @@
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Data.Config;
+using BetterAmongUs.Generated;
+using BetterAmongUs.Utilities;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using System.Globalization;
 using System.Text.Json;
@@ -32,7 +34,7 @@ internal static class Translator
     {
         try
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var assembly = ModInfo.Assembly;
             var jsonFileNames = GetJsonResourceNames(assembly);
 
             TranslateMaps = [];
@@ -78,7 +80,8 @@ internal static class Translator
         try
         {
             using var resourceStream = assembly.GetManifestResourceStream(resourceName);
-            if (resourceStream == null) return;
+            if (resourceStream == null)
+                return;
 
             using var reader = new StreamReader(resourceStream);
             var jsonContent = reader.ReadToEnd();
@@ -151,29 +154,29 @@ internal static class Translator
     /// <summary>
     /// Gets a translated string for a specific language.
     /// </summary>
-    /// <param name="key">The translation key.</param>
+    /// <param name="translationString">The translation key.</param>
     /// <param name="languageId">The language to use.</param>
     /// <param name="showInvalid">Whether to show invalid key indicators.</param>
     /// <returns>The translated string.</returns>
-    internal static string GetString(string key, SupportedLangs languageId, bool showInvalid = true)
+    internal static string GetString(TranslationStrings.TranslationString translationString, SupportedLangs languageId, bool showInvalid = true)
     {
-        var fallbackText = showInvalid ? $"<INVALID:{key}>" : key;
+        var fallbackText = showInvalid ? $"<INVALID:{translationString.Key}>" : translationString.Key;
 
         try
         {
             // Try to get from custom translations
-            if (TranslateMaps.TryGetValue(key, out var languageMap))
+            if (TranslateMaps.TryGetValue(translationString.Key, out var languageMap))
             {
-                var result = GetTranslationFromMap(key, languageId, languageMap, showInvalid);
+                var result = GetTranslationFromMap(translationString, languageId, languageMap, showInvalid);
                 if (result != null) return result;
             }
 
             // Fallback to vanilla string names
-            return GetVanillaStringFallback(key, fallbackText);
+            return GetVanillaStringFallback(translationString, fallbackText);
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Error retrieving string [{key}]: {ex}", "Translator");
+            Logger_.Error($"Error retrieving string [{translationString}]: {ex}", "Translator");
             return fallbackText;
         }
     }
@@ -181,7 +184,7 @@ internal static class Translator
     /// <summary>
     /// Retrieves a localized string corresponding to the specified key, with optional formatting and retrieval options.
     /// </summary>
-    /// <param name="key">The key that identifies the string resource to retrieve.</param>
+    /// <param name="translationString">The key that identifies the string resource to retrieve.</param>
     /// <param name="formatting">An array of objects to format the retrieved string with, or null to return the string without formatting.</param>
     /// <param name="useConsoleLanguage">true to force retrieval in English for console output; otherwise, false.</param>
     /// <param name="showInvalid">true to return a placeholder for invalid or missing keys; otherwise, false to return the key itself.</param>
@@ -189,11 +192,11 @@ internal static class Translator
     /// specified language.</param>
     /// <returns>The localized string corresponding to the specified key, formatted if formatting is provided. Returns a
     /// placeholder or the key itself if the key is invalid, depending on the showInvalid parameter.</returns>
-    internal static string GetString(string key, string[]? formatting = null, bool useConsoleLanguage = false, bool showInvalid = true, bool vanilla = false)
+    internal static string GetString(TranslationStrings.TranslationString translationString, string[]? formatting = null, bool useConsoleLanguage = false, bool showInvalid = true, bool vanilla = false)
     {
         if (vanilla)
         {
-            string nameToFind = key;
+            string nameToFind = translationString.Key;
             if (Enum.TryParse(nameToFind, out StringNames text))
             {
                 return TranslationController.Instance.GetString(text);
@@ -205,8 +208,8 @@ internal static class Translator
         }
         var langId = TranslationController.InstanceExists ? TranslationController.Instance.currentLanguage.languageID : SupportedLangs.English;
         if (useConsoleLanguage) langId = SupportedLangs.English;
-        if (BAUPlugin.ForceOwnLanguage.Value) langId = GetUserSystemLanguage();
-        string str = GetString(key, langId, showInvalid);
+        if (BAUConfigs.ForceOwnLanguage.Value) langId = GetUserSystemLanguage();
+        string str = GetString(translationString, langId, showInvalid);
         if (formatting != null)
             str = string.Format(str, formatting);
         return str ?? string.Empty;
@@ -221,7 +224,7 @@ internal static class Translator
     /// <param name="vanilla">true to retrieve the original, unmodified string values; otherwise, false. The default is false.</param>
     /// <returns>An array of strings containing the localized values for each key in the input collection. The order of the
     /// returned array matches the order of the input keys.</returns>
-    internal static string[] GetStrings(IEnumerable<string> keys, bool console = false, bool showInvalid = true, bool vanilla = false)
+    internal static string[] GetStrings(IEnumerable<TranslationStrings.TranslationString> keys, bool console = false, bool showInvalid = true, bool vanilla = false)
     {
         var results = new List<string>();
         foreach (var trans in keys)
@@ -235,7 +238,12 @@ internal static class Translator
     /// <summary>
     /// Gets a translation from the language map with Chinese character detection.
     /// </summary>
-    private static string GetTranslationFromMap(string key, SupportedLangs languageId, Dictionary<int, string> languageMap, bool showInvalid)
+    /// <param name="key">The translation key to look up.</param>
+    /// <param name="languageId">The target language ID.</param>
+    /// <param name="languageMap">The language map containing translations.</param>
+    /// <param name="showInvalid">Whether to show invalid key indicators.</param>
+    /// <returns>The translated string, or null if not found.</returns>
+    private static string GetTranslationFromMap(TranslationStrings.TranslationString key, SupportedLangs languageId, Dictionary<int, string> languageMap, bool showInvalid)
     {
         if (languageMap.TryGetValue((int)languageId, out var translation) &&
             !string.IsNullOrEmpty(translation))
@@ -259,10 +267,13 @@ internal static class Translator
     /// <summary>
     /// Fallback method to get vanilla string names.
     /// </summary>
-    private static string GetVanillaStringFallback(string key, string fallbackText)
+    /// <param name="translationString">The translation key to look up.</param>
+    /// <param name="fallbackText">The fallback text to return if not found.</param>
+    /// <returns>The translated string or fallback text.</returns>
+    private static string GetVanillaStringFallback(TranslationStrings.TranslationString translationString, string fallbackText)
     {
-        var matchingStringNames = EnumHelper.GetAllValues<StringNames>()
-            .Where(x => x.ToString() == key)
+        var matchingStringNames = EnumUtils.GetAllValues<StringNames>()
+            .Where(x => x.ToString() == translationString.Key)
             .ToArray();
 
         return matchingStringNames.Length > 0 ? GetString(matchingStringNames[0]) : fallbackText;
@@ -284,7 +295,7 @@ internal static class Translator
     internal static SupportedLangs GetTargetLanguageId(bool useConsoleLanguage = false)
     {
         if (useConsoleLanguage) return SupportedLangs.English;
-        if (BAUPlugin.ForceOwnLanguage.Value) return GetUserSystemLanguage();
+        if (BAUConfigs.ForceOwnLanguage.Value) return GetUserSystemLanguage();
 
         return TranslationController.InstanceExists ?
             TranslationController.Instance.currentLanguage.languageID :
@@ -319,6 +330,9 @@ internal static class Translator
     /// <summary>
     /// Applies string replacements to a translated text.
     /// </summary>
+    /// <param name="text">The text to apply replacements to.</param>
+    /// <param name="replacements">Dictionary of replacement pairs.</param>
+    /// <returns>The text with replacements applied.</returns>
     private static string ApplyReplacements(string text, Dictionary<string, string> replacements)
     {
         if (replacements == null) return text;
@@ -333,18 +347,24 @@ internal static class Translator
     /// <summary>
     /// Gets an English fallback translation.
     /// </summary>
-    private static string GetEnglishFallback(string key) =>
+    /// <param name="key">The translation key to look up.</param>
+    /// <returns>The English translation of the key.</returns>
+    private static string GetEnglishFallback(TranslationStrings.TranslationString key) =>
         GetString(key, SupportedLangs.English);
 
     /// <summary>
     /// Checks if a language ID represents a Chinese language.
     /// </summary>
+    /// <param name="languageId">The language ID to check.</param>
+    /// <returns>true if the language is Chinese; otherwise, false.</returns>
     private static bool IsChineseLanguage(SupportedLangs languageId) =>
         languageId is SupportedLangs.SChinese or SupportedLangs.TChinese;
 
     /// <summary>
     /// Checks if a string contains Chinese characters.
     /// </summary>
+    /// <param name="text">The text to check.</param>
+    /// <returns>true if Chinese characters are found; otherwise, false.</returns>
     private static bool ContainsChineseCharacters(string text) =>
         Regex.IsMatch(text, @"[\u4e00-\u9fa5]");
 }

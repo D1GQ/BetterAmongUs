@@ -1,5 +1,5 @@
 ﻿using BetterAmongUs.Data;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;

@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Utilities;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Structs;
@@ -40,7 +40,7 @@ internal sealed class UserInfo(string playerName, string hashPuid, string friend
             return (true, Reason);
         }
 
-        return (false, "");
+        return (false, string.Empty);
     }
 
     /// <summary>

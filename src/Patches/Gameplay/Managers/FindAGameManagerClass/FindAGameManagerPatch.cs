@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Utilities;
 using HarmonyLib;
 using InnerNet;
 using TMPro;

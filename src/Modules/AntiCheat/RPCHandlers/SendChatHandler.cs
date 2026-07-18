@@ -1,12 +1,12 @@
 using AmongUs.Data;
 using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using Hazel;
 
-namespace BetterAmongUs.Modules.AntiCheat;
+namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers;
 
 [RegisterRPCHandler]
 internal sealed class SendChatHandler : RPCHandler
@@ -19,7 +19,7 @@ internal sealed class SendChatHandler : RPCHandler
 
         if (BetterGameSettings.UseBanWordList.GetBool() && (!BetterGameSettings.UseBanWordListOnlyLobby.GetBool() || GameState.IsLobby))
         {
-            if (TextFileHandler.CompareStringFilters(BetterDataManager.banWordListFile, text.Split(' ')))
+            if (TextFileHandler.CompareStringFilters(BetterDataManager.Files.banWordListFilePath, text.Split(' ')))
             {
                 sender.Kick(false, $"has been kicked due to\nchat message containing a banned word!");
             }

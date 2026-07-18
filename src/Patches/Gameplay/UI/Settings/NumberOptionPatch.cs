@@ -13,23 +13,28 @@ internal static class NumberOptionPatch
     {
         if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllGameOptions)) return true;
 
+        // Determine multiplier based on modifier keys
         int times = 1;
         if (Input.GetKey(KeyCode.LeftShift))
-            times = 5;
+            times = 5;      // Shift = 5x
         if (Input.GetKey(KeyCode.LeftControl))
-            times = 10;
+            times = 10;     // Control = 10x
 
+        // Increase value with bounds checking
         if (__instance.Value + __instance.Increment * times > __instance.ValidRange.max)
         {
-            __instance.Value = __instance.ValidRange.max;
+            __instance.Value = __instance.ValidRange.max; // Cap at max
         }
         else
         {
             __instance.Value = __instance.ValidRange.Clamp(__instance.Value + __instance.Increment * times);
         }
+
+        // Update UI and invoke events
         __instance.UpdateValue();
         __instance.OnValueChanged.Invoke(__instance);
         __instance.AdjustButtonsActiveState();
+
         return false;
     }
 
@@ -39,23 +44,28 @@ internal static class NumberOptionPatch
     {
         if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllGameOptions)) return true;
 
+        // Determine multiplier based on modifier keys
         int times = 1;
         if (Input.GetKey(KeyCode.LeftShift))
-            times = 5;
+            times = 5;      // Shift = 5x
         if (Input.GetKey(KeyCode.LeftControl))
-            times = 10;
+            times = 10;     // Control = 10x
 
+        // Decrease value with bounds checking
         if (__instance.Value - __instance.Increment * times < __instance.ValidRange.min)
         {
-            __instance.Value = __instance.ValidRange.min;
+            __instance.Value = __instance.ValidRange.min; // Cap at min
         }
         else
         {
             __instance.Value = __instance.ValidRange.Clamp(__instance.Value - __instance.Increment * times);
         }
+
+        // Update UI and invoke events
         __instance.UpdateValue();
         __instance.OnValueChanged.Invoke(__instance);
         __instance.AdjustButtonsActiveState();
+
         return false;
     }
 }

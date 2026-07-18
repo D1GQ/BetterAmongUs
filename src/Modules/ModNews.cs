@@ -1,7 +1,7 @@
 ﻿using AmongUs.Data;
 using Assets.InnerNet;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Helpers;
+using BetterAmongUs.Utilities;
 using BetterAmongUs.Network.Configs;
 using UnityEngine;
 

@@ -10,6 +10,7 @@ internal static class RoomTrackerPatch
     [HarmonyPostfix]
     private static void RoomTracker_Awake_Postfix(RoomTracker __instance)
     {
+        // Fix aspect positioning
         var originalParent = __instance.transform.parent;
 
         var holder = new GameObject("RoomTrackerHolder");

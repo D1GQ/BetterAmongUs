@@ -1,10 +1,14 @@
-using BepInEx;
-using BetterAmongUs.Data;
-using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Data;
+using BetterAmongUs.Data.Config;
+using BetterAmongUs.Data.Json;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
-using BetterAmongUs.Mono;
+using BetterAmongUs.MonoScripts.Extended;
+using BetterAmongUs.Patches.Gameplay.UI;
 using BetterAmongUs.Patches.Gameplay.UI.Chat;
+using BetterAmongUs.Utilities;
+using BetterAmongUs.Utilities.Extension;
 using HarmonyLib;
 using System.Diagnostics;
 using TMPro;
@@ -22,7 +26,7 @@ internal static class OptionsMenuBehaviourPatch
     private static void Start_Postfix(OptionsMenuBehaviour __instance)
     {
         // Create custom "Better Options" tab in settings menu
-        BetterOptionsTab = CreateTabPage(__instance, Translator.GetString("BetterOption"));
+        BetterOptionsTab = CreateTabPage(__instance, TranslationStrings.BetterOption.LocalizedString);
 
         // Populate the tab with all BAU client options
         SetupAllClientOptions(__instance);
@@ -33,36 +37,44 @@ internal static class OptionsMenuBehaviourPatch
 
     private static void SetupAllClientOptions(OptionsMenuBehaviour __instance)
     {
-        if (__instance.DisableMouseMovement == null) return;
+        if (__instance.DisableMouseMovement == null)
+            return;
 
         // Clear previous client options to prevent duplicates
         ClientOptionItem.ClientOptions.Clear();
 
         // Toggle options with config binding
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.AntiCheat"), BAUPlugin.AntiCheat, __instance);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.SendBetterRpc"), BAUPlugin.SendBetterRpc, __instance, SendBetterRpcAction);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.BetterNotifications"), BAUPlugin.BetterNotifications, __instance, ClearNotifications);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.ForceOwnLanguage"), BAUPlugin.ForceOwnLanguage, __instance);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.ChatDarkMode"), BAUPlugin.ChatDarkMode, __instance, ChatPatch.SetChatTheme);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.ChatInGame"), BAUPlugin.ChatInGameplay, __instance);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.LobbyInfo"), BAUPlugin.LobbyPlayerInfo, __instance);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.LobbyTheme"), BAUPlugin.DisableLobbyTheme, __instance, ToggleLobbyTheme);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.UnlockFPS"), BAUPlugin.UnlockFPS, __instance, UpdateFrameRate);
-        ClientOptionItem.CreateToggle(Translator.GetString("BetterOption.ShowFPS"), BAUPlugin.ShowFPS, __instance);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_AntiCheat, BAUConfigs.AntiCheat, 1, __instance);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_SendBetterRpc, BAUConfigs.SendBetterRpc, 1, __instance, SendBetterRpcAction);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_BetterNotifications, BAUConfigs.BetterNotifications, 1, __instance, BetterNotificationManager.ClearNotifications);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_ForceOwnLanguage, BAUConfigs.ForceOwnLanguage, 1, __instance);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_ChatDarkMode, BAUConfigs.ChatDarkMode, 1, __instance, ChatPatch.SetChatTheme);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_ChatInGame, BAUConfigs.ChatInGameplay, 1, __instance);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_LobbyInfo, BAUConfigs.LobbyPlayerInfo, 1, __instance);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_LobbyTheme, BAUConfigs.DisableLobbyTheme, 1, __instance, ToggleLobbyTheme);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_UnlockFPS, BAUConfigs.UnlockFPS, 1, __instance, UpdateFrameRate);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_ShowFPS, BAUConfigs.ShowFPS, 1, __instance);
+
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_VentColorGroups, BAUConfigs.VentColorGroups, 2, __instance, MiniMapBehaviourPatch.ClearMapIcons);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_MinimapIcons, BAUConfigs.MinimapIcons, 2, __instance, MiniMapBehaviourPatch.ClearMapIcons);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_CompressSettingFiles, BAUConfigs.CompressSettingFiles, 2, __instance, ConvertAllSettingFiles);
 
         // Button options (no toggle)
-        ClientOptionItem.CreateButton(Translator.GetString("BetterOption.SaveData"), __instance, OpenSaveData, () =>
+        if (!ModInfo.Starlight)
         {
-            // Only allow opening save data in lobby/main menu, not during gameplay
-            bool cannotOpen = GameState.IsInGame && !GameState.IsLobby;
-            if (cannotOpen)
+            ClientOptionItem.CreateButton(TranslationStrings.BetterOption_SaveData, -1, __instance, OpenSaveData, () =>
             {
-                BetterNotificationManager.Notify($"Cannot open save data while in gameplay!", 2.5f);
-            }
-            return !cannotOpen;
-        });
+                // Only allow opening save data in lobby/main menu, not during gameplay
+                bool cannotOpen = GameState.IsInGame && !GameState.IsLobby;
+                if (cannotOpen)
+                {
+                    BetterNotificationManager.Notify($"Cannot open save data while in gameplay!", 2.5f);
+                }
+                return !cannotOpen;
+            });
+        }
 
-        ClientOptionItem.CreateButton(Translator.GetString("BetterOption.ToVanilla"), __instance, SwitchToVanilla, () =>
+        ClientOptionItem.CreateButton(TranslationStrings.BetterOption_ToVanilla, -1, __instance, BAUPlugin.Instance.UnloadBAU, () =>
         {
             // Prevent switching to vanilla while in a game
             bool cannotSwitch = GameState.IsInGame;
@@ -74,40 +86,23 @@ internal static class OptionsMenuBehaviourPatch
         });
     }
 
-    private static void SwitchToVanilla()
-    {
-        // Clean up BAU mod components and return to vanilla Among Us
-        ConsoleManager.DetachConsole();
-        BetterNotificationManager.BAUNotificationManagerObj?.DestroyObj();
-        Harmony.UnpatchAll();
-        ModManager.Instance.ModStamp.gameObject.SetActive(false);
-        SceneChanger.ChangeScene("MainMenu");
-    }
-
     private static void SendBetterRpcAction()
     {
         // Resend handshake secret to all other players when option is toggled
-        if (!GameState.IsInGame) return;
+        if (!GameState.IsInGame)
+            return;
 
         foreach (var player in BAUPlugin.AllPlayerControls)
         {
             if (player.IsLocalPlayer()) continue;
-            player.BetterData().HandshakeHandler.ResendSecretToPlayer();
+            player.ExtendedData().HandshakeHandler.ResendSecretToPlayer();
         }
-    }
-
-    private static void ClearNotifications()
-    {
-        // Clear all active notifications when option is toggled
-        BetterNotificationManager.NotifyQueue.Clear();
-        BetterNotificationManager.showTime = 0f;
-        BetterNotificationManager.Notifying = false;
     }
 
     private static void ToggleLobbyTheme()
     {
         // Play lobby theme music if re-enabled while in lobby
-        if (GameState.IsLobby && !BAUPlugin.DisableLobbyTheme.Value)
+        if (GameState.IsLobby && !BAUConfigs.DisableLobbyTheme.Value)
         {
             SoundManager.instance.CrossFadeSound("MapTheme", LobbyBehaviour.Instance.MapTheme, 0.5f, 1.5f);
         }
@@ -116,20 +111,43 @@ internal static class OptionsMenuBehaviourPatch
     internal static void UpdateFrameRate()
     {
         // Toggle between 60 FPS (default) and 165 FPS
-        Application.targetFrameRate = BAUPlugin.UnlockFPS.Value ? 999 : 60;
+        Application.targetFrameRate = BAUConfigs.UnlockFPS.Value ? 999 : 60;
     }
 
     private static void OpenSaveData()
     {
         // Open BAU save data folder in file explorer
-        if (!File.Exists(BetterDataManager.dataPath)) return;
+        if (!File.Exists(BetterDataManager.Files.dataFilePath))
+            return;
 
         Process.Start(new ProcessStartInfo
         {
-            FileName = BetterDataManager.dataPath,
+            FileName = BetterDataManager.Files.dataFilePath,
             UseShellExecute = true,
             Verb = "open"
         });
+    }
+
+    private static void ConvertAllSettingFiles()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (i == BAUConfigs.SettingsPreset.Value)
+            {
+                BetterDataManager.Files.BetterGameSettingsFile.Save();
+                continue;
+            }
+
+            string path = BetterDataManager.GetSettingsFilePathFromPreset(i);
+            if (File.Exists(path))
+            {
+                var settings = new BetterGameSettingsFile
+                {
+                    OverrideFilePath = path
+                };
+                settings.Init();
+            }
+        }
     }
 
     private static TabGroup CreateTabPage(OptionsMenuBehaviour __instance, string name)
@@ -158,11 +176,11 @@ internal static class OptionsMenuBehaviourPatch
         var index = __instance.Tabs.Length - 1;
         var button = tab.GetComponent<PassiveButton>();
         button.OnClick = new();
-        button.OnClick.AddListener((Action)(() =>
+        button.OnClick.AddListener(() =>
         {
             tab.Rollover.SetEnabledColors();
             __instance.OpenTabGroup(index);
-        }));
+        });
 
         return tab;
     }
@@ -181,7 +199,8 @@ internal static class OptionsMenuBehaviourPatch
             if (tabButton.gameObject.activeInHierarchy) activeCount++;
         }
 
-        if (activeCount == 0) return;
+        if (activeCount == 0)
+            return;
 
         // Calculate total width needed for all active tabs
         float totalWidth = (activeCount - 1) * buttonSpacing + activeCount * buttonWidth;

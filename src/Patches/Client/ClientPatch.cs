@@ -1,8 +1,10 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Patches.Gameplay.UI.Chat;
+using BetterAmongUs.Utilities;
+using BetterAmongUs.Utilities.Extension;
 using HarmonyLib;
 using InnerNet;
 using System.Collections;
@@ -14,20 +16,30 @@ namespace BetterAmongUs.Patches.Client;
 [HarmonyPatch]
 internal static class ClientPatch
 {
+    private static GameObject? friendsButton;
+    internal static void Unpatch()
+    {
+        if (friendsButton != null)
+        {
+            friendsButton.SetSpriteColors(Color.white);
+        }
+    }
+
     [HarmonyPatch(typeof(AccountTab), nameof(AccountTab.Awake))]
     [HarmonyPostfix]
     private static void AccountTab_Awake_Postfix(AccountTab __instance)
     {
         // Apply custom UI colors to the friends button
+        friendsButton = __instance.signInStatusComponent.friendsButton;
         __instance.signInStatusComponent.friendsButton.SetUIColors();
     }
 
     [HarmonyPatch(typeof(SignInStatusComponent), nameof(SignInStatusComponent.SetOnline))]
     [HarmonyPrefix]
-    private static bool SignInStatusComponent_SetOnline_Prefix(SignInStatusComponent __instance)
+    private static bool SignInStatusComponent_SetOnline_Prefix()
     {
         // Get supported Among Us versions for BAU
-        var varSupportedVersions = BAUPlugin.SupportedAmongUsVersions;
+        var varSupportedVersions = ModInfo.SupportedAmongUsVersions;
         Version currentVersion = new(BAUPlugin.AppVersion);
         Version firstSupportedVersion = new(varSupportedVersions.First());
         Version lastSupportedVersion = new(varSupportedVersions.Last());
@@ -69,45 +81,73 @@ internal static class ClientPatch
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.ExitGame))]
     [HarmonyPostfix]
-    private static void AmongUsClient_ExitGame_Postfix([HarmonyArgument(0)] DisconnectReasons reason)
+    private static void AmongUsClient_ExitGame_Postfix(DisconnectReasons reason)
     {
         // Hide custom loading bar when exiting game
         CustomLoadingBarManager.ToggleLoadingBar(false);
+
         Logger_.Log($"Client has left game for: {Enum.GetName(reason)}", "AmongUsClientPatch");
     }
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]
     [HarmonyPrefix]
-    private static void AmongUsClient_OnGameEnd_Prefix()
+    private static void AmongUsClient_OnGameEnd_Prefix(AmongUsClient __instance)
     {
         // Preserve all player GameObjects during scene transitions
+        __instance.StartCoroutine(CoMovePlayerData());
+    }
+
+
+    private static IEnumerator CoMovePlayerData()
+    {
         foreach (var data in GameData.Instance.AllPlayers)
         {
+            if (data == null || data.gameObject == null)
+                continue;
+
             UnityEngine.Object.DontDestroyOnLoad(data.gameObject);
         }
 
-        // Move player GameObjects to active scene after a short delay
-        LateTask.Schedule(() =>
+        while (SceneManager.GetActiveScene().name == Constants.ONLINE_SCENE)
+        {
+            yield return null;
+        }
+
+        if (SceneManager.GetActiveScene().name == "EndGame")
         {
             foreach (var data in GameData.Instance.AllPlayers)
             {
+                if (data == null || data.gameObject == null)
+                    continue;
+
                 SceneManager.MoveGameObjectToScene(data.gameObject, SceneManager.GetActiveScene());
             }
-        }, 0.6f, shouldLog: false);
+        }
+        else
+        {
+            foreach (var data in GameData.Instance.AllPlayers)
+            {
+                if (data == null || data.gameObject == null)
+                    continue;
+
+                UnityEngine.Object.Destroy(data.gameObject);
+            }
+            GameData.Instance.AllPlayers.Clear();
+        }
     }
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.CoStartGame))]
     [HarmonyPostfix]
     private static void AmongUsClient_CoStartGame_Postfix(AmongUsClient __instance)
     {
-        // Clear in-game chat if chat feature is enabled
-        if (BAUPlugin.ChatInGameplay.Value)
-        {
-            ChatPatch.ClearChat();
-        }
+        // Censor in-game chat
+        ChatPatch.CensorPlayerChats();
 
         // Start custom loading sequence
-        __instance.StartCoroutine(CoLoading());
+        if (!BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomLoadingBar))
+        {
+            __instance.StartCoroutine(CoLoading());
+        }
     }
 
     private static IEnumerator CoLoading()
@@ -180,8 +220,8 @@ internal static class ClientPatch
             else if (!client.IsReady)
             {
                 // Wait for other clients to be ready
-                int readyClients = clients.CountIl2Cpp(c => c?.Character != null && c.IsReady);
-                int totalClients = clients.CountIl2Cpp(c => c?.Character != null);
+                int readyClients = clients.CountIl2Cpp(c => c != null && c.Character != null && c.IsReady);
+                int totalClients = clients.CountIl2Cpp(c => c != null && c.Character != null);
 
                 loadingText = $"Waiting for Players ({readyClients}/{totalClients})";
                 progress = 0.8f + 0.2f * readyClients / Mathf.Max(1, totalClients);
@@ -244,8 +284,8 @@ internal static class ClientPatch
             else
             {
                 // Wait for other players (including host) to be ready
-                int readyClients = clients.CountIl2Cpp(c => c?.Character != null && c.IsReady);
-                int totalClients = clients.CountIl2Cpp(c => c?.Character != null);
+                int readyClients = clients.CountIl2Cpp(c => c != null && c.Character != null && c.IsReady);
+                int totalClients = clients.CountIl2Cpp(c => c != null && c.Character != null);
 
                 loadingText = $"Waiting for Players ({readyClients}/{totalClients})";
                 progress = 0.85f + 0.15f * readyClients / Mathf.Max(1, totalClients);

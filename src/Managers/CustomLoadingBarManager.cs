@@ -8,7 +8,7 @@ internal static class CustomLoadingBarManager
     /// <summary>
     /// Gets the current loading bar instance.
     /// </summary>
-    internal static AmongUsLoadingBar? LoadingBar => LoadingBarManager.Instance?.loadingBar;
+    internal static AmongUsLoadingBar? LoadingBar => LoadingBarManager.InstanceExists ? LoadingBarManager.Instance.loadingBar : null;
 
     /// <summary>
     /// Toggles the loading bar visibility.

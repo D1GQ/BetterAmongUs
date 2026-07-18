@@ -1,7 +1,8 @@
 ﻿using BepInEx.Configuration;
+using BetterAmongUs.Generated;
 using BetterAmongUs.Patches.Client;
+using BetterAmongUs.Utilities.Extension;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace BetterAmongUs.Modules;
 
@@ -23,24 +24,24 @@ internal sealed class ClientOptionItem
     /// <summary>
     /// Gets the list of all created client option items.
     /// </summary>
-    internal static readonly List<ClientOptionItem> ClientOptions = [];
+    internal static readonly Dictionary<int, List<ClientOptionItem>> ClientOptions = [];
 
     /// <summary>
     /// Creates a toggle option with configuration binding.
     /// </summary>
-    /// <param name="name">The display name of the option.</param>
-    /// <param name="config">The configuration entry to bind to.</param>
-    /// <param name="optionsMenuBehaviour">The options menu behavior instance.</param>
-    /// <param name="onToggle">Optional action to execute when the toggle is changed.</param>
-    /// <param name="toggleCheck">Optional function to check if the toggle can be changed.</param>
-    /// <returns>A new ClientOptionItem instance.</returns>
-    public static ClientOptionItem CreateToggle(string name, ConfigEntry<bool> config, OptionsMenuBehaviour optionsMenuBehaviour, Action? onToggle = null, Func<bool>? toggleCheck = null)
+    public static ClientOptionItem CreateToggle(TranslationStrings.TranslationString translationStringName, ConfigEntry<bool> config, int page, OptionsMenuBehaviour optionsMenuBehaviour, Action? onToggle = null, Func<bool>? toggleCheck = null)
     {
-        var toggleButton = CreateToggleButton(name, config.Value, optionsMenuBehaviour);
-        var item = new ClientOptionItem(name, config, toggleButton);
+        var toggleButton = CreateToggleButton(translationStringName, optionsMenuBehaviour, GetOrCreatePage(page, optionsMenuBehaviour).transform);
+        var item = new ClientOptionItem(translationStringName, config, toggleButton);
 
         item.SetupToggleButton(onToggle, toggleCheck);
-        ClientOptions.Add(item);
+        if (!ClientOptions.TryGetValue(page, out var options))
+        {
+            options = ClientOptions[page] = [];
+        }
+        options.Add(item);
+
+        UpdateAllButtonPositions();
 
         return item;
     }
@@ -48,38 +49,19 @@ internal sealed class ClientOptionItem
     /// <summary>
     /// Creates a button option without toggle state.
     /// </summary>
-    /// <param name="name">The display name of the button.</param>
-    /// <param name="optionsMenuBehaviour">The options menu behavior instance.</param>
-    /// <param name="onClick">The action to execute when the button is clicked.</param>
-    /// <param name="clickCheck">Optional function to check if the button can be clicked.</param>
-    /// <returns>A new ClientOptionItem instance.</returns>
-    public static ClientOptionItem CreateButton(string name, OptionsMenuBehaviour optionsMenuBehaviour, Action onClick, Func<bool>? clickCheck = null)
+    public static ClientOptionItem CreateButton(TranslationStrings.TranslationString translationStringName, int page, OptionsMenuBehaviour optionsMenuBehaviour, Action onClick, Func<bool>? clickCheck = null)
     {
-        var toggleButton = CreateToggleButton(name, false, optionsMenuBehaviour);
-        var item = new ClientOptionItem(name, null, toggleButton);
+        var toggleButton = CreateToggleButton(translationStringName, optionsMenuBehaviour, GetOrCreatePage(page, optionsMenuBehaviour).transform);
+        var item = new ClientOptionItem(translationStringName, null, toggleButton);
 
         item.SetupButton(onClick, clickCheck);
-        ClientOptions.Add(item);
+        if (!ClientOptions.TryGetValue(page, out var options))
+        {
+            options = ClientOptions[page] = [];
+        }
+        options.Add(item);
 
-        return item;
-    }
-
-    /// <summary>
-    /// Creates a toggle option without configuration binding (manual state management).
-    /// </summary>
-    /// <param name="name">The display name of the option.</param>
-    /// <param name="initialState">The initial state of the toggle.</param>
-    /// <param name="optionsMenuBehaviour">The options menu behavior instance.</param>
-    /// <param name="onToggle">The action to execute when the toggle is changed, receiving the new state.</param>
-    /// <param name="toggleCheck">Optional function to check if the toggle can be changed.</param>
-    /// <returns>A new ClientOptionItem instance.</returns>
-    public static ClientOptionItem CreateManualToggle(string name, bool initialState, OptionsMenuBehaviour optionsMenuBehaviour, Action<bool> onToggle, Func<bool>? toggleCheck = null)
-    {
-        var toggleButton = CreateToggleButton(name, initialState, optionsMenuBehaviour);
-        var item = new ClientOptionItem(name, null, toggleButton);
-
-        item.SetupManualToggle(initialState, onToggle, toggleCheck);
-        ClientOptions.Add(item);
+        UpdateAllButtonPositions();
 
         return item;
     }
@@ -87,49 +69,64 @@ internal sealed class ClientOptionItem
     /// <summary>
     /// Initializes a new instance of the ClientOptionItem class.
     /// </summary>
-    /// <param name="name">The name of the option.</param>
-    /// <param name="config">The configuration entry, or null for non-config options.</param>
-    /// <param name="toggleButton">The toggle button behavior instance.</param>
-    private ClientOptionItem(string name, ConfigEntry<bool>? config, ToggleButtonBehaviour toggleButton)
+    internal ClientOptionItem(TranslationStrings.TranslationString translationStringName, ConfigEntry<bool>? config, ToggleButtonBehaviour toggleButton)
     {
         Config = config;
         ToggleButton = toggleButton;
-        ToggleButton.name = name;
+        ToggleButton.name = translationStringName.LocalizedString;
     }
 
     /// <summary>
     /// Creates a toggle button GameObject for the options menu.
     /// </summary>
-    /// <param name="name">The name of the toggle button.</param>
-    /// <param name="initialState">The initial state of the toggle.</param>
-    /// <param name="optionsMenuBehaviour">The options menu behavior instance.</param>
-    /// <returns>A new ToggleButtonBehaviour instance.</returns>
-    private static ToggleButtonBehaviour CreateToggleButton(string name, bool initialState, OptionsMenuBehaviour optionsMenuBehaviour)
+    private static ToggleButtonBehaviour CreateToggleButton(TranslationStrings.TranslationString translationStringName, OptionsMenuBehaviour optionsMenuBehaviour, Transform parent)
     {
-        if (OptionsMenuBehaviourPatch.BetterOptionsTab?.Content == null)
-        {
-            throw new InvalidOperationException("BetterOptionsTab is not initialized");
-        }
-
         var mouseMoveToggle = optionsMenuBehaviour.DisableMouseMovement;
-        var toggleButton = Object.Instantiate(mouseMoveToggle, OptionsMenuBehaviourPatch.BetterOptionsTab.Content.transform);
-
-        toggleButton.transform.localPosition = CalculateButtonPosition();
-        toggleButton.name = name;
-        toggleButton.Text.text = name;
+        var toggleButton = UnityEngine.Object.Instantiate(mouseMoveToggle, parent);
+        toggleButton.name = translationStringName.LocalizedString;
+        toggleButton.Text.text = translationStringName.LocalizedString;
 
         return toggleButton;
     }
 
     /// <summary>
+    /// Calculates all option positions.
+    /// </summary>
+    private static void UpdateAllButtonPositions()
+    {
+        foreach (var kvp in ClientOptions)
+        {
+            int page = kvp.Key;
+            for (int i = 0; i < kvp.Value.Count; i++)
+            {
+                ClientOptionItem? option = kvp.Value[i];
+                option.ToggleButton.gameObject.transform.localPosition = CalculateButtonPosition(page, i);
+            }
+        }
+    }
+
+    /// <summary>
     /// Calculates the position for a new button based on the current number of options.
     /// </summary>
-    /// <returns>A Vector3 representing the button position.</returns>
-    private static Vector3 CalculateButtonPosition()
+    private static Vector3 CalculateButtonPosition(int page, int count)
     {
+        if (page == -1)
+        {
+            if (!ClientOptions.TryGetValue(page, out var options))
+            {
+                options = ClientOptions[page] = [];
+            }
+
+            return new Vector3(
+                options.Count == 1 ? 0f : count % 2 == 0 ? -1.3f : 1.3f,
+                -1.8f,
+                -6f
+            );
+        }
+
         return new Vector3(
-            ClientOptions.Count % 2 == 0 ? -1.3f : 1.3f,
-            1.8f - 0.5f * (ClientOptions.Count / 2),
+            count % 2 == 0 ? -1.3f : 1.3f,
+            1.8f - 0.5f * (count / 2),
             -6f
         );
     }
@@ -137,16 +134,15 @@ internal sealed class ClientOptionItem
     /// <summary>
     /// Sets up a configuration-bound toggle button with click handler.
     /// </summary>
-    /// <param name="onToggle">Optional action to execute when toggled.</param>
-    /// <param name="toggleCheck">Optional function to check if the toggle can be changed.</param>
-    private void SetupToggleButton(Action? onToggle, Func<bool>? toggleCheck)
+    internal void SetupToggleButton(Action? onToggle, Func<bool>? toggleCheck)
     {
         var passiveButton = ToggleButton.GetComponent<PassiveButton>();
         passiveButton.OnClick = new();
 
-        passiveButton.OnClick.AddListener((Action)(() =>
+        passiveButton.OnClick.AddListener(() =>
         {
-            if (toggleCheck?.Invoke() == false) return;
+            if (toggleCheck?.Invoke() == false)
+                return;
 
             if (Config != null)
             {
@@ -154,7 +150,7 @@ internal sealed class ClientOptionItem
                 UpdateToggle();
             }
             onToggle?.Invoke();
-        }));
+        });
 
         UpdateToggle();
     }
@@ -162,9 +158,7 @@ internal sealed class ClientOptionItem
     /// <summary>
     /// Sets up a button (non-toggle) with click handler.
     /// </summary>
-    /// <param name="onClick">The action to execute when clicked.</param>
-    /// <param name="clickCheck">Optional function to check if the button can be clicked.</param>
-    private void SetupButton(Action onClick, Func<bool>? clickCheck)
+    internal void SetupButton(Action onClick, Func<bool>? clickCheck)
     {
         var passiveButton = ToggleButton.GetComponent<PassiveButton>();
         passiveButton.OnClick = new();
@@ -174,36 +168,13 @@ internal sealed class ClientOptionItem
         ToggleButton.Rollover?.ChangeOutColor(new Color32(0, 150, 0, 255));
         ToggleButton.Text.color = new Color(1f, 1f, 1f, 1f);
 
-        passiveButton.OnClick.AddListener((Action)(() =>
+        passiveButton.OnClick.AddListener(() =>
         {
-            if (clickCheck?.Invoke() == false) return;
+            if (clickCheck?.Invoke() == false)
+                return;
+
             onClick?.Invoke();
-        }));
-    }
-
-    /// <summary>
-    /// Sets up a manually managed toggle button with state tracking.
-    /// </summary>
-    /// <param name="initialState">The initial state of the toggle.</param>
-    /// <param name="onToggle">The action to execute when toggled, receiving the new state.</param>
-    /// <param name="toggleCheck">Optional function to check if the toggle can be changed.</param>
-    private void SetupManualToggle(bool initialState, Action<bool> onToggle, Func<bool>? toggleCheck)
-    {
-        var passiveButton = ToggleButton.GetComponent<PassiveButton>();
-        passiveButton.OnClick = new();
-
-        bool currentState = initialState;
-
-        passiveButton.OnClick.AddListener((Action)(() =>
-        {
-            if (toggleCheck?.Invoke() == false) return;
-
-            currentState = !currentState;
-            UpdateManualToggle(currentState);
-            onToggle?.Invoke(currentState);
-        }));
-
-        UpdateManualToggle(initialState);
+        });
     }
 
     /// <summary>
@@ -211,26 +182,15 @@ internal sealed class ClientOptionItem
     /// </summary>
     internal void UpdateToggle()
     {
-        if (ToggleButton == null || Config == null) return;
+        if (ToggleButton == null || Config == null)
+            return;
 
         UpdateToggleVisuals(Config.Value);
     }
 
     /// <summary>
-    /// Updates the visual state of a manually managed toggle button.
-    /// </summary>
-    /// <param name="isEnabled">The current enabled state of the toggle.</param>
-    internal void UpdateManualToggle(bool isEnabled)
-    {
-        if (ToggleButton == null) return;
-
-        UpdateToggleVisuals(isEnabled);
-    }
-
-    /// <summary>
     /// Updates the visual appearance of a toggle button based on its state.
     /// </summary>
-    /// <param name="isEnabled">Whether the toggle is enabled.</param>
     private void UpdateToggleVisuals(bool isEnabled)
     {
         var color = isEnabled ?
@@ -245,5 +205,97 @@ internal sealed class ClientOptionItem
         ToggleButton.Rollover?.ChangeOutColor(color);
         ToggleButton.Text.color = textColor;
         ToggleButton.Text.text = $"{ToggleButton.name}: {(isEnabled ? "On" : "Off")}";
+    }
+
+    /// <summary>
+    /// Retrieves an existing page GameObject or creates a new one with navigation buttons.
+    /// </summary>
+    private static GameObject? GetOrCreatePage(int page, OptionsMenuBehaviour optionsMenuBehaviour, bool doNotCreate = false)
+    {
+        if (page == -1)
+        {
+            return OptionsMenuBehaviourPatch.BetterOptionsTab.Content;
+        }
+
+        string name = "Page " + page;
+        var currentPage = OptionsMenuBehaviourPatch.BetterOptionsTab.Content.transform.Find(name)?.gameObject;
+        if (currentPage == null)
+        {
+            if (doNotCreate)
+            {
+                return null;
+            }
+
+            currentPage = new GameObject(name);
+            currentPage.SetActive(page == 1);
+            currentPage.transform.SetParent(OptionsMenuBehaviourPatch.BetterOptionsTab.Content.transform);
+            currentPage.transform.localPosition = Vector3.zero;
+            currentPage.transform.localScale = Vector3.one;
+
+            int previous = page - 1;
+            if (previous > 0)
+            {
+                var previousPage = GetOrCreatePage(previous, optionsMenuBehaviour, true);
+                if (previousPage != null)
+                {
+                    CreatePreviousButton(currentPage, previousPage, optionsMenuBehaviour);
+                    CreateNextButton(previousPage, currentPage, optionsMenuBehaviour);
+                }
+            }
+        }
+
+        return currentPage;
+    }
+
+    /// <summary>
+    /// Creates a "Next" navigation button that switches to the specified next page.
+    /// </summary>
+    private static void CreateNextButton(GameObject page, GameObject nextPage, OptionsMenuBehaviour optionsMenuBehaviour)
+    {
+        var button = CreateToggleButton(TranslationStrings.BetterOption_Next, optionsMenuBehaviour, page.transform);
+        button.transform.localPosition = new Vector3(2f, -2.5f, 0f);
+        var background = button.transform.Find("Background");
+        if (background != null)
+        {
+            background.localScale = new Vector3(0.5f, 1f, 1f);
+        }
+        var buttonHighlight = button.transform.Find("ButtonHighlight");
+        if (buttonHighlight != null)
+        {
+            buttonHighlight.localScale = new Vector3(0.5f, 0.95f, 1f);
+        }
+        var passiveButton = button.GetComponent<PassiveButton>();
+        passiveButton.OnClick = new();
+        passiveButton.OnClick.AddListener(() =>
+        {
+            page.SetActive(false);
+            nextPage.SetActive(true);
+        });
+    }
+
+    /// <summary>
+    /// Creates a "Previous" navigation button that switches to the specified previous page.
+    /// </summary>
+    private static void CreatePreviousButton(GameObject page, GameObject previousPage, OptionsMenuBehaviour optionsMenuBehaviour)
+    {
+        var button = CreateToggleButton(TranslationStrings.BetterOption_Previous, optionsMenuBehaviour, page.transform);
+        button.transform.localPosition = new Vector3(-2f, -2.5f, 0f);
+        var background = button.transform.Find("Background");
+        if (background != null)
+        {
+            background.localScale = new Vector3(0.5f, 1f, 1f);
+        }
+        var buttonHighlight = button.transform.Find("ButtonHighlight");
+        if (buttonHighlight != null)
+        {
+            buttonHighlight.localScale = new Vector3(0.5f, 0.95f, 1f);
+        }
+        var passiveButton = button.GetComponent<PassiveButton>();
+        passiveButton.OnClick = new();
+        passiveButton.OnClick.AddListener(() =>
+        {
+            page.SetActive(false);
+            previousPage.SetActive(true);
+        });
     }
 }

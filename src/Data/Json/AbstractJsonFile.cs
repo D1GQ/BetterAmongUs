@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Modules;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -6,18 +6,21 @@ using System.Text.Json.Serialization;
 namespace BetterAmongUs.Data.Json;
 
 /// <summary>
-/// Abstract base class for JSON file handling with serialization and deserialization capabilities.
+/// Provides a base class for JSON-backed data files with automatic
+/// loading, validation, and serialization.
 /// </summary>
 internal abstract class AbstractJsonFile
 {
     /// <summary>
-    /// Gets the file path where the JSON data will be stored.
+    /// Gets the path to the JSON file.
     /// </summary>
     internal abstract string FilePath { get; }
-    private bool _hasInit;
+
+    private bool _initialized;
 
     /// <summary>
-    /// Gets the JSON serializer options used for serialization and deserialization.
+    /// Gets the <see cref="JsonSerializerOptions"/> used for serialization
+    /// and deserialization.
     /// </summary>
     protected virtual JsonSerializerOptions SerializerOptions { get; } = new()
     {
@@ -28,159 +31,129 @@ internal abstract class AbstractJsonFile
     };
 
     /// <summary>
-    /// Initializes the JSON file, creating it if it doesn't exist or loading existing data.
+    /// Initializes the file by loading existing data if possible and
+    /// writing the current state back to disk.
     /// </summary>
     internal virtual void Init()
     {
-        if (_hasInit) return;
-        _hasInit = true;
-
-        if (!IsFileValid())
-        {
-            Save();
+        if (_initialized)
             return;
-        }
 
-        Load();
+        _initialized = true;
+
+        if (IsFileValid())
+            Load();
+
         Save();
     }
 
     /// <summary>
-    /// Loads data from the JSON file into the current instance.
+    /// Loads the file contents into the current instance.
     /// </summary>
-    /// <returns>True if loading was successful, false otherwise.</returns>
+    /// <returns>
+    /// <see langword="true"/> if the file was successfully loaded;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     protected virtual bool Load()
     {
         try
         {
-            var content = TryReadFromFile();
-            if (string.IsNullOrEmpty(content.Trim()))
-            {
-                return false;
-            }
+            var json = ReadFromFile();
 
-            var data = JsonSerializer.Deserialize(content, GetType(), SerializerOptions);
-            if (data == null)
-            {
-                Logger_.Error("Deserialization returned null");
+            if (string.IsNullOrWhiteSpace(json))
                 return false;
-            }
+
+            var data = JsonSerializer.Deserialize(json, GetType(), SerializerOptions);
+            if (data is null)
+                return false;
 
             foreach (var property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (property.GetCustomAttribute<JsonPropertyNameAttribute>() == null) continue;
-                if (property.CanWrite)
+                if (property.CanWrite &&
+                    property.GetCustomAttribute<JsonPropertyNameAttribute>() != null)
                 {
-                    var value = property.GetValue(data);
-                    property.SetValue(this, value);
+                    property.SetValue(this, property.GetValue(data));
                 }
             }
 
             return true;
-        }
-        catch (JsonException ex)
-        {
-            Logger_.Error($"JSON parsing error: {ex.Message}");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            Logger_.Error($"Unexpected error: {ex.Message}");
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Attempts to read content from the file, returning an empty string on failure.
-    /// </summary>
-    /// <returns>The file content or an empty string if reading fails.</returns>
-    private string TryReadFromFile()
-    {
-        try
-        {
-            return ReadFromFile();
-        }
-        catch
-        {
-            return string.Empty;
-        }
-    }
-
-    /// <summary>
-    /// Saves the current instance's data to the JSON file.
-    /// </summary>
-    /// <returns>True if saving was successful, false otherwise.</returns>
-    internal virtual bool Save()
-    {
-        try
-        {
-            var json = JsonSerializer.Serialize(this, GetType(), SerializerOptions);
-            WriteToFile(json);
         }
         catch (Exception ex)
         {
             Logger_.Error(ex);
             return false;
         }
-
-        return true;
     }
 
     /// <summary>
-    /// Determines whether the file specified by the current FilePath exists and contains valid, non-empty JSON content.
+    /// Saves the current instance to the JSON file.
     /// </summary>
-    /// <returns>true if the file exists, is not empty, and contains valid, non-empty JSON content; otherwise, false.</returns>
-    private bool IsFileValid()
+    /// <returns>
+    /// <see langword="true"/> if the file was successfully written;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    internal virtual bool Save()
     {
-        var directory = Path.GetDirectoryName(FilePath);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        try
         {
-            Directory.CreateDirectory(directory);
+            WriteToFile(JsonSerializer.Serialize(this, GetType(), SerializerOptions));
+            return true;
         }
-
-        if (!File.Exists(FilePath))
+        catch (Exception ex)
         {
+            Logger_.Error(ex);
             return false;
         }
+    }
 
-        var content = TryReadFromFile();
-        if (string.IsNullOrEmpty(content.Trim())) return false;
+    /// <summary>
+    /// Determines whether the JSON file exists and contains valid,
+    /// non-empty JSON.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true"/> if the file is valid; otherwise,
+    /// <see langword="false"/>.
+    /// </returns>
+    private bool IsFileValid()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
+
+        if (!File.Exists(FilePath))
+            return false;
 
         try
         {
-            var jsonElement = JsonSerializer.Deserialize<JsonElement>(content);
+            var json = ReadFromFile();
 
-            var fileInfo = new FileInfo(FilePath);
-            if (fileInfo.Length == 0)
-            {
+            if (string.IsNullOrWhiteSpace(json))
                 return false;
-            }
 
-            if (jsonElement.ValueKind == JsonValueKind.Object && !jsonElement.EnumerateObject().Any() ||
-                jsonElement.ValueKind == JsonValueKind.Array && !jsonElement.EnumerateArray().Any())
+            var element = JsonSerializer.Deserialize<JsonElement>(json);
+
+            return element.ValueKind switch
             {
-                return false;
-            }
+                JsonValueKind.Object => element.EnumerateObject().Any(),
+                JsonValueKind.Array => element.EnumerateArray().Any(),
+                _ => true
+            };
         }
-        catch (Exception)
+        catch
         {
             return false;
         }
-
-        return true;
     }
 
     /// <summary>
-    /// Reads the content from the JSON file.
+    /// Reads the contents of the JSON file.
     /// </summary>
-    /// <returns>The content of the JSON file.</returns>
+    /// <returns>The raw JSON string.</returns>
     protected virtual string ReadFromFile()
     {
         return File.ReadAllText(FilePath);
     }
 
     /// <summary>
-    /// Writes the JSON string to the file.
+    /// Writes JSON content to the file.
     /// </summary>
     /// <param name="json">The JSON string to write.</param>
     protected virtual void WriteToFile(string json)
