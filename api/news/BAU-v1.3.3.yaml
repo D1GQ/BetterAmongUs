@@ -1,0 +1,65 @@
+^show: true
+^type: 1
+^title: It's been a while huh...
+^subtitle: "NOW THATS A LOT OF CHANGES!"
+^listtitle: BAU v1.3.3
+^date: 2026-06-25T12:00:00.0000000Z
+
+^content-en_US:
+ # Better Among Us v1.3.3
+
+ We are thrilled to announce this release of **BetterAmongUs**, a mod designed to enhance your Among Us experience!
+ ---
+
+ ## Change Log
+
+ #### Mod
+ - **Among Us Compatibility**: Updated to Among Us 2026.3.17 - 2026.6.5
+ - **BepInEx Compatibility**: Updated to BepInEx 6.0.0-be.735+
+ - **Starlight Compatibility**: Added support to Starlight (Android)
+ - **Linux Compatibility**: Added support to Linux: Proton (9.0 +) with launch options (WINEDLLOVERRIDES="winhttp=n,b" PROTON_NO_ESYNC=1 %command%)
+ ---
+ #### New Features
+ - **Modded Protocol**: Added support to lobbies on +25
+ - **Client Option Pages**: Added pages to client options to add more!
+ - **Minimap Icons Option**: Added option to disable minimap icons
+ - **Vent Color Groups Option**: Added option to disable vent color 
+ - **RPC Rate Limiting Settings**: Added  settings to modify RPC rate limiting
+ - **Level Detection Settings**: Added  base toggles for level detection settings
+ - **Show Anonymous Votes**: Anonymous Votes are now revealed when dead and not Guardian Angel
+ - **Detections**: Added new cheat client detections!
+ - **Force Skip Command**: Added ability to count remaining votes when using the force skip command
+ - **Download Icon**: Added downloading icon on the top right when content is being downloaded from the github
+ ---
+ #### Changed
+ - **Private Only Lobbies**: Removed Private Only Lobbies, there really is no point having them anymore tbh
+ - **Remove Pet On Death Setting**: Removed Remove Pet On Death Setting due to being patched on +0
+ - **Game Altering Settings**:  Removed some game altering settings, DisableSabotages, DisableSabotagesForDead and HideAndSeekImpNum. This has been done to not interrupt gameplay in public lobbies!
+ - **DesyncRoles Setting**:  Removed DesyncRoles Setting due to it being patched!
+ - **Outfit Presets**: Outfit Presets now have a preview of the outfit.
+ - **Chat In Gameplay**: Instead of chat being cleared after every meeting, chat messages are now censored while in game
+ - **Chat Limit**:  Made chat limit 120 (was 118)
+ - **Dump Command**: dump command now also dumps BepInEx logs with BAU logs
+ ---
+ #### Bug Fixes
+ - Fixed memory access violation crash when interacting with UI, seems to be an issue with the game
+ - Fixed black screen or game not ending on end game
+ - Fixed access exception on getting clients
+ - Fixed issues with custom RPC handling
+ - Fixed better rpc causing au anti-cheat to kick 
+ - Fixed non decimal float setting values not properly saving and loading
+ - Fixed level cap being applied when becoming host in the middle of a game
+ - Fixed Outfit Presets bugging out when switching from last 2 tabs
+ - Fixed Colorblind text revealing previous color when a player is unshapeshifting
+ - Fixed force skip command not properly resetting abilities
+ - Fixed command arguments not properly resetting when using backspace
+ - Fixed BAU Host being able to sabotage when sabotages are disabled
+ - Fixed shadows possibly being disabled giving infinite vision
+ - Fixed friends button theme not resetting when switching to vanilla
+ - Fixed null exception spam and vanilla meeting update
+ - Fixed sabotages counting towards task in meetings
+ - Fixed kills being tracked when the kill attempt failed
+ - Removed eject button due to it covering update button
+ - Removed html text from game summary when logged
+ ---
+ ## [Discord](https://discord.gg/vjYrXpzNAn) [Github](https://github.com/D1GQ/BetterAmongUs/)

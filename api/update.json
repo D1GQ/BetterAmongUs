@@ -1,8 +1,8 @@
 {
-  "dllLink": "https://github.com/D1GQ/BetterAmongUs/releases/download/v1.3.2-Hotfix-3/BetterAmongUs.dll",
-  "version": "1.3.2",
+  "dllLink": "https://github.com/D1GQ/BetterAmongUs/releases/download/v1.3.3/BetterAmongUs.dll",
+  "version": "1.3.3",
   "releaseType": 0,
-  "isHotfix": true,
+  "isHotfix": false,
   "betaNumber": 0,
-  "hotfixNumber": 3
+  "hotfixNumber": 0
 }
