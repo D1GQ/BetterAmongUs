@@ -389,6 +389,11 @@ public static class TranslationStrings
     public static readonly TranslationString BetterSetting_TextHeader_Detections = new("BetterSetting.TextHeader.Detections");
 
     /// <summary>
+    /// Base Translation: Kick cooldown
+    /// </summary>
+    public static readonly TranslationString BetterSetting_Setting_KickCooldown = new("BetterSetting.Setting.KickCooldown");
+
+    /// <summary>
     /// Base Translation: When a player is caught cheating
     /// </summary>
     public static readonly TranslationString BetterSetting_Setting_WhenCheating = new("BetterSetting.Setting.WhenCheating");
