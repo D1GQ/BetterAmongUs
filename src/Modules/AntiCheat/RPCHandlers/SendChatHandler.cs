@@ -17,11 +17,12 @@ internal sealed class SendChatHandler : RPCHandler
     {
         var text = reader.ReadString();
 
-        if (BetterGameSettings.UseBanWordList.GetBool() && (!BetterGameSettings.UseBanWordListOnlyLobby.GetBool() || GameState.IsLobby))
+        if (BetterGameSettings.UseBanChatList.GetBool() && (!BetterGameSettings.UseBanChatListOnlyLobby.GetBool() || GameState.IsLobby))
         {
-            if (TextFileHandler.CompareStringFilters(BetterDataManager.Files.banWordListFilePath, text.Split(' ')))
+            if (TextFileHandler.CompareStringRegexMatches(BetterDataManager.Files.banChatListFilePath, text))
             {
-                sender.Kick(false, $"has been kicked due to\nchat message containing a banned word!");
+                var ban = BetterGameSettings.UseBanChatListBan.GetBool();
+                sender.Kick(ban, $"has been {(ban ? "banned" : "kicked")} due to\nchat message matching a banned pattern!");
             }
         }
     }

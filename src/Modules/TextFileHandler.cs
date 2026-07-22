@@ -9,25 +9,14 @@ namespace BetterAmongUs.Modules;
 internal static class TextFileHandler
 {
     /// <summary>
-    /// Compares strings against filter patterns in a file using wildcard matching.
+    /// Compares a string against regex patterns in a file.
     /// </summary>
-    /// <param name="filePath">Path to the filter file.</param>
-    /// <param name="strings">Array of strings to check against filters.</param>
-    /// <returns>True if any string matches a filter pattern, false otherwise.</returns>
-    internal static bool CompareStringFilters(string filePath, string[] strings)
+    /// <param name="filePath">Path to the file containing regex patterns.</param>
+    /// <param name="inputString">String to match against.</param>
+    /// <returns>True if the string matches a regex pattern, false otherwise.</returns>
+    internal static bool CompareStringRegexMatches(string filePath, string inputString)
     {
-        foreach (var content in ReadContents(filePath))
-        {
-            foreach (var text in strings)
-            {
-                if (CheckFilterString(content, text))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return ReadContents(filePath).Any(content => Regex.IsMatch(inputString, content, RegexOptions.Compiled));
     }
 
     /// <summary>
@@ -43,17 +32,10 @@ internal static class TextFileHandler
             StringComparer.OrdinalIgnoreCase
         );
 
-        foreach (var content in ReadContents(filePath))
-        {
-            string normalizedContent = content.ToLower().Trim();
-
-            if (stringSet.Contains(normalizedContent))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        var contents = ReadContents(filePath)
+            .SelectMany(line => line.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            .Select(s => s.ToLower().Trim());
+        return contents.Any(stringSet.Contains);
     }
 
     /// <summary>
@@ -66,33 +48,14 @@ internal static class TextFileHandler
         if (File.Exists(filePath))
         {
             return File.ReadLines(filePath)
-                       .Where(line => !string.IsNullOrWhiteSpace(line) &&
-                              !line.StartsWith("//") &&
-                              !line.StartsWith("#"))
-                       .SelectMany(line => line.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                               .Select(s => s.Trim()));
+                .Where(line =>
+                    !string.IsNullOrWhiteSpace(line) &&
+                    !line.StartsWith("//") &&
+                    !line.StartsWith("#")
+                );
         }
 
         return [];
-    }
-
-    /// <summary>
-    /// Checks if a text matches a filter pattern with wildcard support.
-    /// </summary>
-    /// <param name="filter">The filter pattern (supports ** wildcards).</param>
-    /// <param name="text">The text to check.</param>
-    /// <returns>True if the text matches the filter pattern, false otherwise.</returns>
-    private static bool CheckFilterString(string filter, string text)
-    {
-        string pattern = filter switch
-        {
-            _ when filter.StartsWith("**") && filter.EndsWith("**") => Regex.Escape(filter.Trim('*')), // Contains anywhere
-            _ when filter.StartsWith("**") => Regex.Escape(filter.TrimStart('*')) + "$", // Ends with
-            _ when filter.EndsWith("**") => "^" + Regex.Escape(filter.TrimEnd('*')), // Starts with
-            _ => "^" + Regex.Escape(filter) + "$" // Exact match
-        };
-
-        return Regex.IsMatch(text, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 
     /// <summary>

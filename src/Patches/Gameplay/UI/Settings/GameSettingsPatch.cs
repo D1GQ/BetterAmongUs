@@ -15,8 +15,9 @@ internal sealed class BetterGameSettings
     internal static OptionCheckboxItem? InvalidFriendCode;
     internal static OptionCheckboxItem? UseBanPlayerList;
     internal static OptionCheckboxItem? UseBanNameList;
-    internal static OptionCheckboxItem? UseBanWordList;
-    internal static OptionCheckboxItem? UseBanWordListOnlyLobby;
+    internal static OptionCheckboxItem? UseBanChatList;
+    internal static OptionCheckboxItem? UseBanChatListOnlyLobby;
+    internal static OptionCheckboxItem? UseBanChatListBan;
     internal static OptionCheckboxItem? DetectedLevel;
     internal static OptionIntItem? DetectedLevelAbove;
     internal static OptionCheckboxItem? KickLevel;
@@ -73,8 +74,9 @@ internal static class GameSettingsPatch
                 BetterGameSettings.CancelInvalidSabotage = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_CancelInvalidSabotage, true);
                 BetterGameSettings.UseBanPlayerList = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanPlayerList, true);
                 BetterGameSettings.UseBanNameList = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanNameList, true);
-                BetterGameSettings.UseBanWordList = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanWordList, true);
-                BetterGameSettings.UseBanWordListOnlyLobby = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanWordListOnlyLobby, true, BetterGameSettings.UseBanWordList);
+                BetterGameSettings.UseBanChatList = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanChatList, true);
+                BetterGameSettings.UseBanChatListOnlyLobby = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanChatListOnlyLobby, true, BetterGameSettings.UseBanChatList);
+                BetterGameSettings.UseBanChatListBan = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanChatListBan, false, BetterGameSettings.UseBanChatList);
             }
 
             // General detection settings
