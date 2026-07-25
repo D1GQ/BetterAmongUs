@@ -154,6 +154,7 @@ public class OptionFloatItem : OptionItem<float>
     public override void SetValue(float newValue)
     {
         newValue = Math.Clamp(newValue, Range.min, Range.max);
+        newValue = (float)Math.Round(newValue, 1);
         base.SetValue(newValue);
     }
 
