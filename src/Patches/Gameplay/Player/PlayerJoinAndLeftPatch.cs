@@ -1,7 +1,9 @@
+using System.Collections;
 using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Data;
 using BetterAmongUs.Data.Config;
 using BetterAmongUs.Generated;
+using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.Support;
 using BetterAmongUs.MonoScripts.Extended;
@@ -10,7 +12,6 @@ using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using BetterAmongUs.Utilities;
 using HarmonyLib;
 using InnerNet;
-using System.Collections;
 
 namespace BetterAmongUs.Patches.Gameplay.Player;
 
@@ -38,6 +39,7 @@ internal static class PlayerJoinAndLeftPatch
     {
         if (GameState.IsHost)
         {
+            KickCooldownManager.Trigger();
             __instance.StartCoroutine(CoCheckPlayerOnJoin(data));
         }
     }
@@ -59,8 +61,7 @@ internal static class PlayerJoinAndLeftPatch
                 if (player != null)
                 {
                     if (TextFileHandler.CompareStringMatch(BetterDataManager.Files.banPlayerListFilePath,
-                        BAUPlugin.AllPlayerControls.Select(player => player.Data.FriendCode)
-                        .Concat(BAUPlugin.AllPlayerControls.Select(player => player.GetHashPuid())).ToArray()))
+                            [player.Data.FriendCode, player.GetHashPuid()]))
                     {
                         player.Kick(true, TranslationStrings.AntiCheat_BanPlayerListMessage.LocalizedString, bypassDataCheck: true);
                         yield break;
@@ -75,7 +76,7 @@ internal static class PlayerJoinAndLeftPatch
                 {
                     if (TextFileHandler.CompareStringFilters(BetterDataManager.Files.banNameListFilePath, [player.Data.PlayerName]))
                     {
-                        player?.Kick(true, TranslationStrings.AntiCheat_BanPlayerListMessage.LocalizedString, bypassDataCheck: true);
+                        player.Kick(true, TranslationStrings.AntiCheat_BanNameListMessage.LocalizedString, bypassDataCheck: true);
                     }
                 }
             }
@@ -86,6 +87,8 @@ internal static class PlayerJoinAndLeftPatch
     [HarmonyPostfix]
     private static void AmongUsClient_OnPlayerLeft_Postfix(ClientData data, DisconnectReasons reason)
     {
+        KickCooldownManager.Trigger();
+        
         // Reclaim favorite color when player leaves in lobby
         if (GameState.IsLobby)
         {

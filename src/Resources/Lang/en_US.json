@@ -79,6 +79,7 @@
   "BetterSetting.TextHeader.HostOnly": "<color=#4f92ff>Host Only</color>",
   "BetterSetting.TextHeader.Detections": "<color=#4f92ff>Detections</color>",
 
+  "BetterSetting.Setting.KickCooldown": "Kick cooldown",
   "BetterSetting.Setting.WhenCheating": "When a player is caught cheating",
   "BetterSetting.Setting.WhenCheating.Notify": "Notify",
   "BetterSetting.Setting.WhenCheating.Kick": "Kick",
