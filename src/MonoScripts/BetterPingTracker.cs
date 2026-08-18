@@ -2,6 +2,7 @@
 using BetterAmongUs.Data.Config;
 using BetterAmongUs.Generated;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Patches.Gameplay.UI.Chat;
 using BetterAmongUs.Utilities;
 using System.Text;
 using TMPro;
@@ -56,7 +57,15 @@ internal sealed class BetterPingTracker : MonoBehaviour
             return;
 
         // Update position and appearance
-        aspectPosition.DistanceFromEdge = new Vector3(4f, 0.1f, -5);
+        if (ChatPatch.IsChatVisible)
+        {
+            aspectPosition.DistanceFromEdge = new Vector3(4.6f, 0.1f, -5);
+        }
+        else
+        {
+            aspectPosition.DistanceFromEdge = new Vector3(4f, 0.1f, -5);
+        }
+
         aspectPosition.Alignment = AspectPosition.EdgeAlignments.RightTop;
         text.outlineWidth = 0.3f;
 

@@ -57,7 +57,7 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         var IdNumber = LevelDisplay.transform.Find("LevelNumber");
         IdLabel.gameObject.DestroyTextTranslators();
         IdLabel.GetComponent<TextMeshPro>().text = "ID";
-        IdNumber.GetComponent<TextMeshPro>().text = pva.TargetPlayerId.ToString();
+        IdNumber.GetComponent<TextMeshPro>().text = pva.PlayerId.Value.ToString();
         IdLabel.name = "IdLabel";
         IdNumber.name = "IdNumber";
         PlayerLevel.transform.position += new Vector3(0.23f, 0f);
@@ -260,7 +260,7 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     /// <returns>Disconnect reason text.</returns>
     private string GetDisconnectText()
     {
-        var playerData = GameData.Instance.GetPlayerById(_pva.TargetPlayerId);
+        var playerData = GameData.Instance.GetPlayerById(_pva.PlayerId);
         if (playerData == null)
             return string.Empty;
 

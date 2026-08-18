@@ -44,7 +44,7 @@ internal sealed class ForceSkipCommand : BaseCommand
             if (!countVotes)
             {
                 var states = Array.Empty<MeetingHud.VoterState>();
-                MeetingHud.Instance.RpcVotingComplete(states, null, false);
+                MeetingHud.Instance.RpcVotingComplete(states, null, false, false, 0);
             }
             else
             {
@@ -57,11 +57,11 @@ internal sealed class ForceSkipCommand : BaseCommand
                     PlayerVoteArea playerVoteArea = MeetingHud.Instance.playerStates[i];
                     array[i] = new MeetingHud.VoterState
                     {
-                        VoterId = playerVoteArea.TargetPlayerId,
-                        VotedForId = playerVoteArea.VotedFor
+                        VoterId = playerVoteArea.PlayerId,
+                        VotedForId = playerVoteArea.VotedForId
                     };
                 }
-                MeetingHud.Instance.RpcVotingComplete(array, networkedPlayerInfo, tie);
+                MeetingHud.Instance.RpcVotingComplete(array, networkedPlayerInfo, tie, false, 0);
             }
         }
     }

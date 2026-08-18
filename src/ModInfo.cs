@@ -58,11 +58,7 @@ internal static class ModInfo
     /// </summary>
     internal static string[] SupportedAmongUsVersions =
     [
-        "2026.6.5",
-        "2026.4.7", // Andiroid only update
-        "2026.3.31",
-        "2026.3.17",
-        "2025.11.18"
+        "2026.8.18"
     ];
 
     /// <summary>

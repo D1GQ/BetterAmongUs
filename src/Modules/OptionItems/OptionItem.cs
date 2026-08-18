@@ -354,7 +354,7 @@ public abstract class OptionItem
     /// Gets the boxed value of this option.
     /// </summary>
     /// <returns>The option value as an object.</returns>
-    public abstract object GetBoxedValue();
+    public abstract object? GetBoxedValue();
 
     /// <summary>
     /// Represents a node in the option hierarchy tree for text formatting.
@@ -399,7 +399,7 @@ public abstract class OptionItem<T> : OptionItem
     /// Gets the boxed value of this option.
     /// </summary>
     /// <returns>The option value as an object.</returns>
-    public override sealed object GetBoxedValue()
+    public override sealed object? GetBoxedValue()
     {
         return GetValue();
     }

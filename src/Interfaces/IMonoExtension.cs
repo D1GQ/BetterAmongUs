@@ -313,25 +313,3 @@ internal interface IMonoExtension<T> : IMonoExtension where T : MonoBehaviour
         OnExtensionAwake((T)baseMono);
     }
 }
-
-/// <summary>
-/// Extension methods for Unity's UnityEngine.Object types.
-/// </summary>
-public static class UnityObjectExtensions
-{
-    /// <summary>
-    /// Determines whether a Unity object has been destroyed or is null.
-    /// </summary>
-    /// <param name="obj">The Unity object to check.</param>
-    /// <returns>
-    /// <c>true</c> if the object has been destroyed or is null; otherwise, <c>false</c>.
-    /// </returns>
-    /// <remarks>
-    /// This method uses Unity's overloaded == operator which returns true for
-    /// destroyed objects even though the C# reference still exists.
-    /// </remarks>
-    public static bool IsDestroyedOrNull(this UnityEngine.Object obj)
-    {
-        return obj == null;
-    }
-}

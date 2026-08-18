@@ -21,6 +21,24 @@ internal static class ChatPatch
 
     internal const string COMMAND_POSTFIX_ID = "<size=0%>IsCommand</size>";
 
+    internal static bool IsChatVisible
+    {
+        get
+        {
+            if (BAUConfigs.ChatInGameplay.Value)
+            {
+                return true;
+            }
+
+            if (!GameState.IsInGamePlay)
+            {
+                return true;
+            }
+
+            return !PlayerControl.LocalPlayer.IsAlive() || GameState.IsMeeting || GameState.IsExilling;
+        }
+    }
+
     /// <summary>
     /// Removes all chat bubbles from the chat.
     /// </summary>

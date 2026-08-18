@@ -1,8 +1,8 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
-using BetterAmongUs.Data.Config;
 using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Patches.Gameplay.UI.Chat;
 using BetterAmongUs.Utilities;
 using HarmonyLib;
 using System.Collections;
@@ -53,26 +53,23 @@ internal static class HudManagerPatch
             if (__instance.Chat == null)
                 return;
 
-            if (!BAUConfigs.ChatInGameplay.Value)
-            {
-                // Vanilla chat behavior: only show chat when dead or during meetings
-                if (!PlayerControl.LocalPlayer.IsAlive())
-                {
-                    __instance.Chat.gameObject.SetActive(true);
-                }
-                else if (GameState.IsInGamePlay && !(GameState.IsMeeting || GameState.IsExilling))
-                {
-                    __instance.Chat.gameObject.SetActive(false);
-                }
-            }
-            else
-            {
-                // BAU chat behavior: always show chat when enabled
-                if (__instance.Chat.gameObject.active == false)
-                {
-                    __instance.Chat.gameObject.SetActive(true);
-                }
-            }
+            __instance.Chat.gameObject.SetActive(ChatPatch.IsChatVisible);
         }
+    }
+
+    [HarmonyPatch(typeof(MatchInfoHudButton), nameof(MatchInfoHudButton.Update))]
+    [HarmonyPrefix]
+    private static bool MatchInfoHudButton_Update_Prefix(MatchInfoHudButton __instance)
+    {
+        if (ChatPatch.IsChatVisible)
+        {
+            __instance.aspectPosition.DistanceFromEdge = MatchInfoHudButton.adjustedDistanceFromEdge;
+        }
+        else
+        {
+            __instance.aspectPosition.DistanceFromEdge = MatchInfoHudButton.defaultDistanceFromEdge;
+        }
+
+        return false;
     }
 }
