@@ -11,6 +11,7 @@ namespace BetterAmongUs.Patches.Gameplay.UI.Settings;
 // Custom game settings definitions
 internal sealed class BetterGameSettings
 {
+    internal static OptionFloatItem? KickCooldown;
     internal static OptionStringItem? WhenCheating;
     internal static OptionCheckboxItem? InvalidFriendCode;
     internal static OptionCheckboxItem? UseBanPlayerList;
@@ -67,6 +68,7 @@ internal static class GameSettingsPatch
             if (IsPreload || GameState.IsHost)
             {
                 OptionTitleItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_TextHeader_HostOnly);
+                BetterGameSettings.KickCooldown = OptionFloatItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_KickCooldown, (0f, 3f, 0.1f), 2f, ("", "s"));
                 BetterGameSettings.WhenCheating = OptionStringItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_WhenCheating,
                     [TranslationStrings.BetterSetting_Setting_WhenCheating_Notify, TranslationStrings.BetterSetting_Setting_WhenCheating_Kick, TranslationStrings.BetterSetting_Setting_WhenCheating_Ban], 2);
                 BetterGameSettings.InvalidFriendCode = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_InvalidFriendCode, true);

@@ -79,7 +79,7 @@
 
 	<!-- NuGet Core Packages -->
 	<ItemGroup>
-		<PackageReference Include="AmongUs.GameLibs.Steam" Version="2026.6.5" />
+		<PackageReference Include="AmongUs.GameLibs.Steam" Version="2026.8.18" />
 		<PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -2,13 +2,13 @@ using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Data;
 using BetterAmongUs.Data.Config;
 using BetterAmongUs.Enums;
-using BetterAmongUs.Utilities;
+using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Network;
+using BetterAmongUs.Utilities;
 using Hazel;
 using Il2CppInterop.Runtime.Attributes;
 using System.Collections;
 using UnityEngine;
-using BetterAmongUs.MonoScripts.Extended;
 
 namespace BetterAmongUs.Modules;
 
@@ -46,7 +46,8 @@ internal sealed class HandshakeHandler
             yield return null;
         }
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(1f + (0.2f * _extendedData.BaseMono.PlayerId));
+
         SendSecretToPlayer();
     }
 
@@ -62,7 +63,7 @@ internal sealed class HandshakeHandler
             return;
 
         HasSendSharedSecret = false;
-        SendSecretToPlayer();
+        WaitSendSecretToPlayer();
     }
 
     /// <summary>

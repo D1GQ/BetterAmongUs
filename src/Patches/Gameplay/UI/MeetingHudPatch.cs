@@ -32,7 +32,7 @@ internal static class MeetingHudPatch
         {
             if (pva == null) continue;
 
-            var target = Utils.PlayerFromPlayerId(pva.TargetPlayerId);
+            var target = Utils.PlayerDataFromPlayerId(pva.PlayerId);
             if (target == null) continue;
 
             pva.gameObject.AddComponent<MeetingInfoDisplay>().Init(target, pva);

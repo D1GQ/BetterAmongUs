@@ -21,6 +21,24 @@ internal static class ChatPatch
 
     internal const string COMMAND_POSTFIX_ID = "<size=0%>IsCommand</size>";
 
+    internal static bool IsChatVisible
+    {
+        get
+        {
+            if (BAUConfigs.ChatInGameplay.Value)
+            {
+                return true;
+            }
+
+            if (!GameState.IsInGamePlay)
+            {
+                return true;
+            }
+
+            return !PlayerControl.LocalPlayer.IsAlive() || GameState.IsMeeting || GameState.IsExilling;
+        }
+    }
+
     /// <summary>
     /// Removes all chat bubbles from the chat.
     /// </summary>
@@ -169,25 +187,29 @@ internal static class ChatPatch
             __instance.freeChatField.textArea.compoText.Color(Color.black);
             __instance.freeChatField.textArea.outputText.color = Color.black;
         }
+
         // Ctrl+x to cut text to clipboard
-        if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.X))
+        if (__instance.IsOpenOrOpening)
         {
-            ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
-            __instance.freeChatField.textArea.SetText("");
-        }
-        // Up arrow for chat history navigation
-        if (Input.GetKeyDown(KeyCode.UpArrow) && ChatHistory.Any())
-        {
-            CurrentHistorySelection = Mathf.Clamp(--CurrentHistorySelection, 0, ChatHistory.Count - 1);
-            __instance.freeChatField.textArea.SetText(ChatHistory[CurrentHistorySelection]);
-        }
-        // Down arrow for chat history navigation
-        if (Input.GetKeyDown(KeyCode.DownArrow) && ChatHistory.Any())
-        {
-            CurrentHistorySelection++;
-            if (CurrentHistorySelection < ChatHistory.Count)
+            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.X))
+            {
+                ClipboardHelper.PutClipboardString(__instance.freeChatField.textArea.text);
+                __instance.freeChatField.textArea.SetText("");
+            }
+            // Up arrow for chat history navigation
+            if (Input.GetKeyDown(KeyCode.UpArrow) && ChatHistory.Any())
+            {
+                CurrentHistorySelection = Mathf.Clamp(--CurrentHistorySelection, 0, ChatHistory.Count - 1);
                 __instance.freeChatField.textArea.SetText(ChatHistory[CurrentHistorySelection]);
-            else __instance.freeChatField.textArea.SetText("");
+            }
+            // Down arrow for chat history navigation
+            if (Input.GetKeyDown(KeyCode.DownArrow) && ChatHistory.Any())
+            {
+                CurrentHistorySelection++;
+                if (CurrentHistorySelection < ChatHistory.Count)
+                    __instance.freeChatField.textArea.SetText(ChatHistory[CurrentHistorySelection]);
+                else __instance.freeChatField.textArea.SetText("");
+            }
         }
     }
     // Log chat messages to console

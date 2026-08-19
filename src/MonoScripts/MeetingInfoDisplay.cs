@@ -17,6 +17,7 @@ namespace BetterAmongUs.MonoScripts;
 [RegisterInIl2Cpp]
 internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
 {
+    private NetworkedPlayerInfo? _playerInfo;
     private PlayerVoteArea? _pva;
     private Vector3 _namePos;
     private Vector3 _infoPos;
@@ -33,9 +34,9 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     /// </summary>
     /// <param name="player">The player to display info for.</param>
     /// <param name="pva">The PlayerVoteArea associated with the player.</param>
-    internal void Init(PlayerControl? player, PlayerVoteArea pva)
+    internal void Init(NetworkedPlayerInfo? playerInfo, PlayerVoteArea pva)
     {
-        _player = player;
+        _playerInfo = playerInfo;
         _pva = pva;
 
         _nameText = pva.NameText;
@@ -57,7 +58,7 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         var IdNumber = LevelDisplay.transform.Find("LevelNumber");
         IdLabel.gameObject.DestroyTextTranslators();
         IdLabel.GetComponent<TextMeshPro>().text = "ID";
-        IdNumber.GetComponent<TextMeshPro>().text = pva.TargetPlayerId.ToString();
+        IdNumber.GetComponent<TextMeshPro>().text = pva.PlayerId.Value.ToString();
         IdLabel.name = "IdLabel";
         IdNumber.name = "IdNumber";
         PlayerLevel.transform.position += new Vector3(0.23f, 0f);
@@ -77,7 +78,7 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         _ssbTag.Clear();
         _ssbInfo.Clear();
 
-        if (_player != null)
+        if (_playerInfo.Object != null)
         {
             UpdateInfo();
         }
@@ -138,11 +139,11 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     /// </summary>
     private void UpdateInfo()
     {
-        if (_player == null || _player.Data == null || _player.ExtendedData() == null)
+        if (_playerInfo == null || _playerInfo.ExtendedData() == null)
             return;
 
         SetPlayerTags(_ssbTag);
-        _ssbInfo.Append(_player.GetRoleInfo(true));
+        _ssbInfo.Append(_playerInfo.GetRoleInfo(true));
 
         UpdateNameTextPosition(_ssbInfo.ToString(), _ssbInfo.ToString());
 
@@ -157,13 +158,10 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     [HideFromIl2Cpp]
     private void SetPlayerTags(SplitStringBuilder ssbTag)
     {
-        if (_player == null)
+        if (_playerInfo == null)
             return;
 
-        if (_player.Data == null)
-            return;
-
-        if (BetterDataManager.Files.BetterDataFile.TryGetCheatInfo(_player.Data, out var info))
+        if (BetterDataManager.Files.BetterDataFile.TryGetCheatInfo(_playerInfo, out var info))
         {
             ssbTag.Append(info.title.ToColor(info.hexColor));
         }
@@ -260,7 +258,7 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
     /// <returns>Disconnect reason text.</returns>
     private string GetDisconnectText()
     {
-        var playerData = GameData.Instance.GetPlayerById(_pva.TargetPlayerId);
+        var playerData = GameData.Instance.GetPlayerById(_pva.PlayerId);
         if (playerData == null)
             return string.Empty;
 

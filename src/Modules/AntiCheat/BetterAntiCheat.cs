@@ -51,31 +51,31 @@ internal static class BetterAntiCheat
                 {
                     string reason = TranslationStrings.AntiCheat_Reason_SickoMenuUser.LocalizedString;
                     string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
-                    player.Kick(true, kickMessage, true);
+                    player.TryKick(true, kickMessage, true);
                 }
                 else if (BetterDataManager.Files.BetterDataFile.AUMData.Any(info => info.CheckPlayerData(player.Data)))
                 {
                     string reason = TranslationStrings.AntiCheat_Reason_AUMUser.LocalizedString;
                     string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
-                    player.Kick(true, kickMessage, true);
+                    player.TryKick(true, kickMessage, true);
                 }
                 else if (BetterDataManager.Files.BetterDataFile.KNData.Any(info => info.CheckPlayerData(player.Data)))
                 {
                     string reason = TranslationStrings.AntiCheat_Reason_KNUser.LocalizedString;
                     string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
-                    player.Kick(true, kickMessage, true);
+                    player.TryKick(true, kickMessage, true);
                 }
                 else if (BetterDataManager.Files.BetterDataFile.MMCData.Any(info => info.CheckPlayerData(player.Data)))
                 {
                     string reason = TranslationStrings.AntiCheat_Reason_MMCUser.LocalizedString;
                     string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
-                    player.Kick(true, kickMessage, true);
+                    player.TryKick(true, kickMessage, true);
                 }
                 else if (BetterDataManager.Files.BetterDataFile.CheatData.Any(info => info.CheckPlayerData(player.Data)))
                 {
                     string reason = TranslationStrings.AntiCheat_Reason_KnownCheater.LocalizedString;
                     string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
-                    player.Kick(true, kickMessage, true);
+                    player.TryKick(true, kickMessage, true);
                 }
             }
         }

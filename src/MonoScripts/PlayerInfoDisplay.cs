@@ -277,7 +277,7 @@ internal class PlayerInfoDisplay : MonoBehaviour
             if (GameState.IsHost && BetterGameSettings.InvalidFriendCode.GetBool())
             {
                 string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, TranslationStrings.AntiCheat_Reason_InvalidFriendCode);
-                _player.Kick(true, kickMessage, true);
+                _player.TryKick(true, kickMessage, true);
             }
         }
 

@@ -195,7 +195,7 @@ internal static class GameState
             if (!IsMeeting || MeetingHud.Instance == null)
                 return false;
 
-            return MeetingHud.Instance.state is MeetingHud.VoteStates.Voted or MeetingHud.VoteStates.NotVoted;
+            return MeetingHud.Instance.state is MeetingHud.MeetingStates.Voted or MeetingHud.MeetingStates.NotVoted;
         }
     }
 
@@ -209,7 +209,7 @@ internal static class GameState
             if (!IsMeeting || MeetingHud.Instance == null)
                 return false;
 
-            return MeetingHud.Instance.state == MeetingHud.VoteStates.Proceeding;
+            return MeetingHud.Instance.state == MeetingHud.MeetingStates.Proceeding;
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using AmongUs.GameOptions;
 using BetterAmongUs.Data;
 using BetterAmongUs.Generated;
+using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Patches.Gameplay.Player;
@@ -128,41 +129,112 @@ internal static class PlayerControlUtils
     }
 
     /// <summary>
+    /// Kicks a player from the game as soon as it is safe to do so.
+    /// </summary>
+    /// <param name="player">The player to kick.</param>
+    /// <param name="ban">Whether to ban the player.</param>
+    /// <param name="setReasonInfo">Custom reason message for the kick.</param>
+    /// <param name="antiCheatBan">Whether this is an anti-cheat related kick.</param>
+    /// <param name="bypassDataCheck">Whether to bypass the data collection check.</param>
+    /// <param name="forceBan">Whether to force a ban regardless of settings.</param>
+    internal static void Kick(this PlayerControl player, bool ban = false, string setReasonInfo = "", bool antiCheatBan = false, bool bypassDataCheck = false, bool forceBan = false)
+    {
+        if (!player.CanKick(ban, antiCheatBan, bypassDataCheck, forceBan, out var shouldBan)) return;
+        KickCooldownManager.ScheduleAction(() => { player.PerformKick(shouldBan, setReasonInfo, antiCheatBan); });
+    }
+
+    /// <summary>
+    /// Kicks a player from the game immediately if it is safe to do so, otherwise does nothing.
+    /// This should be used instead of <see cref="Kick"/> in places where this method is repeatedly called, like Update methods for example.
+    /// </summary>
+    /// <param name="player">The player to kick.</param>
+    /// <param name="ban">Whether to ban the player.</param>
+    /// <param name="setReasonInfo">Custom reason message for the kick.</param>
+    /// <param name="antiCheatBan">Whether this is an anti-cheat related kick.</param>
+    /// <param name="bypassDataCheck">Whether to bypass the data collection check.</param>
+    /// <param name="forceBan">Whether to force a ban regardless of settings.</param>
+    internal static void TryKick(this PlayerControl player, bool ban = false, string setReasonInfo = "", bool antiCheatBan = false, bool bypassDataCheck = false, bool forceBan = false)
+    {
+        if (!KickCooldownManager.IsReady()) return;
+        if (!player.CanKick(ban, antiCheatBan, bypassDataCheck, forceBan, out var shouldBan)) return;
+        KickCooldownManager.Trigger();
+        player.PerformKick(shouldBan, setReasonInfo, antiCheatBan);
+    }
+
+    /// <summary>
+    /// Kicks a player from the game immediately, regardless of cooldown.
+    /// Only use this if the target player is extremely dangerous and must be removed immediately.
+    /// </summary>
+    /// <param name="player">The player to kick.</param>
+    /// <param name="ban">Whether to ban the player.</param>
+    /// <param name="setReasonInfo">Custom reason message for the kick.</param>
+    /// <param name="antiCheatBan">Whether this is an anti-cheat related kick.</param>
+    /// <param name="bypassDataCheck">Whether to bypass the data collection check.</param>
+    /// <param name="forceBan">Whether to force a ban regardless of settings.</param>
+    internal static void KickImmediate(this PlayerControl player, bool ban = false, string setReasonInfo = "", bool antiCheatBan = false, bool bypassDataCheck = false, bool forceBan = false)
+    {
+        if (!player.CanKick(ban, antiCheatBan, bypassDataCheck, forceBan, out var shouldBan)) return;
+        player.PerformKick(shouldBan, setReasonInfo, antiCheatBan);
+    }
+
+    /// <summary>
+    /// Determines whether the specified player can be kicked from the game and sets the outcome.
+    /// </summary>
+    /// <param name="player">The player to evaluate.</param>
+    /// <param name="ban">Whether to ban the player.</param>
+    /// <param name="antiCheatBan">Whether this is an anti-cheat related kick.</param>
+    /// <param name="bypassDataCheck">Whether to bypass the data collection check.</param>
+    /// <param name="forceBan">Whether to force a ban regardless of settings.</param>
+    /// <param name="shouldBan">
+    /// When the method returns, this value indicates whether the player should be banned
+    /// based on the provided flags and internal checks.
+    /// </param>
+    /// <returns><c>true</c> if the player can be kicked/banned, <c>false</c> otherwise.</returns>
+    private static bool CanKick(this PlayerControl player, bool ban, bool antiCheatBan, bool bypassDataCheck,
+        bool forceBan, out bool shouldBan)
+    {
+        shouldBan = ban || forceBan;
+
+        if (!GameState.IsHost || player.IsLocalPlayer() || (!player.DataIsCollected() && !bypassDataCheck) || player.IsHost() || player.isDummy)
+            return false;
+
+        if (forceBan || !antiCheatBan) return true;
+
+        return HandleAntiCheatBanCheck(shouldBan, out shouldBan);
+    }
+
+    /// <summary>
+    /// Determines whether a player should be banned when an anti‑cheat check is performed.
+    /// </summary>
+    /// <param name="ban">Whether the player has already been flagged for banning before this method is called.</param>
+    /// <param name="shouldBan">The output value that indicates whether the player should ultimately be banned.</param>
+    /// <returns>
+    /// <c>true</c> if the player can be kicked or banned.<br/>
+    /// <c>false</c> if <see cref="BetterGameSettings.WhenCheating"/> is set to <c>0</c> (Notify).
+    /// </returns>
+    private static bool HandleAntiCheatBanCheck(bool ban, out bool shouldBan)
+    {
+        shouldBan = ban && BetterGameSettings.WhenCheating.GetStringIndex() == 2;
+        return BetterGameSettings.WhenCheating.GetStringIndex() != 0;
+    }
+
+    /// <summary>
     /// Kicks a player from the game with optional ban and anti-cheat features.
     /// </summary>
     /// <param name="player">The player to kick.</param>
     /// <param name="ban">Whether to ban the player.</param>
     /// <param name="setReasonInfo">Custom reason message for the kick.</param>
-    /// <param name="AntiCheatBan">Whether this is an anti-cheat related kick.</param>
-    /// <param name="bypassDataCheck">Whether to bypass the data collection check.</param>
-    /// <param name="forceBan">Whether to force a ban regardless of settings.</param>
-    internal static void Kick(this PlayerControl player, bool ban = false, string setReasonInfo = "", bool AntiCheatBan = false, bool bypassDataCheck = false, bool forceBan = false)
+    /// <param name="antiCheatBan">Whether this is an anti-cheat related kick.</param>
+    private static void PerformKick(this PlayerControl player, bool ban = false, string setReasonInfo = "", bool antiCheatBan = false)
     {
-        var Ban = ban || forceBan;
-
-        if (!GameState.IsHost || player.IsLocalPlayer() || (!player.DataIsCollected() && !bypassDataCheck) || player.IsHost() || player.isDummy)
-        {
-            return;
-        }
-
-        if (AntiCheatBan)
-        {
-            if (BetterGameSettings.WhenCheating.GetStringIndex() == 0 && !forceBan)
-            {
-                return;
-            }
-
-            Ban = (Ban && BetterGameSettings.WhenCheating.GetStringIndex() == 2) || forceBan;
-        }
-
         if (setReasonInfo != "")
         {
-            PlayerJoinAndLeftPatch.BetterShowNotification(player.Data, forceReasonText: string.Format(setReasonInfo, Ban ? TranslationStrings.AntiCheat_Ban.LocalizedString.ToLower() : TranslationStrings.AntiCheat_Kick.LocalizedString.ToLower()));
+            PlayerJoinAndLeftPatch.BetterShowNotification(player.Data, forceReasonText: string.Format(setReasonInfo, ban ? TranslationStrings.AntiCheat_Ban.LocalizedString.ToLower() : TranslationStrings.AntiCheat_Kick.LocalizedString.ToLower()));
         }
 
-        AmongUsClient.Instance.KickPlayer(player.GetClientId(), Ban);
+        AmongUsClient.Instance.KickPlayer(player.GetClientId(), ban);
 
-        player.ExtendedData().AntiCheatInfo.BannedByAntiCheat = AntiCheatBan;
+        player.ExtendedData().AntiCheatInfo.BannedByAntiCheat = antiCheatBan;
     }
 
     /// <summary>
@@ -220,6 +292,13 @@ internal static class PlayerControlUtils
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is the local player.</returns>
     internal static bool IsLocalPlayer(this PlayerControl player) => player != null && PlayerControl.LocalPlayer != null && player == PlayerControl.LocalPlayer;
+
+    /// <summary>
+    /// Checks if a player data is the local player data.
+    /// </summary>
+    /// <param name="playerData">The player data to check.</param>
+    /// <returns>True if the player data is the local player data.</returns>
+    internal static bool IsLocalData(this NetworkedPlayerInfo playerData) => playerData != null && PlayerControl.LocalPlayer != null && playerData == PlayerControl.LocalPlayer.Data;
 
     /// <summary>
     /// Gets the ID of the vent the player is currently in.
@@ -430,13 +509,30 @@ internal static class PlayerControlUtils
     /// <returns>True if the player is an impostor teammate.</returns>
     internal static bool IsImpostorTeammate(this PlayerControl player)
     {
-        if (player == null || PlayerControl.LocalPlayer == null)
+        if (player == null)
+            return false;
+
+        var data = player.Data;
+        if (data == null)
+            return false;
+
+        return data.IsImpostorTeammate();
+    }
+
+    /// <summary>
+    /// Checks if a player data is an impostor teammate of the local player data.
+    /// </summary>
+    /// <param name="playerData">The player data to check.</param>
+    /// <returns>True if the player data is an impostor teammate.</returns>
+    internal static bool IsImpostorTeammate(this NetworkedPlayerInfo playerData)
+    {
+        if (playerData == null || PlayerControl.LocalPlayer == null)
             return false;
 
         bool localIsImpostor = PlayerControl.LocalPlayer.IsImpostorTeam();
-        bool playerIsImpostor = player.IsImpostorTeam();
+        bool playerIsImpostor = playerData.IsImpostorTeam();
 
-        return (player.IsLocalPlayer() && localIsImpostor) ||
+        return (playerData.IsLocalData() && localIsImpostor) ||
                (localIsImpostor && playerIsImpostor);
     }
 
