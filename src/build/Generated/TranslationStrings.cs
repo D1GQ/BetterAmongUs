@@ -474,6 +474,11 @@ public static class TranslationStrings
     public static readonly TranslationString BetterSetting_Setting_KickLevelBelow = new("BetterSetting.Setting.KickLevelBelow");
 
     /// <summary>
+    /// Base Translation: Only when player count at least
+    /// </summary>
+    public static readonly TranslationString BetterSetting_Setting_KickLevelBelowMinimumPlayers = new("BetterSetting.Setting.KickLevelBelowMinimumPlayers");
+
+    /// <summary>
     /// Base Translation: Detect cheat clients
     /// </summary>
     public static readonly TranslationString BetterSetting_Setting_DetectCheatClients = new("BetterSetting.Setting.DetectCheatClients");

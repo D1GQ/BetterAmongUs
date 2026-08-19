@@ -96,6 +96,7 @@
   "BetterSetting.Setting.DetectedLevelAbove": "Detected player level above",
   "BetterSetting.Setting.KickLevel": "Kick player levels",
   "BetterSetting.Setting.KickLevelBelow": "Kick player level below",
+  "BetterSetting.Setting.KickLevelBelowMinimumPlayers": "Only when player count at least",
   "BetterSetting.Setting.DetectCheatClients": "Detect cheat clients",
   "BetterSetting.Setting.DetectInvalidRpcs": "Detect invalid Rpcs",
   "BetterSetting.Setting.RpcRateLimiting": "Rpc Rate Limiting",

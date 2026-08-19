@@ -22,6 +22,7 @@ internal sealed class BetterGameSettings
     internal static OptionIntItem? DetectedLevelAbove;
     internal static OptionCheckboxItem? KickLevel;
     internal static OptionIntItem? KickLevelBelow;
+    internal static OptionIntItem? KickLevelBelowMinimumPlayers;
     internal static OptionCheckboxItem? DetectCheatClients;
     internal static OptionCheckboxItem? DetectInvalidRpcs;
     internal static OptionCheckboxItem? RpcRateLimiting;
@@ -86,6 +87,7 @@ internal static class GameSettingsPatch
             BetterGameSettings.DetectedLevelAbove = OptionIntItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_DetectedLevelAbove, (100, 10000, 5), 500, ("Lv ", ""), BetterGameSettings.DetectedLevel);
             BetterGameSettings.KickLevel = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_KickLevel, false);
             BetterGameSettings.KickLevelBelow = OptionIntItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_KickLevelBelow, (0, 10000, 1), 0, ("Lv ", ""), BetterGameSettings.KickLevel);
+            BetterGameSettings.KickLevelBelowMinimumPlayers = OptionIntItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_KickLevelBelowMinimumPlayers, (1, 15, 1), 9, parent: BetterGameSettings.KickLevelBelow);
             BetterGameSettings.DetectCheatClients = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_DetectCheatClients, true);
             BetterGameSettings.DetectInvalidRpcs = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_DetectInvalidRpcs, true);
             BetterGameSettings.RpcRateLimiting = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_RpcRateLimiting, true);
