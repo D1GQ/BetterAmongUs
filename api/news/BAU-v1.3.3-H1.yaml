@@ -1,0 +1,27 @@
+^show: true
+^type: 1
+^title: Hotfix Patch Notes
+^subtitle: Just a quick hotfix!
+^listtitle: BAU v1.3.3 Hotfix 1
+^date: 2026-08-18T12:00:00.0000000Z
+
+^content-en_US:
+ # Better Among Us v1.3.3 Hotfix 1
+
+ We are thrilled to announce this hotfix of **BetterAmongUs**, a mod designed to enhance your Among Us experience!
+ ---
+
+ ## Change Log
+
+ #### Mod
+ - **Among Us Compatibility**: Updated to Among Us 2026.8.18
+ ---
+  #### Changed
+ - **Better Role Algorithm**: Removed Better Role Algorithm due to it being redundant after recent changes.
+ ---
+ #### Bug Fixes
+ - Fixed issues that caused other players to be kicked by the server when hosting
+ - Fixed player meeting info not properly being set up on disconnected players
+ - Fixed float option decimal offset
+ ---
+ ## [Discord](https://discord.gg/vjYrXpzNAn) [Github](https://github.com/D1GQ/BetterAmongUs/)
