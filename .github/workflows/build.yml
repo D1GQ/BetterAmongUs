@@ -5,16 +5,22 @@ on:
     branches:
       - 'main'
       - '**hotfix**'
+      - '**Hotfix**'
       - '**beta**'
+      - '**Beta**'
       - '**dev**'
+      - '**Dev**'
     paths:
       - 'src/**'
   pull_request:
     branches:
       - 'main'
       - '**hotfix**'
+      - '**Hotfix**'
       - '**beta**'
+      - '**Beta**'
       - '**dev**'
+      - '**Dev**'
     paths:
       - 'src/**'
       
