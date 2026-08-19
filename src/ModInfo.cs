@@ -31,12 +31,12 @@ internal static class ModInfo
     /// <summary>
     /// The hotfix number for hotfix releases.
     /// </summary>
-    internal const string HOTFIX_NUM = "0";
+    internal const string HOTFIX_NUM = "1";
 
     /// <summary>
     /// Indicates whether this is a hotfix release.
     /// </summary>
-    internal const bool IS_HOTFIX = false;
+    internal const bool IS_HOTFIX = true;
 
     /// <summary>
     /// The name of BAU.
