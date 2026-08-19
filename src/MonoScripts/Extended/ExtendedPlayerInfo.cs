@@ -227,6 +227,11 @@ internal sealed class ExtendedRoleInfo
     internal int Kills { get; set; } = 0;
 
     /// <summary>
+    /// Gets or sets the player that was judged.
+    /// </summary>
+    internal PlayerId Judged { get; set; } = PlayerId.Invalid;
+
+    /// <summary>
     /// Gets or sets whether noisemaker notification is enabled.
     /// </summary>
     internal bool HasNoisemakerNotify { get; set; } = false;

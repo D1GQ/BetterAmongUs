@@ -160,7 +160,7 @@ internal static class PlayerControlUtils
         KickCooldownManager.Trigger();
         player.PerformKick(shouldBan, setReasonInfo, antiCheatBan);
     }
-    
+
     /// <summary>
     /// Kicks a player from the game immediately, regardless of cooldown.
     /// Only use this if the target player is extremely dangerous and must be removed immediately.
@@ -217,7 +217,7 @@ internal static class PlayerControlUtils
         shouldBan = ban && BetterGameSettings.WhenCheating.GetStringIndex() == 2;
         return BetterGameSettings.WhenCheating.GetStringIndex() != 0;
     }
-    
+
     /// <summary>
     /// Kicks a player from the game with optional ban and anti-cheat features.
     /// </summary>
@@ -292,6 +292,13 @@ internal static class PlayerControlUtils
     /// <param name="player">The player to check.</param>
     /// <returns>True if the player is the local player.</returns>
     internal static bool IsLocalPlayer(this PlayerControl player) => player != null && PlayerControl.LocalPlayer != null && player == PlayerControl.LocalPlayer;
+
+    /// <summary>
+    /// Checks if a player data is the local player data.
+    /// </summary>
+    /// <param name="playerData">The player data to check.</param>
+    /// <returns>True if the player data is the local player data.</returns>
+    internal static bool IsLocalData(this NetworkedPlayerInfo playerData) => playerData != null && PlayerControl.LocalPlayer != null && playerData == PlayerControl.LocalPlayer.Data;
 
     /// <summary>
     /// Gets the ID of the vent the player is currently in.
@@ -502,13 +509,30 @@ internal static class PlayerControlUtils
     /// <returns>True if the player is an impostor teammate.</returns>
     internal static bool IsImpostorTeammate(this PlayerControl player)
     {
-        if (player == null || PlayerControl.LocalPlayer == null)
+        if (player == null)
+            return false;
+
+        var data = player.Data;
+        if (data == null)
+            return false;
+
+        return data.IsImpostorTeammate();
+    }
+
+    /// <summary>
+    /// Checks if a player data is an impostor teammate of the local player data.
+    /// </summary>
+    /// <param name="playerData">The player data to check.</param>
+    /// <returns>True if the player data is an impostor teammate.</returns>
+    internal static bool IsImpostorTeammate(this NetworkedPlayerInfo playerData)
+    {
+        if (playerData == null || PlayerControl.LocalPlayer == null)
             return false;
 
         bool localIsImpostor = PlayerControl.LocalPlayer.IsImpostorTeam();
-        bool playerIsImpostor = player.IsImpostorTeam();
+        bool playerIsImpostor = playerData.IsImpostorTeam();
 
-        return (player.IsLocalPlayer() && localIsImpostor) ||
+        return (playerData.IsLocalData() && localIsImpostor) ||
                (localIsImpostor && playerIsImpostor);
     }
 

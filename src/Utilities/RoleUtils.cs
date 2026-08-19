@@ -91,12 +91,23 @@ internal static class RoleUtils
     /// <returns>Returns role info or <see cref="string.Empty"/> if the player's role information cannot be displayed.</returns>
     internal static string GetRoleInfo(this PlayerControl player, bool displayTask)
     {
+        return player.Data.GetRoleInfo(displayTask);
+    }
+
+    /// <summary>
+    /// Gets the role information for a specified player, optionally including task progress.
+    /// </summary>
+    /// <param name="playerData">The player data to get role information for.</param>
+    /// <param name="displayTask">Whether to display the player's task completion progress.</param>
+    /// <returns>Returns role info or <see cref="string.Empty"/> if the player's role information cannot be displayed.</returns>
+    internal static string GetRoleInfo(this NetworkedPlayerInfo playerData, bool displayTask)
+    {
         if (!GameState.IsInGamePlay)
         {
             return string.Empty;
         }
 
-        if (!player.IsLocalPlayer() && !player.IsImpostorTeammate())
+        if (playerData.PlayerId != PlayerControl.LocalPlayer.PlayerId && !playerData.IsImpostorTeammate())
         {
             if (PlayerControl.LocalPlayer.IsAlive())
             {
@@ -109,19 +120,19 @@ internal static class RoleUtils
             }
         }
 
-        string roleInfo = player.GetRoleName().ToColor(player.Data.Role.TeamColor);
+        string roleInfo = playerData.RoleType.GetRoleName().ToColor(playerData.Role.TeamColor);
 
-        if (!player.IsImpostorTeam() && player.myTasks.Count > 0)
+        if (!playerData.IsImpostorTeam() && playerData.Tasks.Count > 0)
         {
             if (displayTask)
             {
                 int completedTasks = 0;
-                foreach (var task in player.Data.Tasks)
+                foreach (var task in playerData.Tasks)
                 {
                     if (task.Complete)
                         completedTasks++;
                 }
-                roleInfo += $" <color=#cbcbcb>({completedTasks}/{player.Data.Tasks.Count})</color>";
+                roleInfo += $" <color=#cbcbcb>({completedTasks}/{playerData.Tasks.Count})</color>";
             }
         }
 
