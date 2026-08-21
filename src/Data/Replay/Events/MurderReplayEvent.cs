@@ -1,6 +1,5 @@
 ﻿using BetterAmongUs.Interfaces;
 using BetterAmongUs.Utilities;
-using InnerNet;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
@@ -16,11 +15,11 @@ internal sealed class MurderReplayEvent : IReplayEvent<MurderReplayEvent.MurderR
 
     public void Play()
     {
-        var killer = Utils.PlayerFromPlayerId((PlayerId)EventData.KillerId);
+        var killer = Utils.PlayerFromPlayerId(EventData.KillerId);
         if (killer == null)
             return;
 
-        var target = Utils.PlayerFromPlayerId((PlayerId)EventData.TargetId);
+        var target = Utils.PlayerFromPlayerId(EventData.TargetId);
         if (target == null)
             return;
 
@@ -36,7 +35,7 @@ internal sealed class MurderReplayEvent : IReplayEvent<MurderReplayEvent.MurderR
         EventData = new MurderReplayData(murderReplayArgs.Killer.PlayerId, murderReplayArgs.Target.PlayerId);
     }
 
-    internal record MurderReplayData(int KillerId, int TargetId) : IReplayEvent.Data;
+    internal record MurderReplayData(byte KillerId, byte TargetId) : IReplayEvent.Data;
 
     internal record MurderReplayArgs(PlayerControl Killer, PlayerControl Target) : IReplayEvent.Args;
 }

@@ -10,7 +10,6 @@ using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using BetterAmongUs.Structs;
 using BetterAmongUs.Utilities;
 using Il2CppInterop.Runtime.Attributes;
-using InnerNet;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -218,7 +217,7 @@ internal class PlayerInfoDisplay : MonoBehaviour
             }
             else
             {
-                var targetData = Utils.PlayerDataFromPlayerId((PlayerId)_player.shapeshiftTargetPlayerId);
+                var targetData = Utils.PlayerDataFromPlayerId((byte)_player.shapeshiftTargetPlayerId);
                 if (targetData == null)
                     return;
 

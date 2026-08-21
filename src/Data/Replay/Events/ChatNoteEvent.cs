@@ -1,6 +1,5 @@
 ﻿using BetterAmongUs.Interfaces;
 using BetterAmongUs.Utilities;
-using InnerNet;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
@@ -19,7 +18,7 @@ internal sealed class ChatNoteEvent : IReplayEvent<ChatNoteEvent.ChatNoteReplayD
         if (EventData == null)
             return;
 
-        var player = Utils.PlayerFromPlayerId((PlayerId)EventData.PlayerId);
+        var player = Utils.PlayerFromPlayerId(EventData.PlayerId);
         if (player == null)
             return;
 
@@ -38,7 +37,7 @@ internal sealed class ChatNoteEvent : IReplayEvent<ChatNoteEvent.ChatNoteReplayD
         EventData = new ChatNoteReplayData(args.Player.PlayerId, (int)args.NoteType);
     }
 
-    internal record ChatNoteReplayData(int PlayerId, int NoteType) : IReplayEvent.Data;
+    internal record ChatNoteReplayData(byte PlayerId, int NoteType) : IReplayEvent.Data;
 
     internal record ChatNoteReplayArgs(PlayerControl Player, ChatNoteTypes NoteType) : IReplayEvent.Args;
 }

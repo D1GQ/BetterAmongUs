@@ -1,6 +1,5 @@
 ﻿using BetterAmongUs.Interfaces;
 using BetterAmongUs.Utilities;
-using InnerNet;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
@@ -19,7 +18,7 @@ internal sealed class UpdateSystemReplayEvent : IReplayEvent<UpdateSystemReplayE
         if (EventData == null)
             return;
 
-        var player = Utils.PlayerFromPlayerId((PlayerId)EventData.PlayerId);
+        var player = Utils.PlayerFromPlayerId(EventData.PlayerId);
         if (player == null)
             return;
 
@@ -38,7 +37,7 @@ internal sealed class UpdateSystemReplayEvent : IReplayEvent<UpdateSystemReplayE
         EventData = new UpdateSystemReplayData(checked((byte)args.System), args.Player.PlayerId, args.Amount);
     }
 
-    internal record UpdateSystemReplayData(byte SystemType, int PlayerId, byte Amount) : IReplayEvent.Data;
+    internal record UpdateSystemReplayData(byte SystemType, byte PlayerId, byte Amount) : IReplayEvent.Data;
 
     internal record UpdateSystemReplayArgs(SystemTypes System, PlayerControl Player, byte Amount) : IReplayEvent.Args;
 }

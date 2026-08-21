@@ -1,7 +1,6 @@
 ﻿using AmongUs.GameOptions;
 using BetterAmongUs.Interfaces;
 using BetterAmongUs.Utilities;
-using InnerNet;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
@@ -20,7 +19,7 @@ internal sealed class VanishReplayEvent : IReplayEvent<VanishReplayEvent.VanishR
         if (EventData == null)
             return;
 
-        var player = Utils.PlayerFromPlayerId((PlayerId)EventData.PlayerId);
+        var player = Utils.PlayerFromPlayerId(EventData.PlayerId);
         if (player == null)
             return;
 
@@ -39,7 +38,7 @@ internal sealed class VanishReplayEvent : IReplayEvent<VanishReplayEvent.VanishR
         EventData = new VanishReplayData(args.Player.PlayerId);
     }
 
-    internal record VanishReplayData(int PlayerId) : IReplayEvent.Data;
+    internal record VanishReplayData(byte PlayerId) : IReplayEvent.Data;
 
     internal record VanishReplayArgs(PlayerControl Player) : IReplayEvent.Args;
 }

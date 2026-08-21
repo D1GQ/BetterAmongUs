@@ -1,6 +1,5 @@
 ﻿using BetterAmongUs.Interfaces;
 using BetterAmongUs.Utilities;
-using InnerNet;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
@@ -19,7 +18,7 @@ internal sealed class VentReplayEvent : IReplayEvent<VentReplayEvent.VentReplayD
         if (EventData == null)
             return;
 
-        var player = Utils.PlayerFromPlayerId((PlayerId)EventData.PlayerId);
+        var player = Utils.PlayerFromPlayerId(EventData.PlayerId);
         if (player == null)
             return;
 
@@ -46,7 +45,7 @@ internal sealed class VentReplayEvent : IReplayEvent<VentReplayEvent.VentReplayD
         EventData = new VentReplayData(args.Player.PlayerId, args.Exit, args.VentId);
     }
 
-    internal record VentReplayData(int PlayerId, bool Exit, int VentId) : IReplayEvent.Data;
+    internal record VentReplayData(byte PlayerId, bool Exit, int VentId) : IReplayEvent.Data;
 
     internal record VentReplayArgs(PlayerControl Player, bool Exit, int VentId) : IReplayEvent.Args;
 }

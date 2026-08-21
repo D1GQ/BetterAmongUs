@@ -1,7 +1,6 @@
 ﻿using BetterAmongUs.Generated;
 using BetterAmongUs.Utilities;
 using BetterAmongUs.Utilities.Extension;
-using InnerNet;
 using UnityEngine;
 
 namespace BetterAmongUs.Modules.OptionItems;
@@ -239,7 +238,7 @@ public sealed class OptionPlayerItem : OptionItem<int>
     {
         if (Value != -1)
         {
-            var player = Utils.PlayerFromPlayerId((PlayerId)Value);
+            var player = Utils.PlayerFromPlayerId((byte)Value);
             if (player != null)
                 return $"{player.GetPlayerNameAndColor()}";
             else
