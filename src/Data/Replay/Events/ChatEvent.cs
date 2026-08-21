@@ -1,5 +1,6 @@
 ﻿using BetterAmongUs.Interfaces;
 using BetterAmongUs.Utilities;
+using InnerNet;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
@@ -18,7 +19,7 @@ internal sealed class ChatEvent : IReplayEvent<ChatEvent.ChatReplayData, ChatEve
         if (EventData == null)
             return;
 
-        var player = Utils.PlayerFromPlayerId(EventData.PlayerId);
+        var player = Utils.PlayerFromPlayerId((PlayerId)EventData.PlayerId);
         if (player == null)
             return;
 

@@ -1,5 +1,6 @@
 ﻿using BetterAmongUs.Interfaces;
 using BetterAmongUs.Utilities;
+using InnerNet;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;
@@ -18,7 +19,7 @@ internal sealed class ProtectedReplayEvent : IReplayEvent<ProtectedReplayEvent.P
         if (EventData == null)
             return;
 
-        var target = Utils.PlayerFromPlayerId(EventData.TargetId);
+        var target = Utils.PlayerFromPlayerId((PlayerId)EventData.TargetId);
         if (target == null)
             return;
 

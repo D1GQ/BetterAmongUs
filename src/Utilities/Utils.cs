@@ -77,7 +77,7 @@ internal static class Utils
     /// </summary>
     /// <param name="clientId">The client ID to look up.</param>
     /// <returns>The ClientData if found, null otherwise.</returns>
-    internal static ClientData? ClientFromClientId(int clientId) =>
+    internal static ClientData? ClientFromClientId(ClientId clientId) =>
         AmongUsClient.Instance.allClients.FirstOrDefaultIl2Cpp(cd => cd.Id == clientId);
 
     /// <summary>
@@ -85,7 +85,7 @@ internal static class Utils
     /// </summary>
     /// <param name="playerId">The player ID to look up.</param>
     /// <returns>The NetworkedPlayerInfo if found, null otherwise.</returns>
-    internal static NetworkedPlayerInfo? PlayerDataFromPlayerId(int playerId) =>
+    internal static NetworkedPlayerInfo? PlayerDataFromPlayerId(PlayerId playerId) =>
         GameData.Instance.AllPlayers.FirstOrDefaultIl2Cpp(data => data.PlayerId == playerId);
 
     /// <summary>
@@ -93,7 +93,7 @@ internal static class Utils
     /// </summary>
     /// <param name="clientId">The client ID to look up.</param>
     /// <returns>The NetworkedPlayerInfo if found, null otherwise.</returns>
-    internal static NetworkedPlayerInfo? PlayerDataFromClientId(int clientId) =>
+    internal static NetworkedPlayerInfo? PlayerDataFromClientId(ClientId clientId) =>
         GameData.Instance.AllPlayers.FirstOrDefaultIl2Cpp(data => data.ClientId == clientId);
 
     /// <summary>
@@ -109,7 +109,7 @@ internal static class Utils
     /// </summary>
     /// <param name="playerId">The player ID to look up.</param>
     /// <returns>The PlayerControl if found, null otherwise.</returns>
-    internal static PlayerControl? PlayerFromPlayerId(int playerId) =>
+    internal static PlayerControl? PlayerFromPlayerId(PlayerId playerId) =>
         BAUPlugin.AllPlayerControls.FirstOrDefault(player => player.PlayerId == playerId);
 
     /// <summary>
@@ -117,7 +117,7 @@ internal static class Utils
     /// </summary>
     /// <param name="clientId">The client ID to look up.</param>
     /// <returns>The PlayerControl if found, null otherwise.</returns>
-    internal static PlayerControl? PlayerFromClientId(int clientId) =>
+    internal static PlayerControl? PlayerFromClientId(ClientId clientId) =>
         BAUPlugin.AllPlayerControls.FirstOrDefault(player => player.GetClientId() == clientId);
 
     /// <summary>
@@ -125,7 +125,7 @@ internal static class Utils
     /// </summary>
     /// <param name="netId">The network ID to look up.</param>
     /// <returns>The PlayerControl if found, null otherwise.</returns>
-    internal static PlayerControl? PlayerFromNetId(uint netId) =>
+    internal static PlayerControl? PlayerFromNetId(NetId netId) =>
         BAUPlugin.AllPlayerControls.FirstOrDefault(player => player.NetId == netId);
 
     // Chat functionality
