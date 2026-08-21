@@ -74,7 +74,8 @@ internal static class PlayerJoinAndLeftPatch
             {
                 if (player != null)
                 {
-                    if (TextFileHandler.CompareStringFilters(BetterDataManager.Files.banNameListFilePath, [player.Data.PlayerName]))
+                    if (TextFileHandler.CompareStringRegexMatches(BetterDataManager.Files.banNameListFilePath,
+                            player.Data.PlayerName))
                     {
                         player.Kick(true, TranslationStrings.AntiCheat_BanNameListMessage.LocalizedString, bypassDataCheck: true);
                     }
