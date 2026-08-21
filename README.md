@@ -73,6 +73,7 @@ WINEDLLOVERRIDES="winhttp=n,b" PROTON_NO_ESYNC=1 %command%
 - ❌ Xbox/Playstation/Switch
 
 ## Supported Game Versions
+- ✅ AU **v18.0.0** / **v2026.8.18**: (BAU v1.3.3 Hotfix 1) >
 - ✅ AU **v17.2.0** / **v2026.3.17**: (BAU v1.3.3) >
 - ✅ AU **v17.1.0** / **v2025.11.18**: (BAU v1.3.1) >
 - ✅ AU **v17.0.1** / **v2025.10.14**: (BAU v1.3.0) >
