@@ -1,6 +1,6 @@
-﻿using BetterAmongUs.Utilities;
-using BetterAmongUs.Modules;
+﻿using BetterAmongUs.Modules;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay.Anticheat;
@@ -20,6 +20,10 @@ internal static class CheckPlayerLevelPatch
             // Kick players below minimum level
             if (!__instance.IsLocalPlayer() && BetterGameSettings.KickLevel.GetBool() && __instance.Data.PlayerLevel < BetterGameSettings.KickLevelBelow.GetInt())
             {
+                var minPlayers = BetterGameSettings.KickLevelBelowMinimumPlayers.GetInt();
+                if (minPlayers > 1 && minPlayers > BAUPlugin.AllPlayerControls.Count)
+                    return;
+                
                 __instance.TryKick(setReasonInfo: $" is level {__instance.Data.PlayerLevel}, level must be equal or above {BetterGameSettings.KickLevelBelow.GetInt()} to join");
             }
         }
