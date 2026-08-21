@@ -10,21 +10,32 @@ namespace BetterAmongUs.Patches.Unity;
 [HarmonyPatch]
 internal static class UnityWebRequestPatch
 {
-    // Build mod version header string
+    /// <summary>
+    /// Builds a mod version header string for network transmission.
+    /// Format: "major;minor;patch;metadata1/metadata2/metadata3"
+    /// </summary>
     public static string GetHeader()
     {
         var stringBuilder = new StringBuilder();
+        var version = BAUPlugin.ModInfo.SemVersion;
 
-        // Format: "Version;BuildType;IsHotfix/HotfixNum/BetaNum"
-        stringBuilder.Append(BAUPlugin.ModInfo.PLUGIN_VERSION);
+        stringBuilder.Append(version.Major);
         stringBuilder.Append(';');
-        stringBuilder.Append(Enum.GetName(BAUPlugin.ModInfo.ReleaseBuildType));
+        stringBuilder.Append(version.Minor);
         stringBuilder.Append(';');
-        stringBuilder.Append(BAUPlugin.ModInfo.IS_HOTFIX);
-        stringBuilder.Append('/');
-        stringBuilder.Append(BAUPlugin.ModInfo.HOTFIX_NUM);
-        stringBuilder.Append('/');
-        stringBuilder.Append(BAUPlugin.ModInfo.BETA_NUM);
+        stringBuilder.Append(version.Patch);
+        stringBuilder.Append(';');
+
+        var buildMetadata = version.Metadata;
+        if (buildMetadata.Length > 0)
+        {
+            for (int i = 0; i < buildMetadata.Length; i++)
+            {
+                stringBuilder.Append(buildMetadata[i]);
+                if (i < buildMetadata.Length - 1)
+                    stringBuilder.Append('/');
+            }
+        }
 
         return stringBuilder.ToString();
     }

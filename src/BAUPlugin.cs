@@ -7,7 +7,6 @@ using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
 using BetterAmongUs.Data.Config;
 using BetterAmongUs.Data.Json;
-using BetterAmongUs.Enums;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.OptionItems;
@@ -22,42 +21,10 @@ using UnityEngine.SceneManagement;
 
 namespace BetterAmongUs;
 
-[BepInPlugin(ModInfo.PLUGIN_GUID, ModInfo.PLUGIN_NAME, ModInfo.PLUGIN_VERSION)]
+[BepInPlugin(ModInfo.PLUGIN_GUID, ModInfo.PLUGIN_NAME, ModInfo.VERSION)]
 [BepInProcess(ModInfo.AmongUs.PROCESS_NAME)]
 internal partial class BAUPlugin : BasePlugin
 {
-    /// <summary>
-    /// Gets the formatted version text for display.
-    /// </summary>
-    /// <param name="newLine">Whether to use newline separation for additional info.</param>
-    /// <returns>Formatted version string.</returns>
-    internal static string GetVersionText(bool newLine = false)
-    {
-        string text = string.Empty;
-
-        string newLineText = newLine ? "\n" : " ";
-
-        switch (ModInfo.ReleaseBuildType)
-        {
-            case ReleaseTypes.Release:
-                text = $"v{BetterAmongUsVersion}";
-                break;
-            case ReleaseTypes.Beta:
-                text = $"v{BetterAmongUsVersion}{newLineText}Beta {ModInfo.BETA_NUM}";
-                break;
-            case ReleaseTypes.Dev:
-                text = $"v{BetterAmongUsVersion}{newLineText}Dev {ModInfo.CommitHash}-{ModInfo.BuildDate}";
-                break;
-            default:
-                break;
-        }
-
-        if (ModInfo.IS_HOTFIX)
-            text += $"{newLineText}Hotfix {ModInfo.HOTFIX_NUM}";
-
-        return text;
-    }
-
     /// <summary>
     /// Gets the BAUPlugin instance.
     /// </summary>
@@ -67,11 +34,6 @@ internal partial class BAUPlugin : BasePlugin
     /// Gets the Harmony instance used for patching.
     /// </summary>
     internal static Harmony Harmony { get; } = new Harmony(ModInfo.PLUGIN_GUID);
-
-    /// <summary>
-    /// Gets the BetterAmongUs version string.
-    /// </summary>
-    internal static string BetterAmongUsVersion => ModInfo.PLUGIN_VERSION;
 
     /// <summary>
     /// Gets the application version string.
@@ -170,7 +132,7 @@ internal partial class BAUPlugin : BasePlugin
         Logger_.Log("Better Among Us successfully loaded!");
 
         string SupportedVersions = string.Join(" ", ModInfo.SupportedAmongUsVersions);
-        Logger_.Log($"BetterAmongUs {BetterAmongUsVersion}-{ModInfo.BuildDate} - [{AppVersion} --> {SupportedVersions}] {Utils.GetPlatformName(PlatformData.Platform)}");
+        Logger_.Log($"BetterAmongUs {ModInfo.VERSION_STRING}-{ModInfo.BuildDate} - [{AppVersion} --> {SupportedVersions}] {Utils.GetPlatformName(PlatformData.Platform)}");
     }
 
     /// <summary>

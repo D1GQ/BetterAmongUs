@@ -23,7 +23,7 @@ internal static class DiscordPatch
         if (activity == null)
             return;
 
-        string details = $"BAU {BAUPlugin.GetVersionText()}";
+        string details = $"BAU {BAUPlugin.ModInfo.VERSION_STRING}";
         activity.Details = details;
 
         // Skip lobby info processing if Discord already shows "In Menus"
@@ -50,7 +50,7 @@ internal static class DiscordPatch
             {
                 // Streamer mode hides lobby code, only show mode info
                 if (GameState.IsHideNSeek)
-                    details = $"BAU v{BAUPlugin.ModInfo.PLUGIN_VERSION} - Hide & Seek";
+                    details = $"BAU v{BAUPlugin.ModInfo.VERSION_STRING} - Hide & Seek";
             }
         }
         catch

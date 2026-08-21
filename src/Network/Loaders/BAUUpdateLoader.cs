@@ -25,10 +25,6 @@ internal sealed class BAUUpdateLoader : MonoBehaviour
     /// Coroutine to fetch update data from the remote repository.
     /// </summary>
     /// <returns>IEnumerator for coroutine execution.</returns>
-    /// <remarks>
-    /// If no internet connection is detected, it retries several times before giving up.
-    /// After successfully loading update data, it initializes the UpdateManager.
-    /// </remarks>
     [HideFromIl2Cpp]
     internal IEnumerator CoFetchUpdateData()
     {
@@ -47,7 +43,7 @@ internal sealed class BAUUpdateLoader : MonoBehaviour
         }
 
         string callBack = "";
-        yield return GitHubFile.CoFetchTextFile(GitUrlPath.RepositoryApi.Combine("update.json").ToString(), (string text) =>
+        yield return GitHubFile.CoFetchTextFile(GitUrlPath.RepositoryApi.Combine("update-V2.json").ToString(), (string text) =>
         {
             callBack = text;
         });

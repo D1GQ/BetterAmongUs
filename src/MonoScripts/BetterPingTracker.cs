@@ -84,7 +84,7 @@ internal sealed class BetterPingTracker : MonoBehaviour
             sb.AppendFormat("{0}: <b>{1}</b>\n", TranslationStrings.Timer.LocalizedString.ToUpper(), $"<{timeColor}>{lobbyTimerDisplay}</color>");
         }
 
-        sb.Append($"<color=#00dbdb><size=75%>BetterAmongUs {BAUPlugin.GetVersionText(true)}</size></color>\n");
+        sb.Append($"<color=#00dbdb><size=75%>BetterAmongUs {BAUPlugin.ModInfo.VERSION_STRING}</size></color>\n");
         sb.Append($"<color=#8A8A8A>{BAUPlugin.ModInfo.GITHUB}</color>\n".Size(52f));
 
         if (BAUConfigs.ShowFPS.Value)

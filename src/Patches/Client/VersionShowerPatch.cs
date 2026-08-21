@@ -13,6 +13,6 @@ internal static class VersionShowerPatch
     {
         string mark = TranslationStrings.BAUMark.LocalizedString;
         string bau = TranslationStrings.BAU.LocalizedString;
-        __instance.text.text = $"<color=#0dff00>{mark}{bau}{mark} {BAUPlugin.GetVersionText()}</color> <color=#ababab>~</color> {Utils.GetPlatformName(BAUPlugin.PlatformData.Platform)} v{BAUPlugin.AmongUsVersion} ({BAUPlugin.AppVersion})";
+        __instance.text.text = $"<color=#0dff00>{mark}{bau}{mark} {BAUPlugin.ModInfo.VERSION_STRING}</color> <color=#ababab>~</color> {Utils.GetPlatformName(BAUPlugin.PlatformData.Platform)} v{BAUPlugin.AmongUsVersion} ({BAUPlugin.AppVersion})";
     }
 }

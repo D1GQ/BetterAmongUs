@@ -1,4 +1,4 @@
-﻿using BetterAmongUs.Enums;
+﻿using Semver;
 using System.Reflection;
 
 namespace BetterAmongUs;
@@ -11,9 +11,33 @@ internal partial class BAUPlugin
     internal static class ModInfo
     {
         /// <summary>
-        /// Gets the release type of the current build.
+        /// The base version number of the mod in MAJOR.MINOR.PATCH format.
         /// </summary>
-        internal static readonly ReleaseTypes ReleaseBuildType = ReleaseTypes.Release;
+        internal const string VERSION_NUMBER = "1.3.4";
+
+        /// <summary>
+        /// The beta release number. Increment this for each beta release.
+        /// </summary>
+        internal const string BETA_NUMBER = "0";
+
+        /// <summary>
+        /// Gets the full version string for the current build configuration.
+        /// </summary>
+#if RELEASE
+        internal const string VERSION = VERSION_NUMBER;
+#elif BETA
+        internal const string VERSION = $"{VERSION_NUMBER}-beta-{BETA_NUMBER}";
+#endif
+
+        /// <summary>
+        /// Gets the full version string with a v prefix for the current build configuration.
+        /// </summary>
+        internal const string VERSION_STRING = "v" + VERSION;
+
+        /// <summary>
+        /// Gets the parsed semantic version of the mod.
+        /// </summary>
+        internal static readonly SemVersion SemVersion = SemVersion.Parse(VERSION);
 
         /// <summary>
         /// Gets the Git commit hash from assembly metadata.
@@ -26,21 +50,6 @@ internal partial class BAUPlugin
         public static string BuildDate = ThisAssembly.Metadata.BuildDate;
 
         /// <summary>
-        /// The beta number for beta releases.
-        /// </summary>
-        internal const string BETA_NUM = "0";
-
-        /// <summary>
-        /// The hotfix number for hotfix releases.
-        /// </summary>
-        internal const string HOTFIX_NUM = "1";
-
-        /// <summary>
-        /// Indicates whether this is a hotfix release.
-        /// </summary>
-        internal const bool IS_HOTFIX = true;
-
-        /// <summary>
         /// The name of BAU.
         /// </summary>
         internal const string PLUGIN_NAME = "BetterAmongUs";
@@ -49,11 +58,6 @@ internal partial class BAUPlugin
         /// The GUID (Globally Unique Identifier) of BAU.
         /// </summary>
         internal const string PLUGIN_GUID = "com.d1gq.betteramongus";
-
-        /// <summary>
-        /// The version of BAU.
-        /// </summary>
-        internal const string PLUGIN_VERSION = "1.3.3";
 
         /// <summary>
         /// Gets the list of supported Among Us versions.

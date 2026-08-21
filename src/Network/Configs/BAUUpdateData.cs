@@ -1,5 +1,5 @@
-﻿using BetterAmongUs.Enums;
-using BetterAmongUs.Modules;
+﻿using BetterAmongUs.Modules;
+using Semver;
 using System.Collections;
 using System.Text.Json.Serialization;
 using UnityEngine;
@@ -15,6 +15,12 @@ internal sealed class BAUUpdateData
     /// <summary>
     /// Gets or sets the download link for the updated DLL file.
     /// </summary>
+    [JsonPropertyName("valid")]
+    public bool Valid { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the download link for the updated DLL file.
+    /// </summary>
     [JsonPropertyName("dllLink")]
     public string DllLink { get; set; } = string.Empty;
 
@@ -25,81 +31,22 @@ internal sealed class BAUUpdateData
     public string Version { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the release type as an integer value.
-    /// </summary>
-    [JsonPropertyName("releaseType")]
-    public int ReleaseType { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether this update is a hotfix.
-    /// </summary>
-    [JsonPropertyName("isHotfix")]
-    public bool IsHotfix { get; set; }
-
-    /// <summary>
-    /// Gets or sets the hotfix number if this is a hotfix update.
-    /// </summary>
-    [JsonPropertyName("hotfixNumber")]
-    public int HotfixNumber { get; set; }
-
-    /// <summary>
-    /// Gets or sets the beta number if this is a beta release.
-    /// </summary>
-    [JsonPropertyName("betaNumber")]
-    public int BetaNumber { get; set; }
-
-    /// <summary>
     /// Determines if this update is newer than the currently installed version.
     /// </summary>
     /// <returns>True if the update is newer, false otherwise.</returns>
-    /// <remarks>
-    /// Compares version numbers, release types, and specific build numbers
-    /// to determine if an update should be applied.
-    /// </remarks>
     internal bool IsNewUpdate()
     {
         try
         {
-            var updateVersion = new Version(Version);
-            var modVersion = new Version(BAUPlugin.ModInfo.PLUGIN_VERSION);
-
-            // 1. Compare main version (major.minor.build)
-            if (updateVersion > modVersion)
-            {
-                return true;
-            }
-            else if (updateVersion < modVersion)
+            if (!Valid)
             {
                 return false;
             }
 
-            // 2. Versions are equal, compare release types
-            var updateReleaseType = (ReleaseTypes)ReleaseType;
-            var currentReleaseType = BAUPlugin.ModInfo.ReleaseBuildType;
+            var updateVersion = SemVersion.Parse(Version);
+            var modVersion = BAUPlugin.ModInfo.SemVersion;
 
-            // Release is always preferred over Beta
-            if (updateReleaseType == ReleaseTypes.Release && currentReleaseType == ReleaseTypes.Beta)
-                return true;
-
-            // Don't downgrade from Release to Beta
-            if (updateReleaseType == ReleaseTypes.Beta && currentReleaseType == ReleaseTypes.Release)
-                return false;
-
-            // 3. Same version and release type, compare specific numbers
-            if (updateReleaseType == ReleaseTypes.Beta)
-            {
-                return BetaNumber > int.Parse(BAUPlugin.ModInfo.BETA_NUM);
-            }
-
-            // Release version - check hotfixes
-            if (IsHotfix && !BAUPlugin.ModInfo.IS_HOTFIX)
-                return true;
-
-            if (IsHotfix && BAUPlugin.ModInfo.IS_HOTFIX)
-                return HotfixNumber > int.Parse(BAUPlugin.ModInfo.HOTFIX_NUM);
-
-            // Same version, same type, no newer hotfix
-            return false;
+            return updateVersion.ComparePrecedenceTo(modVersion) > 0;
         }
         catch (Exception ex)
         {
@@ -152,6 +99,6 @@ internal sealed class BAUUpdateData
     /// <returns>A formatted string containing version information.</returns>
     public override string ToString()
     {
-        return $"{Version}:{ReleaseType}:{BetaNumber}:{HotfixNumber}";
+        return $"{SemVersion.Parse(Version)}";
     }
 }

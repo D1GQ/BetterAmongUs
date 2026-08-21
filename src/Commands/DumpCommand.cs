@@ -60,14 +60,14 @@ internal sealed class DumpCommand : BaseCommand
             {
                 Directory.CreateDirectory(logFolderPath);
             }
-            string logFileName = "log-" + BAUPlugin.GetVersionText().Replace(' ', '-').ToLower() + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bau" + ".log";
+            string logFileName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bau" + ".log";
             string logFile = Path.Combine(logFolderPath, logFileName);
             File.WriteAllText(logFile, newLog);
 
             string bepInExLog = Path.Combine(Paths.BepInExRootPath, "LogOutput.log");
             if (File.Exists(bepInExLog))
             {
-                string logFileBepInExeName = "log-" + BAUPlugin.GetVersionText().Replace(' ', '-').ToLower() + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
+                string logFileBepInExeName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
                 string logFileBepInExe = Path.Combine(logFolderPath, logFileBepInExeName);
                 File.Copy(bepInExLog, logFileBepInExe);
             }
@@ -93,14 +93,14 @@ internal sealed class DumpCommand : BaseCommand
             string androidLogContent = File.ReadAllText(logFilePath);
             string androidNewLog = DecryptLog(androidLogContent);
 
-            string androidLogFileName = "log-" + BAUPlugin.GetVersionText().Replace(' ', '-').ToLower() + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bau" + ".log";
+            string androidLogFileName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bau" + ".log";
             string androidNewLogFilePath = Path.Combine(logFolderPath, androidLogFileName);
             File.WriteAllText(androidNewLogFilePath, androidNewLog);
 
             string bepInExLog = Path.Combine(Paths.BepInExRootPath, "LogOutput.log");
             if (File.Exists(bepInExLog))
             {
-                string logFileBepInExeName = "log-" + BAUPlugin.GetVersionText().Replace(' ', '-').ToLower() + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
+                string logFileBepInExeName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
                 string logFileBepInExe = Path.Combine(logFolderPath, logFileBepInExeName);
                 File.Copy(bepInExLog, logFileBepInExe);
             }

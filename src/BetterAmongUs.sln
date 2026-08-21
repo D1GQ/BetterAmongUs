@@ -7,10 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BetterAmongUs", "BetterAmon
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Beta|Any CPU = Beta|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{41193AE4-8181-49F8-9DA4-F4B7B275A0EA}.Beta|Any CPU.ActiveCfg = Beta|Any CPU
+		{41193AE4-8181-49F8-9DA4-F4B7B275A0EA}.Beta|Any CPU.Build.0 = Beta|Any CPU
 		{41193AE4-8181-49F8-9DA4-F4B7B275A0EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{41193AE4-8181-49F8-9DA4-F4B7B275A0EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41193AE4-8181-49F8-9DA4-F4B7B275A0EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
