@@ -15,7 +15,7 @@ internal abstract class AutoRegisterAttribute : Attribute
     /// </summary>
     internal static void Initialize()
     {
-        var types = ModInfo.Assembly.GetTypes();
+        var types = BAUPlugin.ModInfo.Assembly.GetTypes();
 
         foreach (var type in types)
         {
@@ -63,7 +63,7 @@ internal abstract class AutoRegisterAttribute<T> : AutoRegisterAttribute where T
     /// <inheritdoc/>
     protected override void Register()
     {
-        var types = ModInfo.Assembly.GetTypes();
+        var types = BAUPlugin.ModInfo.Assembly.GetTypes();
 
         foreach (var type in types)
         {

@@ -50,7 +50,7 @@ internal static class DiscordPatch
             {
                 // Streamer mode hides lobby code, only show mode info
                 if (GameState.IsHideNSeek)
-                    details = $"BAU v{ModInfo.PLUGIN_VERSION} - Hide & Seek";
+                    details = $"BAU v{BAUPlugin.ModInfo.PLUGIN_VERSION} - Hide & Seek";
             }
         }
         catch

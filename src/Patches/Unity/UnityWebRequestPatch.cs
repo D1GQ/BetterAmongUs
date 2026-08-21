@@ -16,15 +16,15 @@ internal static class UnityWebRequestPatch
         var stringBuilder = new StringBuilder();
 
         // Format: "Version;BuildType;IsHotfix/HotfixNum/BetaNum"
-        stringBuilder.Append(ModInfo.PLUGIN_VERSION);
+        stringBuilder.Append(BAUPlugin.ModInfo.PLUGIN_VERSION);
         stringBuilder.Append(';');
-        stringBuilder.Append(Enum.GetName(ModInfo.ReleaseBuildType));
+        stringBuilder.Append(Enum.GetName(BAUPlugin.ModInfo.ReleaseBuildType));
         stringBuilder.Append(';');
-        stringBuilder.Append(ModInfo.IS_HOTFIX);
+        stringBuilder.Append(BAUPlugin.ModInfo.IS_HOTFIX);
         stringBuilder.Append('/');
-        stringBuilder.Append(ModInfo.HOTFIX_NUM);
+        stringBuilder.Append(BAUPlugin.ModInfo.HOTFIX_NUM);
         stringBuilder.Append('/');
-        stringBuilder.Append(ModInfo.BETA_NUM);
+        stringBuilder.Append(BAUPlugin.ModInfo.BETA_NUM);
 
         return stringBuilder.ToString();
     }

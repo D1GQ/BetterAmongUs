@@ -369,8 +369,8 @@ internal static class ChatPatch
         __instance.textArea.AllowSymbols = true;
         __instance.textArea.AllowPaste = true;
         __instance.textArea.AllowEmail = true;
-        __instance.textArea.characterLimit = ModInfo.Constants.MAX_CHAT_TEXT;
-        __instance.charCountText.text = "0/" + ModInfo.Constants.MAX_CHAT_TEXT;
+        __instance.textArea.characterLimit = BAUPlugin.Constants.MAX_CHAT_TEXT;
+        __instance.charCountText.text = "0/" + BAUPlugin.Constants.MAX_CHAT_TEXT;
     }
 
     [HarmonyPatch(typeof(FreeChatInputField), nameof(FreeChatInputField.UpdateCharCount))]
@@ -379,7 +379,7 @@ internal static class ChatPatch
     {
         // Update character counter with color coding
         int length = __instance.textArea.text.Length;
-        __instance.charCountText.text = string.Format("{0}/" + ModInfo.Constants.MAX_CHAT_TEXT, length);
+        __instance.charCountText.text = string.Format("{0}/" + BAUPlugin.Constants.MAX_CHAT_TEXT, length);
         __instance.charCountText.color = GetCharColor(length);
     }
 
@@ -387,7 +387,7 @@ internal static class ChatPatch
     {
         // Color gradient: green -> yellow -> red as text length increases
         Color[] colorGradient = [Color.green, Color.yellow, Color.red];
-        (float min, float max) lerpRange = (0f, ModInfo.Constants.MAX_CHAT_TEXT - 1);
+        (float min, float max) lerpRange = (0f, BAUPlugin.Constants.MAX_CHAT_TEXT - 1);
         return colorGradient.LerpColor(lerpRange, length);
     }
 }

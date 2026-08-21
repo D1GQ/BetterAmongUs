@@ -60,7 +60,7 @@ internal static class OptionsMenuBehaviourPatch
         ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_CompressSettingFiles, BAUConfigs.CompressSettingFiles, 2, __instance, ConvertAllSettingFiles);
 
         // Button options (no toggle)
-        if (!ModInfo.Starlight)
+        if (!BAUPlugin.ModInfo.Starlight)
         {
             ClientOptionItem.CreateButton(TranslationStrings.BetterOption_SaveData, -1, __instance, OpenSaveData, () =>
             {

@@ -24,7 +24,7 @@ namespace BetterAmongUs;
 
 [BepInPlugin(ModInfo.PLUGIN_GUID, ModInfo.PLUGIN_NAME, ModInfo.PLUGIN_VERSION)]
 [BepInProcess(ModInfo.AmongUs.PROCESS_NAME)]
-internal class BAUPlugin : BasePlugin
+internal partial class BAUPlugin : BasePlugin
 {
     /// <summary>
     /// Gets the formatted version text for display.
@@ -86,7 +86,7 @@ internal class BAUPlugin : BasePlugin
     /// <summary>
     /// Gets platform-specific data.
     /// </summary>
-    internal static PlatformSpecificData PlatformData => Constants.GetPlatformData();
+    internal static PlatformSpecificData PlatformData => global::Constants.GetPlatformData();
 
     /// <summary>
     /// Gets the list of all PlayerControl instances.

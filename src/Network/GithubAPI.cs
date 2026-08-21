@@ -80,7 +80,7 @@ internal sealed class GithubAPI : MonoBehaviour
         yield return newsLoader.CoFetchNewsData();
 
         // Disable auto updating on Starlight
-        if (!ModInfo.Starlight)
+        if (!BAUPlugin.ModInfo.Starlight)
         {
             var updateLoader = gameObject.AddComponent<BAUUpdateLoader>();
             yield return updateLoader.CoFetchUpdateData();

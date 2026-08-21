@@ -444,7 +444,7 @@ internal static class Utils
     {
         try
         {
-            var stream = ModInfo.Assembly.GetManifestResourceStream(path);
+            var stream = BAUPlugin.ModInfo.Assembly.GetManifestResourceStream(path);
             if (stream == null)
                 return null;
 

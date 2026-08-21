@@ -34,7 +34,7 @@ internal static class Translator
     {
         try
         {
-            var assembly = ModInfo.Assembly;
+            var assembly = BAUPlugin.ModInfo.Assembly;
             var jsonFileNames = GetJsonResourceNames(assembly);
 
             TranslateMaps = [];

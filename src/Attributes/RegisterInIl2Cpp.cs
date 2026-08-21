@@ -21,7 +21,7 @@ internal class RegisterInIl2Cpp(params Type[] interfaces) : Attribute
     /// </summary>
     internal static void Initialize()
     {
-        var types = ModInfo.Assembly.GetTypes();
+        var types = BAUPlugin.ModInfo.Assembly.GetTypes();
         foreach (var type in types)
         {
             var attr = type.GetCustomAttribute<RegisterInIl2Cpp>();

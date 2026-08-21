@@ -1,13 +1,13 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Attributes;
-using BetterAmongUs.Utilities;
 using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Network.Loaders;
+using BetterAmongUs.Utilities;
+using BetterAmongUs.Utilities.Extension;
 using Il2CppInterop.Runtime.Attributes;
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using BetterAmongUs.Utilities.Extension;
 
 namespace BetterAmongUs.Managers;
 
@@ -93,7 +93,7 @@ internal sealed class BAUUpdateManager : MonoBehaviour
 
     private void Start()
     {
-        var oldDll = ModInfo.Assembly.Location + ".old";
+        var oldDll = BAUPlugin.ModInfo.Assembly.Location + ".old";
         if (File.Exists(oldDll))
         {
             File.Delete(oldDll);

@@ -28,7 +28,7 @@ internal static class RPC
     {
         AmongUsClient.Instance.SendRpcImmediately(PlayerControl.LocalPlayer.MyPhysics.NetId, CUSTOM_RPC_CALL, SendOption.Reliable, writer =>
         {
-            writer.Write(ModInfo.Constants.BAU_CUSTOM_RPC_FLAG); // Flag to check if its a rpc packed into SetNamePlateStr
+            writer.Write(BAUPlugin.Constants.BAU_CUSTOM_RPC_FLAG); // Flag to check if its a rpc packed into SetNamePlateStr
             writer.Write((byte)customRPC);
             action(writer);
         }, targetClientId);
@@ -120,7 +120,7 @@ internal static class RPC
         {
             try
             {
-                if (reader.ReadString() == ModInfo.Constants.BAU_CUSTOM_RPC_FLAG)
+                if (reader.ReadString() == BAUPlugin.Constants.BAU_CUSTOM_RPC_FLAG)
                 {
                     return true;
                 }

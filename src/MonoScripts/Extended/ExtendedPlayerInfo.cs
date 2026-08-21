@@ -93,7 +93,7 @@ internal sealed class ExtendedPlayerInfo : MonoBehaviour, IMonoExtension<Network
         {
             try
             {
-                if (reader.ReadString() == ModInfo.Constants.BAU_MODDED_PROTOCOL_FLAG)
+                if (reader.ReadString() == BAUPlugin.Constants.BAU_MODDED_PROTOCOL_FLAG)
                 {
                     int flagCount = reader.ReadPackedInt32();
                     for (int i = 0; i < flagCount; i++)

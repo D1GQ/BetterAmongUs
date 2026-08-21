@@ -110,7 +110,7 @@ internal sealed class NewsLoader : MonoBehaviour
     private IEnumerator CoLoadNewsTest()
     {
         string yamlDirectory = "BetterAmongUs.Resources.NewsTest";
-        var assembly = ModInfo.Assembly;
+        var assembly = BAUPlugin.ModInfo.Assembly;
         using Stream? resourceStream = assembly.GetManifestResourceStream(yamlDirectory);
         if (resourceStream != null)
         {

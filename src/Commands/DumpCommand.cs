@@ -49,7 +49,7 @@ internal sealed class DumpCommand : BaseCommand
             return;
         }
 
-        if (!ModInfo.Starlight)
+        if (!BAUPlugin.ModInfo.Starlight)
         {
             string log = File.ReadAllText(logFilePath);
             string newLog = DecryptLog(log);
