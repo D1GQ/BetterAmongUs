@@ -29,8 +29,6 @@ internal sealed class BetterGameSettings
     internal static OptionCheckboxItem? RpcRateLimiting;
     internal static OptionIntItem? RpcRateLimit;
 
-    internal static OptionStringItem? RoleRandomizer;
-
     internal static OptionCheckboxItem? CancelInvalidSabotage;
     internal static OptionCheckboxItem? CensorDetectionReason;
 }
@@ -94,13 +92,6 @@ internal static class GameSettingsPatch
             BetterGameSettings.DetectInvalidRpcs = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_DetectInvalidRpcs, true);
             BetterGameSettings.RpcRateLimiting = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_RpcRateLimiting, true);
             BetterGameSettings.RpcRateLimit = OptionIntItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_RateLimit, (25, 1000, 1), 50, ("", " PS"), BetterGameSettings.RpcRateLimiting);
-        }
-
-        // Role algorithm settings
-        if (IsPreload || GameState.IsHost)
-        {
-            OptionHeaderItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_MainHeader_RoleAlgorithm);
-            BetterGameSettings.RoleRandomizer = OptionStringItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_RoleRandomizer, [new("System.Random"), new("UnityEngine.Random")], 0);
         }
 
         BetterSettingsTab.UpdateVisuals();

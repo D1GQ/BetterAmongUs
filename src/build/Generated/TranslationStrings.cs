@@ -364,19 +364,9 @@ public static class TranslationStrings
     public static readonly TranslationString BetterSetting_MainHeader_AntiCheat = new("BetterSetting.MainHeader.AntiCheat");
 
     /// <summary>
-    /// Base Translation: &lt;color=#4f92ff&gt;Role Algorithm Settings&lt;/color&gt;
-    /// </summary>
-    public static readonly TranslationString BetterSetting_MainHeader_RoleAlgorithm = new("BetterSetting.MainHeader.RoleAlgorithm");
-
-    /// <summary>
     /// Base Translation: &lt;color=#d7d700&gt;Gameplay Settings&lt;/color&gt;
     /// </summary>
     public static readonly TranslationString BetterSetting_MainHeader_Gameplay = new("BetterSetting.MainHeader.Gameplay");
-
-    /// <summary>
-    /// Base Translation: &lt;color=#d7d700&gt;Hide &amp; Seek Settings&lt;/color&gt;
-    /// </summary>
-    public static readonly TranslationString BetterSetting_MainHeader_HideNSeek = new("BetterSetting.MainHeader.HideNSeek");
 
     /// <summary>
     /// Base Translation: &lt;color=#4f92ff&gt;Host Only&lt;/color&gt;
@@ -449,11 +439,6 @@ public static class TranslationStrings
     public static readonly TranslationString BetterSetting_Setting_UseBanChatListBan = new("BetterSetting.Setting.UseBanChatListBan");
 
     /// <summary>
-    /// Base Translation: Show role in name for clients
-    /// </summary>
-    public static readonly TranslationString BetterSetting_Setting_ShowRoleForClients = new("BetterSetting.Setting.ShowRoleForClients");
-
-    /// <summary>
     /// Base Translation: Censor detection reason
     /// </summary>
     public static readonly TranslationString BetterSetting_Setting_CensorDetectionReason = new("BetterSetting.Setting.CensorDetectionReason");
@@ -502,16 +487,6 @@ public static class TranslationStrings
     /// Base Translation: Rate Limit
     /// </summary>
     public static readonly TranslationString BetterSetting_Setting_RateLimit = new("BetterSetting.Setting.RateLimit");
-
-    /// <summary>
-    /// Base Translation: Randomizer
-    /// </summary>
-    public static readonly TranslationString BetterSetting_Setting_RoleRandomizer = new("BetterSetting.Setting.RoleRandomizer");
-
-    /// <summary>
-    /// Base Translation: Desync roles to other clients
-    /// </summary>
-    public static readonly TranslationString BetterSetting_Setting_DesyncRoles = new("BetterSetting.Setting.DesyncRoles");
 
     /// <summary>
     /// Base Translation: Disable sabotages for dead
