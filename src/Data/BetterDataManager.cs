@@ -206,13 +206,26 @@ internal static class BetterDataManager
     {
         if (File.Exists(Files.settingsFilePath_Legacy))
         {
-            BAUConfigs.SettingsPreset.Value = 1;
-            File.Move(Files.settingsFilePath_Legacy, Files.SettingsFilePath);
+            if (File.Exists(Files.SettingsFilePath))
+            {
+                File.Delete(Files.settingsFilePath_Legacy);
+            }
+            else
+            {
+                File.Move(Files.settingsFilePath_Legacy, Files.SettingsFilePath);
+            }
         }
 
         if (File.Exists(Files.dataFilePath_Legacy))
         {
-            File.Move(Files.dataFilePath_Legacy, Files.dataFilePath);
+            if (File.Exists(Files.dataFilePath))
+            {
+                File.Delete(Files.dataFilePath_Legacy);
+            }
+            else
+            {
+                File.Move(Files.dataFilePath_Legacy, Files.dataFilePath);
+            }
         }
 
         HandleMigrationFromWildcardToRegex();
