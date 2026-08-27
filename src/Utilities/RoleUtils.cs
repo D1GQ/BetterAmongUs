@@ -80,7 +80,7 @@ internal static class RoleUtils
             return color;
         }
 
-        return string.Empty;
+        return "#ffffff";
     }
 
     /// <summary>

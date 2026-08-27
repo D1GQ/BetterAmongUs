@@ -114,14 +114,24 @@ internal static class FindAGameManagerPatch
             Transform child = container.transform.Find("Container");
             Transform tmproObject = child.Find("TrueHostName_TMP");
 
-            // Use existing TMP component or create new one
-            TMP_Text tmpro = tmproObject != null
-                ? tmproObject.GetComponent<TextMeshPro>()
-                : CreateNewTextMeshPro(child);
+            TMP_Text? tmpro = null;
 
-            tmpro.font = container.capacity.font;
-            tmpro.fontSize = 3f;
-            tmpro.text = FormatGameInfoText(container.gameListing);
+            if (tmproObject != null)
+            {
+                tmpro = tmproObject.GetComponent<TextMeshPro>();
+            }
+
+            if (tmpro == null)
+            {
+                tmpro = CreateNewTextMeshPro(child);
+            }
+
+            if (tmpro != null)
+            {
+                tmpro.font = container.capacity?.font;
+                tmpro.fontSize = 3f;
+                tmpro.text = FormatGameInfoText(container.gameListing);
+            }
         }
     }
 
