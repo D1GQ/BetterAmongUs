@@ -1,5 +1,6 @@
-﻿using BetterAmongUs.Utilities;
+﻿using BetterAmongUs.Data.Config;
 using BetterAmongUs.Modules.Support;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay.Player;
@@ -7,11 +8,27 @@ namespace BetterAmongUs.Patches.Gameplay.Player;
 [HarmonyPatch]
 internal static class CosmeticsLayerPatch
 {
+    internal static void UpdateAllColorblindText()
+    {
+        foreach (var player in PlayerControl.AllPlayerControls)
+        {
+            player.cosmetics.colorBlindText.text = player.cosmetics.GetColorBlindText();
+        }
+
+        if (MeetingHud.Instance != null)
+        {
+            foreach (var pva in MeetingHud.Instance.playerStates)
+            {
+                pva.SetColorblindText();
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(CosmeticsLayer), nameof(CosmeticsLayer.GetColorBlindText))]
     [HarmonyPrefix]
     private static bool CosmeticsLayer_GetColorBlindText_Prefix(CosmeticsLayer __instance, ref string __result)
     {
-        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomColorBlindText))
+        if (!BAUConfigs.BetterColorblindText.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomColorBlindText))
         {
             return true;
         }

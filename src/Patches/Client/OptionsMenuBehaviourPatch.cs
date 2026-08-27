@@ -5,6 +5,7 @@ using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.MonoScripts.Extended;
+using BetterAmongUs.Patches.Gameplay.Player;
 using BetterAmongUs.Patches.Gameplay.UI;
 using BetterAmongUs.Patches.Gameplay.UI.Chat;
 using BetterAmongUs.Utilities;
@@ -55,8 +56,10 @@ internal static class OptionsMenuBehaviourPatch
         ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_UnlockFPS, BAUConfigs.UnlockFPS, 1, __instance, UpdateFrameRate);
         ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_ShowFPS, BAUConfigs.ShowFPS, 1, __instance);
 
-        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_VentColorGroups, BAUConfigs.VentColorGroups, 2, __instance, MiniMapBehaviourPatch.ClearMapIcons);
-        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_MinimapIcons, BAUConfigs.MinimapIcons, 2, __instance, MiniMapBehaviourPatch.ClearMapIcons);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_MinimapIcons, BAUConfigs.MinimapIcons, 2, __instance, MiniMapBehaviourPatch.ForceCloseMiniMap);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_BetterMinimapColors, BAUConfigs.BetterMinimapColors, 2, __instance, MiniMapBehaviourPatch.ForceCloseMiniMap);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_VentColorGroups, BAUConfigs.VentColorGroups, 2, __instance, MiniMapBehaviourPatch.ForceCloseMiniMap);
+        ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_BetterColorblindText, BAUConfigs.BetterColorblindText, 2, __instance, CosmeticsLayerPatch.UpdateAllColorblindText);
         ClientOptionItem.CreateToggle(TranslationStrings.BetterOption_CompressSettingFiles, BAUConfigs.CompressSettingFiles, 2, __instance, ConvertAllSettingFiles);
 
         // Button options (no toggle)

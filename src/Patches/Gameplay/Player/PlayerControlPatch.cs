@@ -104,7 +104,7 @@ internal static class PlayerControlPatch
         if (targetPlayer == null)
             return;
 
-        if (!BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomColorBlindText))
+        if (BAUConfigs.BetterColorblindText.Value && !BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomColorBlindText))
         {
             if (targetPlayer.Data.PlayerId == __instance.Data.PlayerId)
             {

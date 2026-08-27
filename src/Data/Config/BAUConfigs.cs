@@ -64,9 +64,19 @@ internal static class BAUConfigs
     internal static BAUConfigEntry<bool> MinimapIcons { get; } = new("Better Options", "MinimapIcons", true);
 
     /// <summary>
+    /// Gets the configuration entry for new minimap colors setting.
+    /// </summary>
+    internal static BAUConfigEntry<bool> BetterMinimapColors { get; } = new("Better Options", "BetterMinimapColors", true);
+
+    /// <summary>
     /// Gets the configuration entry for vent color groups setting.
     /// </summary>
     internal static BAUConfigEntry<bool> VentColorGroups { get; } = new("Better Options", "VentColorGroups", true);
+
+    /// <summary>
+    /// Gets the configuration entry for better color blind text setting.
+    /// </summary>
+    internal static BAUConfigEntry<bool> BetterColorblindText { get; } = new("Better Options", "BetterColorblindText", true);
 
     /// <summary>
     /// Gets the configuration entry for compress settings file setting.

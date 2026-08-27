@@ -324,6 +324,16 @@ public static class TranslationStrings
     public static readonly TranslationString BetterOption_MinimapIcons = new("BetterOption.MinimapIcons");
 
     /// <summary>
+    /// Base Translation: Better Minimap Colors
+    /// </summary>
+    public static readonly TranslationString BetterOption_BetterMinimapColors = new("BetterOption.BetterMinimapColors");
+
+    /// <summary>
+    /// Base Translation: Better Colorblind Text
+    /// </summary>
+    public static readonly TranslationString BetterOption_BetterColorblindText = new("BetterOption.BetterColorblindText");
+
+    /// <summary>
     /// Base Translation: Compress Setting Files
     /// </summary>
     public static readonly TranslationString BetterOption_CompressSettingFiles = new("BetterOption.CompressSettingFiles");

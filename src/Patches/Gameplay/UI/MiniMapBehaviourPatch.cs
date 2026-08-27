@@ -20,39 +20,68 @@ internal static class MiniMapBehaviourPatch
     [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.ShowNormalMap))]
     [HarmonyPostfix]
     private static void MapBehaviour_ShowNormalMap_Postfix(MapBehaviour __instance)
-        => __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f)); // Blue tint for normal map
+    {
+        if (!BAUConfigs.BetterMinimapColors.Value)
+        {
+            return;
+        }
+
+        __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f));
+    }
 
     [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.ShowDetectiveMap))]
     [HarmonyPostfix]
     private static void MapBehaviour_ShowDetectiveMap_Postfix(MapBehaviour __instance)
-        => __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f)); // Blue tint for detective map
+    {
+        if (!BAUConfigs.BetterMinimapColors.Value)
+        {
+            return;
+        }
+
+        __instance.ColorControl.SetColor(new Color(0.05f, 0.6f, 1f, 1f));
+    }
 
     [HarmonyPatch(typeof(MapBehaviour), nameof(MapBehaviour.ShowSabotageMap))]
     [HarmonyPostfix]
     private static void MapBehaviour_ShowSabotageMap_Postfix(MapBehaviour __instance)
-        => __instance.ColorControl.SetColor(new Color(1f, 0.3f, 0f, 1f)); // Orange tint for sabotage map
+    {
+        if (!BAUConfigs.BetterMinimapColors.Value)
+        {
+            return;
+        }
+
+        __instance.ColorControl.SetColor(new Color(1f, 0.3f, 0f, 1f));
+    }
 
     [HarmonyPatch(typeof(MapCountOverlay), nameof(MapCountOverlay.OnEnable))]
     [HarmonyPostfix]
     private static void MapCountOverlay_OnEnable_Postfix(MapCountOverlay __instance)
-        // Green background normally, gray if comms sabotaged
-        => __instance.BackgroundColor.SetColor(PlayerTask.PlayerHasTaskOfType<IHudOverrideTask>(PlayerControl.LocalPlayer) ? Palette.DisabledGrey : new Color(0.2f, 0.5f, 0f, 1f));
+    {
+        if (!BAUConfigs.BetterMinimapColors.Value)
+        {
+            return;
+        }
+
+        __instance.BackgroundColor.SetColor(PlayerTask.PlayerHasTaskOfType<IHudOverrideTask>(PlayerControl.LocalPlayer) ? Palette.DisabledGrey : new Color(0.2f, 0.5f, 0f, 1f));
+    }
 
     [HarmonyPatch(typeof(MapCountOverlay), nameof(MapCountOverlay.Update))]
     [HarmonyPrefix]
     private static void MapCountOverlay_Update_Prefix(MapCountOverlay __instance)
     {
-        // Handle comms sabotage effect on map
+        if (!BAUConfigs.BetterMinimapColors.Value)
+        {
+            return;
+        }
+
         if (PlayerTask.PlayerHasTaskOfType<IHudOverrideTask>(PlayerControl.LocalPlayer))
         {
-            // Comms sabotaged - disable map
             __instance.isSab = true;
             __instance.BackgroundColor.SetColor(Palette.DisabledGrey);
             __instance.SabotageText.gameObject.SetActive(true);
         }
         else
         {
-            // Comms working - normal map
             __instance.isSab = false;
             __instance.BackgroundColor.SetColor(new Color(0.2f, 0.5f, 0f, 1f));
             __instance.SabotageText.gameObject.SetActive(false);
@@ -62,14 +91,21 @@ internal static class MiniMapBehaviourPatch
     [HarmonyPatch(typeof(MapConsole), nameof(MapConsole.Use))]
     [HarmonyPostfix]
     private static void MapConsole_ShowCountOverlay_Postfix()
-        => MapBehaviour.Instance.ColorControl.SetColor(new Color(0.2f, 0.5f, 0f, 1f)); // Green tint for admin map
+    {
+        if (!BAUConfigs.BetterMinimapColors.Value)
+        {
+            return;
+        }
+
+        MapBehaviour.Instance.ColorControl.SetColor(new Color(0.2f, 0.5f, 0f, 1f));
+    }
 
     private static Transform? _icons; // Container for all custom map icons
 
     /// <summary>
     /// Clears all map icons to be regenerated
     /// </summary>
-    internal static void ClearMapIcons()
+    internal static void ForceCloseMiniMap()
     {
         if (_icons != null)
         {

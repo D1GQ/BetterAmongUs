@@ -411,11 +411,19 @@ internal class PlayerInfoDisplay : MonoBehaviour
     private void UpdateColorBlindTextPosition()
     {
         if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_CustomColorBlindText))
+        {
             return;
+        }
 
         var text = _player.cosmetics.colorBlindText;
         if (!text.enabled)
             return;
+
+        if (!BAUConfigs.BetterColorblindText.Value)
+        {
+            text.transform.localPosition = new Vector3(0f, -0.2f, 0f);
+            return;
+        }
 
         if (!_player.onLadder && !_player.MyPhysics.Animations.IsPlayingAnyLadderAnimation())
         {

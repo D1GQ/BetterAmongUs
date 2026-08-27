@@ -63,6 +63,8 @@
   "BetterOption.ShowFPS": "ShowFPS",
   "BetterOption.VentColorGroups": "Vent Color Groups",
   "BetterOption.MinimapIcons": "Minimap Icons",
+  "BetterOption.BetterMinimapColors": "Better Minimap Colors",
+  "BetterOption.BetterColorblindText": "Better Colorblind Text",
   "BetterOption.CompressSettingFiles": "Compress Setting Files",
 
   "BetterOption.SaveData": "Open Save Data",
