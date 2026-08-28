@@ -36,8 +36,6 @@ internal sealed class PlayerArgument(BaseCommand command, string argInfo = "{pla
     /// <summary>
     /// Tries to parse the player argument and find the corresponding PlayerControl. 
     /// </summary>
-    /// <param name="result"></param>
-    /// <returns></returns>
     internal override bool TryParse(out PlayerControl result)
     {
         foreach (var player in BAUPlugin.AllPlayerControls)
@@ -59,8 +57,6 @@ internal sealed class PlayerArgument(BaseCommand command, string argInfo = "{pla
     /// <summary>
     /// Checks if the given player info matches the argument value.
     /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
     private bool IsMatchingPlayer(NetworkedPlayerInfo data)
     {
         return Arg.Equals(data.PlayerName.Replace(' ', '_'), StringComparison.OrdinalIgnoreCase)
