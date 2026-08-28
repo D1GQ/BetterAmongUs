@@ -8,7 +8,6 @@ using BetterAmongUs.Structs;
 using BetterAmongUs.Utilities;
 using BetterAmongUs.Utilities.Extension;
 using HarmonyLib;
-using TMPro;
 using UnityEngine;
 
 namespace BetterAmongUs.Patches.Gameplay.UI.Chat;
@@ -294,9 +293,16 @@ internal static class ChatPatch
         bubble.NameText.SetText(playerName);
     }
 
+    [HarmonyPatch(typeof(ChatBubble), nameof(ChatBubble.SetName))]
+    [HarmonyPostfix]
+    private static void ChatBubble_SetName_Postfix(ChatBubble __instance)
+    {
+        SetChatPoolTheme(__instance);
+    }
+
     [HarmonyPatch(typeof(ChatController), nameof(ChatController.GetPooledBubble))]
     [HarmonyPostfix]
-    private static void ChatController_GetPooledBubble_Postfix(ChatController __instance, ChatBubble __result)
+    private static void ChatController_GetPooledBubble_Postfix(ChatBubble __result)
     {
         SetChatPoolTheme(__result);
     }
@@ -323,38 +329,29 @@ internal static class ChatPatch
             chat.quickChatButton.transform.Find("QuickChatIcon").GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
             chat.openKeyboardButton.transform.Find("OpenKeyboardIcon").GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
         }
+
         // Apply theme to all existing chat bubbles
         foreach (var item in HudManager.Instance.Chat.chatBubblePool.activeChildren.SelectIl2Cpp(c => c.GetComponent<ChatBubble>()))
         {
             SetChatPoolTheme(item);
         }
     }
+
     // Apply theme to individual chat bubble
     internal static ChatBubble SetChatPoolTheme(ChatBubble asChatBubble)
     {
         var chatBubble = asChatBubble;
 
+        var alpha = chatBubble.Background.color.a;
         if (BAUConfigs.ChatDarkMode.Value)
         {
-            chatBubble.transform.Find("ChatText (TMP)").GetComponentInChildren<TextMeshPro>(true).color = Color.white;
-            chatBubble.transform.Find("Background").GetComponentInChildren<SpriteRenderer>(true).color = new Color(0.15f, 0.15f, 0.15f, 1f);
-
-            var mark = chatBubble.transform.Find("PoolablePlayer/xMark");
-            if (mark != null && mark.GetComponentInChildren<SpriteRenderer>(true).enabled)
-            {
-                chatBubble.transform.Find("Background").GetComponentInChildren<SpriteRenderer>(true).color = new Color(0.15f, 0.15f, 0.15f, 0.5f);
-            }
+            chatBubble.TextArea.color = Color.white;
+            chatBubble.Background.color = new Color(0.15f, 0.15f, 0.15f, alpha);
         }
         else
         {
-            chatBubble.transform.Find("ChatText (TMP)").GetComponentInChildren<TextMeshPro>(true).color = Color.black;
-            chatBubble.transform.Find("Background").GetComponentInChildren<SpriteRenderer>(true).color = Color.white;
-
-            var mark = chatBubble.transform.Find("PoolablePlayer/xMark");
-            if (mark != null && mark.GetComponentInChildren<SpriteRenderer>(true).enabled)
-            {
-                chatBubble.transform.Find("Background").GetComponentInChildren<SpriteRenderer>(true).color = new Color(1f, 1f, 1f, 0.5f);
-            }
+            chatBubble.TextArea.color = new Color(0.15f, 0.15f, 0.15f);
+            chatBubble.Background.color = new Color(1f, 1f, 1f, alpha);
         }
 
         return chatBubble;
