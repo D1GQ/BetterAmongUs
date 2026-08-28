@@ -1,4 +1,5 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
+using BetterAmongUs.Enums;
 using BetterAmongUs.Generated;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Patches.Gameplay.UI.Chat;
@@ -602,6 +603,7 @@ internal static class Utils
             Platforms.Switch => ("Switch", "Console"),
             Platforms.Android => ("Android", "Mobile"),
             Platforms.IPhone => ("IPhone", "Mobile"),
+            (Platforms)CustomPlatforms.Starlight => ("Starlight", "Mobile"),
             Platforms.Unknown => ("None", ""),
             _ => (string.Empty, string.Empty)
         };
