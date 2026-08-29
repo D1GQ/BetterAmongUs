@@ -217,14 +217,7 @@ internal static class ChatPatch
     private static void ChatController_AddChat_Postfix(ChatController __instance, PlayerControl sourcePlayer, string chatText)
     {
         // Log chat publicly if player is alive, privately if dead
-        if (sourcePlayer.IsAlive() || !PlayerControl.LocalPlayer.IsAlive())
-        {
-            Logger_.Log($"{sourcePlayer.Data.PlayerName} -> {chatText}", "ChatLog");
-        }
-        else
-        {
-            Logger_.LogPrivate($"{sourcePlayer.Data.PlayerName} -> {chatText}", "ChatLog");
-        }
+        Logger_.LogPrivate($"{sourcePlayer.Data.PlayerName} -> {chatText}", "ChatLog");
     }
 
     [HarmonyPatch(typeof(ChatController), nameof(ChatController.SetChatBubbleName))]
