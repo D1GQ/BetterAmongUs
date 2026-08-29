@@ -124,7 +124,7 @@ internal static class VoteBanSystemPatch
             maxVotes = votes.Length; // Total possible votes
         }
 
-        Logger_.InGame(
+        BAUPlugin.Logger.InGame(
             $"{src.Character?.GetPlayerNameAndColor() ?? src.PlayerName} " +
             $"voted to kick {client.Character?.GetPlayerNameAndColor() ?? client.PlayerName} " +
             $"<#6F6F6F>(</color><#FFFFFF>{currentVotes}</color><#6F6F6F>/</color><#FFFFFF>{maxVotes}</color><#6F6F6F>)</color>"

@@ -80,7 +80,7 @@ internal abstract class AbstractJsonFile
         }
         catch (Exception ex)
         {
-            Logger_.Error(ex);
+            BAUPlugin.Logger.Error(ex);
             return false;
         }
     }
@@ -101,7 +101,7 @@ internal abstract class AbstractJsonFile
         }
         catch (Exception ex)
         {
-            Logger_.Error(ex);
+            BAUPlugin.Logger.Error(ex);
             return false;
         }
     }

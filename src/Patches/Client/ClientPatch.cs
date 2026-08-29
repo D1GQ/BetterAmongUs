@@ -86,7 +86,7 @@ internal static class ClientPatch
         // Hide custom loading bar when exiting game
         CustomLoadingBarManager.ToggleLoadingBar(false);
 
-        Logger_.Log($"Client has left game for: {Enum.GetName(reason)}", "AmongUsClientPatch");
+        BAUPlugin.Logger.Log($"Client has left game for: {Enum.GetName(reason)}", "AmongUsClientPatch");
     }
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]

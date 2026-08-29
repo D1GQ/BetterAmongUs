@@ -22,9 +22,9 @@ internal static class Translator
     /// </summary>
     internal static void Initialize()
     {
-        Logger_.Log("Loading language files...", "Translator");
+        BAUPlugin.Logger.Log("Loading language files...", "Translator");
         LoadLanguages();
-        Logger_.Log("Language files loaded successfully", "Translator");
+        BAUPlugin.Logger.Log("Language files loaded successfully", "Translator");
     }
 
     /// <summary>
@@ -41,7 +41,7 @@ internal static class Translator
 
             if (jsonFileNames.Length == 0)
             {
-                Logger_.Error("JSON translation files do not exist.", "Translator");
+                BAUPlugin.Logger.Error("JSON translation files do not exist.", "Translator");
                 return;
             }
 
@@ -54,7 +54,7 @@ internal static class Translator
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Error loading languages: {ex}", "Translator");
+            BAUPlugin.Logger.Error($"Error loading languages: {ex}", "Translator");
         }
     }
 
@@ -89,7 +89,7 @@ internal static class Translator
 
             if (jsonDictionary == null)
             {
-                Logger_.Error($"Failed to deserialize JSON from {resourceName}", "Translator");
+                BAUPlugin.Logger.Error($"Failed to deserialize JSON from {resourceName}", "Translator");
                 return;
             }
 
@@ -103,12 +103,12 @@ internal static class Translator
             }
             else
             {
-                Logger_.Error($"Invalid JSON format in {resourceName}: Missing or invalid 'LanguageID' field.", "Translator");
+                BAUPlugin.Logger.Error($"Invalid JSON format in {resourceName}: Missing or invalid 'LanguageID' field.", "Translator");
             }
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Error loading language file {resourceName}: {ex}", "Translator");
+            BAUPlugin.Logger.Error($"Error loading language file {resourceName}: {ex}", "Translator");
         }
     }
 
@@ -176,7 +176,7 @@ internal static class Translator
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Error retrieving string [{translationString}]: {ex}", "Translator");
+            BAUPlugin.Logger.Error($"Error retrieving string [{translationString}]: {ex}", "Translator");
             return fallbackText;
         }
     }

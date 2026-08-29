@@ -65,12 +65,12 @@ internal static class BetterDataManager
         /// <summary>
         /// The log file path.
         /// </summary>
-        internal static readonly string logFilePath = Path.Combine(Folders.fileFolderPath, "better-log.txt");
+        internal static readonly string logFilePath_Legacy = Path.Combine(Folders.fileFolderPath, "better-log.txt");
 
         /// <summary>
         /// The previous log file path.
         /// </summary>
-        internal static readonly string previousLogFilePath = Path.Combine(Folders.fileFolderPath, "better-previous-log.txt");
+        internal static readonly string previousLogFilePath_Legacy = Path.Combine(Folders.fileFolderPath, "better-previous-log.txt");
 
         /// <summary>
         /// Legacy data file path (BetterData.json).
@@ -204,6 +204,16 @@ internal static class BetterDataManager
     /// </summary>
     private static void LoadLegacyData()
     {
+        if (File.Exists(Files.logFilePath_Legacy))
+        {
+            File.Delete(Files.logFilePath_Legacy);
+        }
+
+        if (File.Exists(Files.previousLogFilePath_Legacy))
+        {
+            File.Delete(Files.previousLogFilePath_Legacy);
+        }
+
         if (File.Exists(Files.settingsFilePath_Legacy))
         {
             if (File.Exists(Files.SettingsFilePath))

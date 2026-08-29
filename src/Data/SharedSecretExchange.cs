@@ -39,7 +39,7 @@ internal sealed class SharedSecretExchange
         }
         catch (Exception ex)
         {
-            Logger_.Error("ECDH unavailable, using fallback handshake: " + ex.Message, logConsole: false);
+            BAUPlugin.Logger.Error("ECDH unavailable, using fallback handshake: " + ex.Message, logConsole: false);
             cryptoDisabled = true;
             dh = null;
             publicKey = [];
@@ -129,7 +129,7 @@ internal sealed class SharedSecretExchange
         }
         catch (Exception ex)
         {
-            Logger_.Error("Error generating shared secret: " + ex.Message, logConsole: false);
+            BAUPlugin.Logger.Error("Error generating shared secret: " + ex.Message, logConsole: false);
             return [];
         }
     }

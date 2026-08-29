@@ -160,6 +160,6 @@ internal static class LobbyPatch
     [HarmonyPrefix]
     private static void GameStartManager_FinallyBegin_Prefix(/*GameStartManager __instance*/)
     {
-        Logger_.LogHeader($"Game Has Started - {Enum.GetName(typeof(MapNames), GameState.GetActiveMapId)}/{GameState.GetActiveMapId}", "GamePlayManager");
+        BAUPlugin.Logger.LogHeader($"Game Has Started - {Enum.GetName(typeof(MapNames), GameState.GetActiveMapId)}/{GameState.GetActiveMapId}", "GamePlayManager");
     }
 }

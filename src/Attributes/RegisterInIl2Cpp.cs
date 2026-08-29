@@ -1,5 +1,4 @@
-﻿using BetterAmongUs.Modules;
-using Il2CppInterop.Runtime.Injection;
+﻿using Il2CppInterop.Runtime.Injection;
 using System.Reflection;
 
 namespace BetterAmongUs.Attributes;
@@ -37,7 +36,7 @@ internal class RegisterInIl2Cpp(params Type[] interfaces) : Attribute
             }
             catch (Exception ex)
             {
-                Logger_.Error($"Failed to register {type.Name}: {ex.Message}");
+                BAUPlugin.Logger.Error($"Failed to register {type.Name}: {ex.Message}");
             }
         }
     }

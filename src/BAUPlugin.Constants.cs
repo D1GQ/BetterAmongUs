@@ -68,6 +68,8 @@ internal partial class BAUPlugin
                                                              // **Cheat**
                                                              """;
 
+        internal const char ENCRYPTED_LOG_PREFIX = '\u2063';
+        internal const char ENCRYPTED_LOG_POSTFIX = '\u2064';
         internal const int MAX_CHAT_TEXT = 120;
         internal const string BAU_CUSTOM_RPC_FLAG = "bau:rpc";
         internal const string BAU_MODDED_PROTOCOL_FLAG = "bau:flags";

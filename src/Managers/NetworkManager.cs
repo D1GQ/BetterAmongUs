@@ -41,7 +41,7 @@ internal static class NetworkManager
         }
         catch (Exception ex)
         {
-            Logger_.Error(ex, "NetworkManager");
+            BAUPlugin.Logger.Error(ex, "NetworkManager");
         }
         finally
         {
@@ -414,7 +414,7 @@ internal static class NetworkManager
     /// </summary>
     private static void HandleInvalidTag(MessageReader reader)
     {
-        Logger_.Warning($"Bad tag {reader.Tag} at {reader.Offset}+{reader.Position}={reader.Length}: " + string.Join(" ", reader.Buffer.Take(128)), "NetworkManager");
+        BAUPlugin.Logger.Warning($"Bad tag {reader.Tag} at {reader.Offset}+{reader.Position}={reader.Length}: " + string.Join(" ", reader.Buffer.Take(128)), "NetworkManager");
         reader.Recycle();
     }
 
@@ -477,7 +477,7 @@ internal static class NetworkManager
 
         if (BetterAntiCheat.CheckCancelRPC(player, callId, reader) == false)
         {
-            if (!player.IsLocalPlayer()) Logger_.LogCheat($"RPC canceled by Anti-Cheat: {Enum.GetName((RpcCalls)callId)}{Enum.GetName((CustomRPC)callId)} - {callId}");
+            if (!player.IsLocalPlayer()) BAUPlugin.Logger.LogCheat($"RPC canceled by Anti-Cheat: {Enum.GetName((RpcCalls)callId)}{Enum.GetName((CustomRPC)callId)} - {callId}");
             return false;
         }
 

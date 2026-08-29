@@ -172,8 +172,8 @@ internal static class BetterNotificationManager
             Notify(text, time: 8f);
         }
 
-        Logger_.LogCheat($"{player.cosmetics.nameText.text} Info: {player.Data.PlayerName} - {player.Data.FriendCode} - {player.GetHashPuid()}");
-        Logger_.LogCheat(Utils.RemoveHtmlText(rawText));
+        BAUPlugin.Logger.LogCheat($"{player.cosmetics.nameText.text} Info: {player.Data.PlayerName} - {player.Data.FriendCode} - {player.GetHashPuid()}");
+        BAUPlugin.Logger.LogCheat(Utils.RemoveHtmlText(rawText));
 
         if (GameState.IsHost && kickPlayer)
         {

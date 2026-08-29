@@ -62,7 +62,7 @@ internal sealed class BetterGameSettingsFile : AbstractJsonFile
                     }
                     catch (Exception ex)
                     {
-                        Logger_.Error($"Failed to convert JSON element for key {kvp.Key}: {ex.Message}");
+                        BAUPlugin.Logger.Error($"Failed to convert JSON element for key {kvp.Key}: {ex.Message}");
                     }
                 }
             }

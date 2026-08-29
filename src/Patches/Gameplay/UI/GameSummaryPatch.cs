@@ -35,8 +35,8 @@ internal static class GameSummaryPatch
     // Log game end info to console
     private static void LogGameEnd()
     {
-        Logger_.LogHeader($"Game Has Ended - {Enum.GetName(typeof(MapNames), GameState.GetActiveMapId)}/{GameState.GetActiveMapId}", "GamePlayManager");
-        Logger_.LogHeader("Game Summary Start", "GameSummary");
+        BAUPlugin.Logger.LogHeader($"Game Has Ended - {Enum.GetName(typeof(MapNames), GameState.GetActiveMapId)}/{GameState.GetActiveMapId}", "GamePlayManager");
+        BAUPlugin.Logger.LogHeader("Game Summary Start", "GameSummary");
     }
 
     // Creates the visual game summary on screen
@@ -52,14 +52,14 @@ internal static class GameSummaryPatch
 
         // Get win condition info
         var (winTeam, winTag, winColor) = GetWinInfo();
-        Logger_.Log($"{winTeam}: {winTag}", "GameSummary");
+        BAUPlugin.Logger.Log($"{winTeam}: {winTag}", "GameSummary");
 
         // Build and display summary text
         var summaryHeader = BuildSummaryHeader(winTeam, winTag, winColor);
         var playerList = BuildPlayerList();
 
         summaryText.text = $"{summaryHeader}\n\n<size=58%>{playerList}</size>";
-        Logger_.LogHeader("Game Summary End", "GameSummary");
+        BAUPlugin.Logger.LogHeader("Game Summary End", "GameSummary");
     }
 
     // Creates the text object for the summary
@@ -191,7 +191,7 @@ internal static class GameSummaryPatch
 
             var playerLine = BuildPlayerLine(playerData);
             stringBuilder.AppendLine($"- {playerLine}\n");
-            Logger_.Log(Utils.RemoveHtmlText(playerLine).Replace("\n", " "), "GameSummary");
+            BAUPlugin.Logger.Log(Utils.RemoveHtmlText(playerLine).Replace("\n", " "), "GameSummary");
         }
 
         return stringBuilder;

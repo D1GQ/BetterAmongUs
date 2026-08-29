@@ -54,7 +54,7 @@ internal static class MeetingHudPatch
             MeetingHud.Instance.ProceedButton.DestroyTextTranslators();
         }
 
-        Logger_.LogHeader("Meeting Has Started");
+        BAUPlugin.Logger.LogHeader("Meeting Has Started");
     }
 
     // Updates host icon with current host info
@@ -134,6 +134,6 @@ internal static class MeetingHudPatch
         }
 
         timeOpen = 0f;
-        Logger_.LogHeader("Meeting Has Ended");
+        BAUPlugin.Logger.LogHeader("Meeting Has Ended");
     }
 }

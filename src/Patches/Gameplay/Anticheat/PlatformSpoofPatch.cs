@@ -57,7 +57,7 @@ internal static class PlatformSpoofPatch
                         TranslationStrings.AntiCheat_Reason_PlatformSpoofer.LocalizedString,
                         TranslationStrings.AntiCheat_HasBeenDetectedWithCheat.LocalizedString
                     );
-                    Logger_.LogCheat($"{player.ExtendedData().RealName} {TranslationStrings.AntiCheat_Reason_PlatformSpoofer}: {__instance.XboxPlatformId}");
+                    BAUPlugin.Logger.LogCheat($"{player.ExtendedData().RealName} {TranslationStrings.AntiCheat_Reason_PlatformSpoofer}: {__instance.XboxPlatformId}");
                 }
             }
 
@@ -72,7 +72,7 @@ internal static class PlatformSpoofPatch
                         TranslationStrings.AntiCheat_Reason_PlatformSpoofer.LocalizedString,
                         TranslationStrings.AntiCheat_HasBeenDetectedWithCheat.LocalizedString
                     );
-                    Logger_.LogCheat($"{player.ExtendedData().RealName} {TranslationStrings.AntiCheat_Reason_PlatformSpoofer}: {__instance.PsnPlatformId}");
+                    BAUPlugin.Logger.LogCheat($"{player.ExtendedData().RealName} {TranslationStrings.AntiCheat_Reason_PlatformSpoofer}: {__instance.PsnPlatformId}");
                 }
             }
 

@@ -80,7 +80,7 @@ internal abstract class BAUSupportEvent(string attributeFlag)
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Invoking event '{_attributeFlag}' for {pluginInfo.GetType().Name}: {ex}");
+            BAUPlugin.Logger.Error($"Invoking event '{_attributeFlag}' for {pluginInfo.GetType().Name}: {ex}");
             return default;
         }
     }

@@ -22,55 +22,37 @@ internal sealed class DumpCommand : BaseCommand
         return base.CanRunCommand(out reason);
     }
 
-    private static string DecryptLog(string log)
-    {
-        string newLog = string.Empty;
-        string[] logArray = log.Split([Environment.NewLine], StringSplitOptions.None);
-        foreach (string text in logArray)
-        {
-            if (text.Contains("[PrivateLog]"))
-            {
-                newLog += text.Split(':')[0] + ":" + text.Split(':')[1].Replace("[PrivateLog]", "") + ": " + Encryptor.Decrypt(text.Split(':')[2][1..]) + "\n";
-            }
-            else
-            {
-                newLog += text + "\n";
-            }
-        }
-        return newLog;
-    }
-
     internal override void Run()
     {
-        string logFilePath = BetterDataManager.Files.logFilePath;
-        if (!File.Exists(logFilePath))
+        string bepInExLog = Path.Combine(Paths.BepInExRootPath, "LogOutput.log");
+        if (!File.Exists(bepInExLog))
         {
-            CommandErrorText("Log file not found!");
+            CommandErrorText("BepInEx log file not found!");
             return;
         }
 
         if (!BAUPlugin.ModInfo.Starlight)
         {
-            string log = File.ReadAllText(logFilePath);
-            string newLog = DecryptLog(log);
-
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string logFolderPath = Path.Combine(desktopPath, "BetterLogDumps");
+            string logFolderPath = Path.Combine(desktopPath, "BAULogDumps");
+
             if (!Directory.Exists(logFolderPath))
             {
                 Directory.CreateDirectory(logFolderPath);
             }
-            string logFileName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bau" + ".log";
-            string logFile = Path.Combine(logFolderPath, logFileName);
-            File.WriteAllText(logFile, newLog);
 
-            string bepInExLog = Path.Combine(Paths.BepInExRootPath, "LogOutput.log");
-            if (File.Exists(bepInExLog))
+            string log;
+            using (FileStream fileStream = new(bepInExLog, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (StreamReader reader = new(fileStream))
             {
-                string logFileBepInExeName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
-                string logFileBepInExe = Path.Combine(logFolderPath, logFileBepInExeName);
-                File.Copy(bepInExLog, logFileBepInExe);
+                log = reader.ReadToEnd();
             }
+
+            string decryptedLog = BAULogger.DecryptLogs(log);
+
+            string logFileName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
+            string logFilePath_New = Path.Combine(logFolderPath, logFileName);
+            File.WriteAllText(logFilePath_New, decryptedLog);
 
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
             {
@@ -84,26 +66,24 @@ internal sealed class DumpCommand : BaseCommand
         else
         {
             string dataPath = BetterDataManager.Folders.fileFolderPath;
-            string logFolderPath = Path.Combine(dataPath, "BetterLogDumps");
+            string logFolderPath = Path.Combine(dataPath, "BAULogDumps");
             if (!Directory.Exists(logFolderPath))
             {
                 Directory.CreateDirectory(logFolderPath);
             }
 
-            string androidLogContent = File.ReadAllText(logFilePath);
-            string androidNewLog = DecryptLog(androidLogContent);
-
-            string androidLogFileName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bau" + ".log";
-            string androidNewLogFilePath = Path.Combine(logFolderPath, androidLogFileName);
-            File.WriteAllText(androidNewLogFilePath, androidNewLog);
-
-            string bepInExLog = Path.Combine(Paths.BepInExRootPath, "LogOutput.log");
-            if (File.Exists(bepInExLog))
+            string log;
+            using (FileStream fileStream = new(bepInExLog, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (StreamReader reader = new(fileStream))
             {
-                string logFileBepInExeName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
-                string logFileBepInExe = Path.Combine(logFolderPath, logFileBepInExeName);
-                File.Copy(bepInExLog, logFileBepInExe);
+                log = reader.ReadToEnd();
             }
+
+            string decryptedLog = BAULogger.DecryptLogs(log);
+
+            string logFileName = "log-" + BAUPlugin.ModInfo.VERSION_STRING + "-" + DateTime.Now.ToString("yyyy.MM.dd-HH.mm.ss") + "-bepinex" + ".log";
+            string logFilePath_New = Path.Combine(logFolderPath, logFileName);
+            File.WriteAllText(logFilePath_New, decryptedLog);
 
             CommandResultText($"Dump logs at <color=#b1b1b1>'{logFolderPath}'</color>");
         }

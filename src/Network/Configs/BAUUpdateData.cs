@@ -50,7 +50,7 @@ internal sealed class BAUUpdateData
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Update check failed: {ex.Message}");
+            BAUPlugin.Logger.Error($"Update check failed: {ex.Message}");
             return false;
         }
     }

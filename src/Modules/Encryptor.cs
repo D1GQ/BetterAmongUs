@@ -1,5 +1,5 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
+using UnityEngine;
 
 namespace BetterAmongUs.Modules;
 
@@ -8,16 +8,82 @@ namespace BetterAmongUs.Modules;
 /// </summary>
 internal static class Encryptor
 {
-    private static readonly byte[] Key = Encoding.UTF8.GetBytes("0123456789ABCDEF0123456789ABCDEF");
-    private static readonly byte[] IV = Encoding.UTF8.GetBytes("ABCDEF0123456789");
+    private static byte[] Key = [];
+    private static byte[] IV = [];
+
+    /// <summary>
+    /// Initializes the encryption system by loading or generating AES keys.
+    /// </summary>
+    internal static void Initialize()
+    {
+        try
+        {
+            if (PlayerPrefs.HasKey("BAUEncryptionKey") && PlayerPrefs.HasKey("BAUEncryptionIV"))
+            {
+                string keyString = PlayerPrefs.GetString("BAUEncryptionKey");
+                string ivString = PlayerPrefs.GetString("BAUEncryptionIV");
+
+                if (string.IsNullOrEmpty(keyString) || string.IsNullOrEmpty(ivString))
+                {
+                    throw new Exception("Keys are empty");
+                }
+
+                Key = Convert.FromBase64String(keyString);
+                IV = Convert.FromBase64String(ivString);
+
+                if (Key.Length != 32 || IV.Length != 16)
+                {
+                    throw new Exception("Invalid key length");
+                }
+            }
+            else
+            {
+                GenerateAndSaveKeys();
+            }
+        }
+        catch
+        {
+            PlayerPrefs.DeleteKey("BAUEncryptionKey");
+            PlayerPrefs.DeleteKey("BAUEncryptionIV");
+            PlayerPrefs.Save();
+            GenerateAndSaveKeys();
+        }
+    }
+
+    /// <summary>
+    /// Generates a new 256-bit AES key and 128-bit initialization vector (IV),
+    /// then saves them to PlayerPrefs as Base64 strings.
+    /// </summary>
+    private static void GenerateAndSaveKeys()
+    {
+        using (Aes aes = Aes.Create())
+        {
+            aes.KeySize = 256;
+            aes.BlockSize = 128;
+            aes.GenerateKey();
+            aes.GenerateIV();
+            Key = aes.Key;
+            IV = aes.IV;
+        }
+
+        PlayerPrefs.SetString("BAUEncryptionKey", Convert.ToBase64String(Key));
+        PlayerPrefs.SetString("BAUEncryptionIV", Convert.ToBase64String(IV));
+        PlayerPrefs.Save();
+    }
 
     /// <summary>
     /// Encrypts a plain text string using AES encryption.
     /// </summary>
     /// <param name="input">The plain text string to encrypt.</param>
     /// <returns>A base64-encoded string containing the encrypted data.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if encryption is not initialized.</exception>
     internal static string Encrypt(string input)
     {
+        if (Key == null || Key.Length == 0 || IV == null || IV.Length == 0)
+        {
+            throw new InvalidOperationException("Encryption not initialized. Call InitializeEncryption() first.");
+        }
+
         using Aes aes = Aes.Create();
         aes.Key = Key;
         aes.IV = IV;
@@ -36,8 +102,16 @@ internal static class Encryptor
     /// </summary>
     /// <param name="input">The base64-encoded encrypted string.</param>
     /// <returns>The decrypted plain text string.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if encryption is not initialized.</exception>
+    /// <exception cref="FormatException">Thrown if the input is not valid Base64.</exception>
+    /// <exception cref="CryptographicException">Thrown if decryption fails due to invalid key or corrupted data.</exception>
     internal static string Decrypt(string input)
     {
+        if (Key == null || Key.Length == 0 || IV == null || IV.Length == 0)
+        {
+            throw new InvalidOperationException("Encryption not initialized. Call InitializeEncryption() first.");
+        }
+
         using Aes aes = Aes.Create();
         aes.Key = Key;
         aes.IV = IV;

@@ -431,7 +431,7 @@ internal static class Utils
         }
         catch (Exception ex)
         {
-            Logger_.Error(ex);
+            BAUPlugin.Logger.Error(ex);
             return null;
         }
     }
@@ -461,7 +461,7 @@ internal static class Utils
         }
         catch (Exception ex)
         {
-            Logger_.Error(ex);
+            BAUPlugin.Logger.Error(ex);
             return null;
         }
     }
@@ -475,13 +475,13 @@ internal static class Utils
     {
         if (!File.Exists(filePath))
         {
-            Logger_.Error($"File not found: {filePath}");
+            BAUPlugin.Logger.Error($"File not found: {filePath}");
             return null;
         }
 
         if (Path.GetExtension(filePath).ToLower() != ".wav")
         {
-            Logger_.Error("Only .wav files are supported.");
+            BAUPlugin.Logger.Error("Only .wav files are supported.");
             return null;
         }
 
@@ -497,7 +497,7 @@ internal static class Utils
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Failed to load WAV: {ex}");
+            BAUPlugin.Logger.Error($"Failed to load WAV: {ex}");
             return null;
         }
     }

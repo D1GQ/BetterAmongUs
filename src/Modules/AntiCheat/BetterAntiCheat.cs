@@ -164,7 +164,7 @@ internal static class BetterAntiCheat
                 {
                     if (BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_InvalidHostRPC.Format(Enum.GetName((RpcCalls)callId))))
                     {
-                        Logger_.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {!player.IsHost()}");
+                        BAUPlugin.Logger.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {!player.IsHost()}");
                     }
 
                     reader.Recycle();
@@ -183,7 +183,7 @@ internal static class BetterAntiCheat
                 {
                     if (BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_InvalidSetRPC.Format(Enum.GetName((RpcCalls)callId))))
                     {
-                        Logger_.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGamePlay}");
+                        BAUPlugin.Logger.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGamePlay}");
                     }
 
                     reader.Recycle();
@@ -223,7 +223,7 @@ internal static class BetterAntiCheat
                 {
                     if (BetterNotificationManager.NotifyCheat(player, TranslationStrings.AntiCheat_InvalidLobbyRPC.Format(Enum.GetName((RpcCalls)callId))))
                     {
-                        Logger_.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGame} && {GameState.IsLobby}");
+                        BAUPlugin.Logger.LogCheat($"{player.ExtendedData().RealName} {Enum.GetName((RpcCalls)callId)}: {GameState.IsInGame} && {GameState.IsLobby}");
                     }
 
                     reader.Recycle();
@@ -237,7 +237,7 @@ internal static class BetterAntiCheat
         }
         catch (Exception ex)
         {
-            Logger_.Error(ex);
+            BAUPlugin.Logger.Error(ex);
             return true;
         }
     }

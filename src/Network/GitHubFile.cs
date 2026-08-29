@@ -64,7 +64,7 @@ internal static class GitHubFile
         }
         else
         {
-            Logger_.Error($"Error downloading file from URL '{url}': {www.error} (Response Code: {(int)www.responseCode})");
+            BAUPlugin.Logger.Error($"Error downloading file from URL '{url}': {www.error} (Response Code: {(int)www.responseCode})");
             if (showProgress)
             {
                 CustomLoadingBarManager.SetLoadingPercent(100f, "Download Failed!");
@@ -77,7 +77,7 @@ internal static class GitHubFile
         byte[] bytes = www.downloadHandler.GetNativeData().ToArray();
         File.WriteAllBytes(localFilePath, bytes);
 
-        Logger_.Log($"Saved file: {localFilePath}");
+        BAUPlugin.Logger.Log($"Saved file: {localFilePath}");
         callback?.Invoke(localFilePath);
     }
 
@@ -98,7 +98,7 @@ internal static class GitHubFile
 
         if (www.result != UnityWebRequest.Result.Success)
         {
-            Logger_.Error($"Error downloading {url}: {www.error}");
+            BAUPlugin.Logger.Error($"Error downloading {url}: {www.error}");
             yield break;
         }
 

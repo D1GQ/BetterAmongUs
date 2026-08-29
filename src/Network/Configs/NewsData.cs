@@ -80,7 +80,7 @@ internal sealed class NewsData()
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Failed to manually deserialize YAML: {ex.Message}");
+            BAUPlugin.Logger.Error($"Failed to manually deserialize YAML: {ex.Message}");
             return null;
         }
     }

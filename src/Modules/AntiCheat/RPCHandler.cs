@@ -164,7 +164,7 @@ internal abstract class RPCHandler
                 }
                 catch (Exception ex)
                 {
-                    Logger_.Error(ex);
+                    BAUPlugin.Logger.Error(ex);
                 }
             }
         }
@@ -181,7 +181,7 @@ internal abstract class RPCHandler
     {
         string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRPC)CallId) ?? $"Unregistered({CallId})";
         Name = $"[{Enum.GetName(catchedHandlerFlag)}] > " + Name;
-        Logger_.LogCheat($"{catchedSender?.ExtendedData()?.RealName ?? player.ExtendedData()?.RealName ?? string.Empty} {Name}: {info}");
+        BAUPlugin.Logger.LogCheat($"{catchedSender?.ExtendedData()?.RealName ?? player.ExtendedData()?.RealName ?? string.Empty} {Name}: {info}");
     }
 
     /// <summary>

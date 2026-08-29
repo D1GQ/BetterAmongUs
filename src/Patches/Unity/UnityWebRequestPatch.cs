@@ -79,7 +79,7 @@ internal static class UnityWebRequestPatch
 
                 if (responseHeader != null)
                 {
-                    Logger_.Log("Connected to a supported Better Among Us matchmaking server");
+                    BAUPlugin.Logger.Log("Connected to a supported Better Among Us matchmaking server");
                 }
             }));
         }

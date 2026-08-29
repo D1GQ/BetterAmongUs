@@ -61,7 +61,7 @@ internal sealed class BAUUpdateLoader : MonoBehaviour
         if (response != null)
         {
             UpdateInfo = response;
-            Logger_.Log($"Loaded update info");
+            BAUPlugin.Logger.Log($"Loaded update info");
         }
 
         BAUUpdateManager.Init();

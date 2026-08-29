@@ -53,7 +53,7 @@ internal sealed class NewsLoader : MonoBehaviour
 
         if (response == null || !response.ContainsKey("News"))
         {
-            Logger_.Error("manifest.json deserialization failed or no 'News' key found.");
+            BAUPlugin.Logger.Error("manifest.json deserialization failed or no 'News' key found.");
             yield break;
         }
 
@@ -64,7 +64,7 @@ internal sealed class NewsLoader : MonoBehaviour
 
         yield return CoLoadNewsTest();
 
-        Logger_.Log($"Loaded {ModNews.NewsDataToProcess.Count} news files");
+        BAUPlugin.Logger.Log($"Loaded {ModNews.NewsDataToProcess.Count} news files");
 
         Destroy(this);
     }
@@ -97,7 +97,7 @@ internal sealed class NewsLoader : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Logger_.Error($"Failed to deserialize yaml for '{fileName}': {ex.Message}");
+            BAUPlugin.Logger.Error($"Failed to deserialize yaml for '{fileName}': {ex.Message}");
             yield break;
         }
     }
@@ -124,7 +124,7 @@ internal sealed class NewsLoader : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Logger_.Error($"Failed to deserialize yaml for '{yamlDirectory}': {ex.Message}");
+                BAUPlugin.Logger.Error($"Failed to deserialize yaml for '{yamlDirectory}': {ex.Message}");
                 yield break;
             }
         }

@@ -88,7 +88,7 @@ internal static class PlayerControlPatch
             return;
 
         // Log kill event with player names and roles
-        Logger_.LogPrivate($"{__instance.Data.PlayerName} Has killed {target.Data.PlayerName} as {__instance.Data.RoleType.GetRoleName()}", "EventLog");
+        BAUPlugin.Logger.LogPrivate($"{__instance.Data.PlayerName} Has killed {target.Data.PlayerName} as {__instance.Data.RoleType.GetRoleName()}", "EventLog");
 
         // Track kill count in player's BetterData
         if (resultFlags.HasFlag(MurderResultFlags.Succeeded) || resultFlags.HasFlag(MurderResultFlags.DecisionByHost))
@@ -118,9 +118,9 @@ internal static class PlayerControlPatch
 
         // Log shapeshift events (both shifting and unshifting)
         if (__instance != targetPlayer)
-            Logger_.LogPrivate($"{__instance.Data.PlayerName} Has Shapeshifted into {targetPlayer.Data.PlayerName}, did animate: {animate}", "EventLog");
+            BAUPlugin.Logger.LogPrivate($"{__instance.Data.PlayerName} Has Shapeshifted into {targetPlayer.Data.PlayerName}, did animate: {animate}", "EventLog");
         else
-            Logger_.LogPrivate($"{__instance.Data.PlayerName} Has Un-Shapeshifted, did animate: {animate}", "EventLog");
+            BAUPlugin.Logger.LogPrivate($"{__instance.Data.PlayerName} Has Un-Shapeshifted, did animate: {animate}", "EventLog");
     }
 
     private static IEnumerator CoSetColorEarly(PlayerControl __instance)
@@ -135,9 +135,9 @@ internal static class PlayerControlPatch
     {
         // Log Phantom role visibility changes
         if (isActive)
-            Logger_.LogPrivate($"{__instance.Data.PlayerName} Has Vanished as Phantom, did animate: {shouldAnimate}", "EventLog");
+            BAUPlugin.Logger.LogPrivate($"{__instance.Data.PlayerName} Has Vanished as Phantom, did animate: {shouldAnimate}", "EventLog");
         else
-            Logger_.LogPrivate($"{__instance.Data.PlayerName} Has Appeared as Phantom, did animate: {shouldAnimate}", "EventLog");
+            BAUPlugin.Logger.LogPrivate($"{__instance.Data.PlayerName} Has Appeared as Phantom, did animate: {shouldAnimate}", "EventLog");
     }
 
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetName))]
@@ -163,7 +163,7 @@ internal static class PlayerControlPatch
     private static void PlayerPhysics_BootFromVent_Postfix(PlayerPhysics __instance, int ventId)
     {
         // Log vent boot events (when engineer boots someone)
-        Logger_.LogPrivate($"{__instance.myPlayer.Data.PlayerName} Has been booted from vent: {ventId}, as {__instance.myPlayer.Data.RoleType.GetRoleName()}", "EventLog");
+        BAUPlugin.Logger.LogPrivate($"{__instance.myPlayer.Data.PlayerName} Has been booted from vent: {ventId}, as {__instance.myPlayer.Data.RoleType.GetRoleName()}", "EventLog");
     }
 
     [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoEnterVent))]
@@ -171,7 +171,7 @@ internal static class PlayerControlPatch
     private static void PlayerPhysics_CoEnterVent_Postfix(PlayerPhysics __instance, int id)
     {
         // Log vent entry events
-        Logger_.LogPrivate($"{__instance.myPlayer.Data.PlayerName} Has entered vent: {id}, as {__instance.myPlayer.Data.RoleType.GetRoleName()}", "EventLog");
+        BAUPlugin.Logger.LogPrivate($"{__instance.myPlayer.Data.PlayerName} Has entered vent: {id}, as {__instance.myPlayer.Data.RoleType.GetRoleName()}", "EventLog");
     }
 
     [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoExitVent))]
@@ -179,6 +179,6 @@ internal static class PlayerControlPatch
     private static void PlayerPhysics_CoExitVent_Postfix(PlayerPhysics __instance, int id)
     {
         // Log vent exit events
-        Logger_.LogPrivate($"{__instance.myPlayer.Data.PlayerName} Has exit vent: {id}, as {__instance.myPlayer.Data.RoleType.GetRoleName()}", "EventLog");
+        BAUPlugin.Logger.LogPrivate($"{__instance.myPlayer.Data.PlayerName} Has exit vent: {id}, as {__instance.myPlayer.Data.RoleType.GetRoleName()}", "EventLog");
     }
 }

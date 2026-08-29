@@ -71,9 +71,14 @@ internal partial class BAUPlugin : BasePlugin
     internal static Vent[] AllVents => UnityEngine.Object.FindObjectsOfType<Vent>();
 
     /// <summary>
+    /// Gets the BAU logger instance.
+    /// </summary>
+    internal static BAULogger Logger { get; private set; } = null!;
+
+    /// <summary>
     /// Gets the BepInEx logger instance.
     /// </summary>
-    internal static ManualLogSource? Logger;
+    private static ManualLogSource? _manualLogSource;
 
     public override void Load()
     {
@@ -100,7 +105,7 @@ internal partial class BAUPlugin : BasePlugin
         }
         catch (Exception ex)
         {
-            Logger_.Error(ex);
+            Logger.Error(ex);
         }
     }
 
@@ -125,14 +130,10 @@ internal partial class BAUPlugin : BasePlugin
         OutfitData.Initialize();
         SceneManager.add_sceneLoaded((Action<Scene, LoadSceneMode>)OnSceneLoaded);
 
-        if (File.Exists(BetterDataManager.Files.logFilePath))
-            File.WriteAllText(BetterDataManager.Files.previousLogFilePath, File.ReadAllText(BetterDataManager.Files.logFilePath));
-
-        File.WriteAllText(BetterDataManager.Files.logFilePath, "");
-        Logger_.Log("Better Among Us successfully loaded!");
+        Logger.Log("Better Among Us successfully loaded!");
 
         string SupportedVersions = string.Join(" ", ModInfo.SupportedAmongUsVersions);
-        Logger_.Log($"BetterAmongUs {ModInfo.VERSION_STRING}-{ModInfo.BuildDate} - [{AppVersion} --> {SupportedVersions}] {Utils.GetPlatformName(PlatformData.Platform)}");
+        Logger.Log($"BetterAmongUs {ModInfo.VERSION_STRING}-{ModInfo.BuildDate} - [{AppVersion} --> {SupportedVersions}] {Utils.GetPlatformName(PlatformData.Platform)}");
     }
 
     /// <summary>
@@ -164,13 +165,15 @@ internal partial class BAUPlugin : BasePlugin
     /// </summary>
     private static void SetupConsole()
     {
+        Encryptor.Initialize();
         ConsoleManager.CreateConsole();
         ConsoleManager.ConfigPreventClose.Value = true;
         if (ConsoleManager.ConfigConsoleEnabled.Value) ConsoleManager.DetachConsole();
         ConsoleManager.ConfigConsoleEnabled.Value = false;
         ConsoleManager.SetConsoleTitle("Among Us - BAU Console");
-        Logger = BepInEx.Logging.Logger.CreateLogSource(ModInfo.PLUGIN_GUID);
-        var customLogListener = new CustomLogListener();
+        _manualLogSource = BepInEx.Logging.Logger.CreateLogSource(ModInfo.PLUGIN_GUID);
+        Logger = new BAULogger(_manualLogSource);
+        var customLogListener = new CustomLogListener(Logger);
         BepInEx.Logging.Logger.Listeners.Add(customLogListener);
         ConsoleManager.SetConsoleColor(ConsoleColor.Green);
         ConsoleManager.ConsoleStream.WriteLine($".--------------------------------------------------------------------------------.\r\n|  ____       _   _                 _                                  _   _     |\r\n| | __ )  ___| |_| |_ ___ _ __     / \\   _ __ ___   ___  _ __   __ _  | | | |___ |\r\n| |  _ \\ / _ \\ __| __/ _ \\ '__|   / _ \\ | '_ ` _ \\ / _ \\| '_ \\ / _` | | | | / __||\r\n| | |_) |  __/ |_| ||  __/ |     / ___ \\| | | | | | (_) | | | | (_| | | |_| \\__ \\|\r\n| |____/ \\___|\\__|\\__\\___|_|    /_/   \\_\\_| |_| |_|\\___/|_| |_|\\__, |  \\___/|___/|\r\n|                                                              |___/             |\r\n'--------------------------------------------------------------------------------'");

@@ -34,7 +34,7 @@ internal sealed class AUMChatHandler : RPCHandler
                 betterData.AntiCheatInfo.AUMChats.Add(msgString);
             }
 
-            Logger_.Log($"{sender.Data.PlayerName} -> {msgString}", "AUMChatLog");
+            BAUPlugin.Logger.Log($"{sender.Data.PlayerName} -> {msgString}", "AUMChatLog");
 
             if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat))
                 return;

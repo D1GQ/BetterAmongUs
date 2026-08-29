@@ -39,7 +39,7 @@ internal sealed class BetterPingTracker : MonoBehaviour
 
         if (pingText == null || pingAspectPosition == null)
         {
-            Logger_.Error("BetterPingTracker.SetUp() called with null parameters!");
+            BAUPlugin.Logger.Error("BetterPingTracker.SetUp() called with null parameters!");
             return;
         }
 

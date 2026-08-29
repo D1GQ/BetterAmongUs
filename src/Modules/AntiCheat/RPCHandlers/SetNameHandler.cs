@@ -23,7 +23,7 @@ internal sealed class SetNameHandler : RPCHandler
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatSetText()))
             {
                 Utils.AddChatPrivate($"{sender.GetPlayerNameAndColor()} Has tried to change their name to '{name}' but has been undone!");
-                Logger_.LogCheat($"{sender.ExtendedData().RealName} Has tried to change their name to '{name}' but has been undone!");
+                BAUPlugin.Logger.LogCheat($"{sender.ExtendedData().RealName} Has tried to change their name to '{name}' but has been undone!");
                 LogRpcInfo($"Player attempted to change name multiple times: '{name}'");
             }
 
