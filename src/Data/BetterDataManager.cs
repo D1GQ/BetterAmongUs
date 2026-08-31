@@ -111,6 +111,11 @@ internal static class BetterDataManager
         /// File containing banned chat messages/patterns.
         /// </summary>
         internal static readonly string banChatListFilePath = Path.Combine(Folders.saveInfoFolderPath, "BanChatList.txt");
+        
+        /// <summary>
+        /// File containing whitelisted player identifiers.
+        /// </summary>
+        internal static readonly string whiteListFilePath = Path.Combine(Folders.saveInfoFolderPath, "WhiteList.txt");
     }
 
     /// <summary>
@@ -120,7 +125,8 @@ internal static class BetterDataManager
     [
         Files.banPlayerListFilePath,
         Files.banNameListFilePath,
-        Files.banChatListFilePath
+        Files.banChatListFilePath,
+        Files.whiteListFilePath
     ];
 
     /// <summary>
@@ -195,6 +201,10 @@ internal static class BetterDataManager
             else if (path == Files.banChatListFilePath)
             {
                 writer.WriteLine(BAUPlugin.Constants.BAN_CHAT_LIST_CONTENT);
+            }
+            else if (path == Files.whiteListFilePath)
+            {
+                writer.WriteLine(BAUPlugin.Constants.WHITE_LIST_CONTENT);
             }
         }
     }
@@ -414,31 +424,52 @@ internal static class BetterDataManager
     /// <param name="hashPUID">The player's hashed PUID (optional).</param>
     internal static void AddToBanList(string friendCode = "", string hashPUID = "")
     {
-        if (!string.IsNullOrEmpty(friendCode) || !string.IsNullOrEmpty(hashPUID))
+        AddPlayerIdentifierToFile(Files.banPlayerListFilePath, friendCode, hashPUID);
+    }
+    
+    /// <summary>
+    /// Adds a player to the whitelist by friend code and/or hashed PUID.
+    /// </summary>
+    /// <param name="friendCode">The player's friend code (optional).</param>
+    /// <param name="hashPUID">The player's hashed PUID (optional).</param>
+    internal static void AddToWhiteList(string friendCode = "", string hashPUID = "")
+    {
+        AddPlayerIdentifierToFile(Files.whiteListFilePath, friendCode, hashPUID);
+    }
+
+    /// <summary>
+    /// Adds a player to the specified file by friend code and/or hashed PUID.
+    /// </summary>
+    /// <param name="filePath">The file to which the player identifier should be appended.</param>
+    /// <param name="friendCode">The player's friend code (optional).</param>
+    /// <param name="hashPUID">The player's hashed PUID (optional).</param>
+    private static void AddPlayerIdentifierToFile(string filePath, string friendCode = "", string hashPUID = "")
+    {
+        if (string.IsNullOrEmpty(friendCode) && string.IsNullOrEmpty(hashPUID))
+            return;
+
+        // Create the new string with the separator if both are not empty
+        string newText = string.Empty;
+
+        if (!string.IsNullOrEmpty(friendCode))
         {
-            // Create the new string with the separator if both are not empty
-            string newText = string.Empty;
+            newText = friendCode;
+        }
 
-            if (!string.IsNullOrEmpty(friendCode))
+        if (!string.IsNullOrEmpty(hashPUID))
+        {
+            if (!string.IsNullOrEmpty(newText))
             {
-                newText = friendCode;
+                newText += ", ";
             }
+            newText += hashPUID.GetHashStr();
+        }
 
-            if (!string.IsNullOrEmpty(hashPUID))
-            {
-                if (!string.IsNullOrEmpty(newText))
-                {
-                    newText += ", ";
-                }
-                newText += hashPUID.GetHashStr();
-            }
-
-            // Check if the file already contains the new entry
-            if (!File.Exists(Files.banPlayerListFilePath) || !File.ReadLines(Files.banPlayerListFilePath).Any(line => line.Equals(newText)))
-            {
-                // Append the new string to the file if it's not already present
-                File.AppendAllText(Files.banPlayerListFilePath, Environment.NewLine + newText);
-            }
+        // Check if the file already contains the new entry
+        if (!File.Exists(filePath) || !File.ReadLines(filePath).Any(line => line.Equals(newText)))
+        {
+            // Append the new string to the file if it's not already present
+            File.AppendAllText(filePath, Environment.NewLine + newText);
         }
     }
 

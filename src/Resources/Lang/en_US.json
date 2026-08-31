@@ -91,6 +91,7 @@
   "BetterSetting.Setting.UseBanChatList": "Use ban chat list",
   "BetterSetting.Setting.UseBanChatListOnlyLobby": "Only in lobby",
   "BetterSetting.Setting.UseBanChatListBan": "Ban",
+  "BetterSetting.Setting.UseWhiteList": "Use whitelist",
   "BetterSetting.Setting.CensorDetectionReason": "Censor detection reason",
   "BetterSetting.Setting.DetectedLevel": "Detected player levels",
   "BetterSetting.Setting.DetectedLevelAbove": "Detected player level above",
