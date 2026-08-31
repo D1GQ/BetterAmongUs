@@ -449,6 +449,11 @@ public static class TranslationStrings
     public static readonly TranslationString BetterSetting_Setting_UseBanChatListBan = new("BetterSetting.Setting.UseBanChatListBan");
 
     /// <summary>
+    /// Base Translation: Use whitelist
+    /// </summary>
+    public static readonly TranslationString BetterSetting_Setting_UseWhiteList = new("BetterSetting.Setting.UseWhiteList");
+
+    /// <summary>
     /// Base Translation: Censor detection reason
     /// </summary>
     public static readonly TranslationString BetterSetting_Setting_CensorDetectionReason = new("BetterSetting.Setting.CensorDetectionReason");

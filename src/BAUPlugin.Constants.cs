@@ -68,6 +68,17 @@ internal partial class BAUPlugin
                                                              // **Cheat**
                                                              """;
 
+        internal const string WHITE_LIST_CONTENT = """
+                                                   // Example whitelist entries (friend code and/or hashed PUID)
+                                                   // Format: [FriendCode], [HashedPUID]
+                                                   // Example with both:
+                                                   // FriendCode#0000, abc123def456789
+                                                   // Example with just friend code:
+                                                   // FriendCode#0000
+                                                   // Example with just hashed PUID:
+                                                   // , hash123xyz789
+                                                   """;
+
         internal const char ENCRYPTED_LOG_PREFIX = '\u2063';
         internal const char ENCRYPTED_LOG_POSTFIX = '\u2064';
         internal const int MAX_CHAT_TEXT = 120;
