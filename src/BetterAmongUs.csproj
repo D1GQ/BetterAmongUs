@@ -6,6 +6,13 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<OutputType>Library</OutputType>
 		<LangVersion>preview</LangVersion>
+		<Version Condition="'$(Version)' == ''">1.3.3</Version>
+		<AssemblyVersion>1.3.3.0</AssemblyVersion>
+		<FileVersion>1.3.3.0</FileVersion>
+		<InformationalVersion>1.3.3</InformationalVersion>
+		<UseGitMetadata Condition="'$(UseGitMetadata)' == '' and (Exists('$(MSBuildProjectDirectory)/../.git') or Exists('$(MSBuildProjectDirectory)/.git'))">true</UseGitMetadata>
+		<UseGitMetadata Condition="'$(UseGitMetadata)' == ''">false</UseGitMetadata>
+		<DefineConstants Condition="'$(UseGitMetadata)' == 'true'">$(DefineConstants);BAU_GIT_METADATA</DefineConstants>
 	</PropertyGroup>
 
 	<!-- Apply Null Notation Restrictions -->
@@ -89,7 +96,7 @@
 
 	<!-- NuGet Info Packages -->
 	<ItemGroup>
-		<PackageReference Include="GitInfo" Version="3.3.3">
+		<PackageReference Include="GitInfo" Version="3.3.3" Condition="'$(UseGitMetadata)' == 'true'">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

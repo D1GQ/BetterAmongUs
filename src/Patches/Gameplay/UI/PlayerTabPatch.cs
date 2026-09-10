@@ -118,7 +118,7 @@ internal static class PlayerTabPatch
         foreach (var icon in _favoriteIcons)
         {
             if (icon == null) continue;
-            UnityEngine.Object.Destroy(icon);
+            UnityEngine.Object.Destroy(icon.gameObject);
         }
         _favoriteIcons.Clear();
 
@@ -130,7 +130,8 @@ internal static class PlayerTabPatch
 
             // Override click behavior
             var extendedPassiveButton = IMonoExtension.AddExtension<ExtendedPassiveButton>(colorChip.Button);
-            extendedPassiveButton.OnHoldOrShiftClick += () =>
+            if (extendedPassiveButton == null) continue;
+            extendedPassiveButton.OnHoldOrShiftClick = () =>
             {
                 if (BAUConfigs.FavoriteColor.Value == index)
                 {
@@ -145,7 +146,13 @@ internal static class PlayerTabPatch
             };
 
             // Add favorite star indicator
-            var checkBox = colorChip.PlayerEquippedForeground.transform.Find("CheckMark").GetComponentInChildren<SpriteRenderer>();
+            var checkMark = colorChip.PlayerEquippedForeground.transform.Find("CheckMark");
+            var checkBox = checkMark != null ? checkMark.GetComponentInChildren<SpriteRenderer>() : null;
+            if (checkBox == null)
+            {
+                _favoriteIcons.Add(null);
+                continue;
+            }
             var favoriteIcon = UnityEngine.Object.Instantiate(checkBox, colorChip.transform);
             favoriteIcon.color = Color.yellow;
             favoriteIcon.transform.localPosition -= new Vector3(0f, 0f, 15f);
@@ -161,6 +168,7 @@ internal static class PlayerTabPatch
         for (int i = 0; i < _favoriteIcons.Count; i++)
         {
             SpriteRenderer? fav = _favoriteIcons[i];
+            if (fav == null) continue;
             fav.gameObject.SetActive(i == BAUConfigs.FavoriteColor.Value);
         }
     }

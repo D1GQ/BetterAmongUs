@@ -61,6 +61,8 @@ internal static class ModManagerPatch
             }
         }
 
+        OptionsMenuBehaviourPatch.UpdateFrameRate();
+
         // Update various BAU systems each frame
         BetterAntiCheat.Update();
         BetterNotificationManager.Update();

@@ -90,6 +90,8 @@ public sealed class OptionCheckboxItem : OptionItem<bool>
     /// <param name="updateTabVisuals">Whether to update the parent tab visuals as well.</param>
     internal sealed override void UpdateVisuals(bool updateTabVisuals = true)
     {
+        if (Option == null || Tab == null || Tab.AUTab == null) return;
+
         if (Option is ToggleOption toggleOption)
         {
             toggleOption.CheckMark.enabled = Value;

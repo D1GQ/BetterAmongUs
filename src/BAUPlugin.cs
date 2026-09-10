@@ -181,8 +181,11 @@ internal class BAUPlugin : BasePlugin
         ConsoleManager.DetachConsole();
         BetterNotificationManager.Detach();
         ClientPatch.Unpatch();
-        Harmony.UnpatchAll();
-        ModManager.Instance.ModStamp.gameObject.SetActive(false);
+        Harmony.UnpatchSelf();
+        BetterAmongUs.Interfaces.IMonoExtension.ClearExtensions();
+        OptionsMenuBehaviourPatch.RestoreFrameRate();
+        if (ModManager.Instance != null && ModManager.Instance.ModStamp != null)
+            ModManager.Instance.ModStamp.gameObject.SetActive(false);
         SceneChanger.ChangeScene("MainMenu");
     }
 

@@ -66,22 +66,42 @@ internal static class TextFileHandler
         if (File.Exists(filePath))
         {
             return File.ReadLines(filePath)
+                       .Select(line => line.Trim())
                        .Where(line => !string.IsNullOrWhiteSpace(line) &&
                               !line.StartsWith("//") &&
                               !line.StartsWith("#"))
                        .SelectMany(line => line.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                               .Select(s => s.Trim()));
+                                               .Select(s => s.Trim()))
+                       .Where(entry => entry.Length > 0);
         }
 
         return [];
     }
 
     /// <summary>
-    /// Checks if a text matches a filter pattern with wildcard support.
+    /// Matches a chat message against configured words, phrases and wildcard filters.
     /// </summary>
-    /// <param name="filter">The filter pattern (supports ** wildcards).</param>
-    /// <param name="text">The text to check.</param>
-    /// <returns>True if the text matches the filter pattern, false otherwise.</returns>
+    internal static bool CompareChatFilters(string filePath, string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return false;
+        var words = Regex.Matches(text, @"[\p{L}\p{N}_]+(?:['’][\p{L}\p{N}_]+)*")
+            .Cast<Match>().Select(match => match.Value).ToArray();
+        foreach (var filter in ReadContents(filePath))
+        {
+            if (CheckFilterString(filter, text.Trim()) || words.Any(word => CheckFilterString(filter, word)))
+                return true;
+
+            // Also support multi-word entries inside a longer message.
+            if (filter.Any(char.IsWhiteSpace))
+            {
+                int count = filter.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+                for (int i = 0; i + count <= words.Length; i++)
+                    if (CheckFilterString(filter, string.Join(" ", words.Skip(i).Take(count)))) return true;
+            }
+        }
+        return false;
+    }
+
     private static bool CheckFilterString(string filter, string text)
     {
         string pattern = filter switch

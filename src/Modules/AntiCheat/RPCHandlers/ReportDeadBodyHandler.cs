@@ -1,4 +1,4 @@
-using BetterAmongUs.Attributes;
+﻿using BetterAmongUs.Attributes;
 using BetterAmongUs.Generated;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Patches.Gameplay.UI;
@@ -14,13 +14,12 @@ internal sealed class ReportDeadBodyHandler : RPCHandler
 
     internal override bool HandleAntiCheatCancel(PlayerControl? sender, MessageReader reader)
     {
+        if (sender == null || sender.Data == null || sender.MyPhysics == null)
+            return CancelAsHost;
+
         if (!GameState.IsInGamePlay || !BAUPlugin.AllPlayerControls.All(pc => pc.roleAssigned))
         {
-            if (BetterNotificationManager.NotifyCheat(sender, TranslationStrings.AntiCheat_InvalidActionRPC.Format(Enum.GetName((RpcCalls)CallId)), forceBan: true))
-            {
-                LogRpcInfo($"Report dead body blocked: Game not in play or roles not assigned");
-            }
-
+            // Late packets during loading or teardown are not evidence of cheating.
             return CancelAsHost;
         }
 
@@ -41,7 +40,12 @@ internal sealed class ReportDeadBodyHandler : RPCHandler
 
         if (isBodyReport)
         {
-            if (!deadPlayerInfo.IsDead || deadPlayerInfo == sender.Data)
+            if (!deadPlayerInfo.IsDead && deadPlayerInfo != sender.Data)
+            {
+                return true;
+            }
+
+            if (deadPlayerInfo == sender.Data)
             {
                 if (BetterNotificationManager.NotifyCheat(sender, TranslationStrings.AntiCheat_InvalidActionRPC.Format(Enum.GetName((RpcCalls)CallId))))
                 {

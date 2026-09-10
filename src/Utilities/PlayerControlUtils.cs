@@ -140,7 +140,16 @@ internal static class PlayerControlUtils
     internal static void Kick(this PlayerControl player, bool ban = false, string setReasonInfo = "", bool antiCheatBan = false, bool bypassDataCheck = false, bool forceBan = false)
     {
         if (!player.CanKick(ban, antiCheatBan, bypassDataCheck, forceBan, out var shouldBan)) return;
-        KickCooldownManager.ScheduleAction(() => { player.PerformKick(shouldBan, setReasonInfo, antiCheatBan); });
+        var client = AmongUsClient.Instance;
+        int gameId = client.GameId;
+        int clientId = player.GetClientId();
+        KickCooldownManager.ScheduleAction(() =>
+        {
+            if (client == null || AmongUsClient.Instance != client || client.GameId != gameId ||
+                player == null || player.GetClientId() != clientId ||
+                !player.CanKick(ban, antiCheatBan, bypassDataCheck, forceBan, out var currentBan)) return;
+            player.PerformKick(currentBan, setReasonInfo, antiCheatBan);
+        });
     }
 
     /// <summary>
@@ -195,7 +204,7 @@ internal static class PlayerControlUtils
     {
         shouldBan = ban || forceBan;
 
-        if (!GameState.IsHost || player.IsLocalPlayer() || (!player.DataIsCollected() && !bypassDataCheck) || player.IsHost() || player.isDummy)
+        if (player == null || !GameState.IsHost || player.IsLocalPlayer() || (!player.DataIsCollected() && !bypassDataCheck) || player.IsHost() || player.isDummy)
             return false;
 
         if (forceBan || !antiCheatBan) return true;
@@ -227,14 +236,18 @@ internal static class PlayerControlUtils
     /// <param name="antiCheatBan">Whether this is an anti-cheat related kick.</param>
     private static void PerformKick(this PlayerControl player, bool ban = false, string setReasonInfo = "", bool antiCheatBan = false)
     {
-        if (setReasonInfo != "")
+        if (player == null || !GameState.IsHost) return;
+
+        if (player.ExtendedData() != null)
+            player.ExtendedData().AntiCheatInfo.BannedByAntiCheat = antiCheatBan;
+
+        if (player.Data != null && setReasonInfo != "")
         {
             PlayerJoinAndLeftPatch.BetterShowNotification(player.Data, forceReasonText: string.Format(setReasonInfo, ban ? TranslationStrings.AntiCheat_Ban.LocalizedString.ToLower() : TranslationStrings.AntiCheat_Kick.LocalizedString.ToLower()));
         }
 
         AmongUsClient.Instance.KickPlayer(player.GetClientId(), ban);
 
-        player.ExtendedData().AntiCheatInfo.BannedByAntiCheat = antiCheatBan;
     }
 
     /// <summary>

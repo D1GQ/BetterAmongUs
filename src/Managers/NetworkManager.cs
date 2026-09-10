@@ -74,14 +74,17 @@ internal static class NetworkManager
 
         MessageReader[] allReaders = writer.MessagesToReaders();
 
-        foreach (MessageReader reader in allReaders)
+        try
         {
-            if (reader.Tag == 5 || reader.Tag == 6)
+            foreach (MessageReader reader in allReaders)
             {
-                ReadData(reader, sendOption);
-                reader.Recycle();
-                continue;
+                if (reader.Tag == 5 || reader.Tag == 6)
+                    ReadData(reader, sendOption);
             }
+        }
+        finally
+        {
+            foreach (var reader in allReaders) reader.Recycle();
         }
     }
 
@@ -103,14 +106,26 @@ internal static class NetworkManager
 
         MessageReader[] allDataReaders = reader.MessagesToReadersNewBuffer();
 
-        foreach (MessageReader dataReader in allDataReaders)
+        try
         {
-            if (dataReader.Tag == 2)
+            foreach (MessageReader dataReader in allDataReaders)
             {
-                var data = ReadRpc(MessageReader.Get(dataReader), typeFlag, ClientId);
-                HandleInnerNetObject(data.Sender, (byte)data.CalledRpc, data.Reader);
-                continue;
+                if (dataReader.Tag != 2) continue;
+                var rpcReader = MessageReader.Get(dataReader);
+                try
+                {
+                    var data = ReadRpc(rpcReader, typeFlag, ClientId);
+                    HandleInnerNetObject(data.Sender, (byte)data.CalledRpc, data.Reader);
+                }
+                finally
+                {
+                    rpcReader.Recycle();
+                }
             }
+        }
+        finally
+        {
+            foreach (var dataReader in allDataReaders) dataReader.Recycle();
         }
     }
 
@@ -143,7 +158,7 @@ internal static class NetworkManager
                 int currentMessageNumber = InnerNetClient.msgNum++;
                 var oldReader = MessageReader.Get(messageReader);
                 InnerNetClient.StartCoroutine(HandleGameDataInner(messageReader, currentMessageNumber));
-                RPCHandler.HandleRPC(parentReader.Tag, null, oldReader, HandlerFlag.HandleGameDataTag);
+                RPCHandler.HandleRPC(oldReader.Tag, null, oldReader, HandlerFlag.HandleGameDataTag);
                 oldReader.Recycle();
             }
         }

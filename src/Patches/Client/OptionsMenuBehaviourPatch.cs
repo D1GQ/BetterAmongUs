@@ -20,11 +20,19 @@ namespace BetterAmongUs.Patches.Client;
 internal static class OptionsMenuBehaviourPatch
 {
     internal static TabGroup? BetterOptionsTab { get; private set; }
+    private static int? taskVSyncCount;
 
     [HarmonyPatch(typeof(OptionsMenuBehaviour), nameof(OptionsMenuBehaviour.Start))]
     [HarmonyPostfix]
     private static void Start_Postfix(OptionsMenuBehaviour __instance)
     {
+        if (__instance.DisableMouseMovement == null || __instance.Tabs == null || __instance.Tabs.Length == 0)
+            return;
+
+        var template = __instance.Tabs[^1];
+        if (template == null || template.Content == null || template.GetComponent<PassiveButton>() == null)
+            return;
+
         // Create custom "Better Options" tab in settings menu
         BetterOptionsTab = CreateTabPage(__instance, TranslationStrings.BetterOption.LocalizedString);
 
@@ -110,8 +118,28 @@ internal static class OptionsMenuBehaviourPatch
 
     internal static void UpdateFrameRate()
     {
-        // Toggle between 60 FPS (default) and 165 FPS
-        Application.targetFrameRate = BAUConfigs.UnlockFPS.Value ? 999 : 60;
+        bool taskOpen = Minigame.Instance != null && Minigame.Instance.isActiveAndEnabled;
+        if (taskOpen)
+        {
+            if (!taskVSyncCount.HasValue) taskVSyncCount = QualitySettings.vSyncCount;
+            QualitySettings.vSyncCount = 0;
+        }
+        else if (taskVSyncCount.HasValue)
+        {
+            QualitySettings.vSyncCount = taskVSyncCount.Value;
+            taskVSyncCount = null;
+        }
+        int target = BAUConfigs.UnlockFPS.Value && !taskOpen ? 165 : 60;
+        if (Application.targetFrameRate != target)
+            Application.targetFrameRate = target;
+    }
+
+    internal static void RestoreFrameRate()
+    {
+        if (taskVSyncCount.HasValue)
+            QualitySettings.vSyncCount = taskVSyncCount.Value;
+        taskVSyncCount = null;
+        Application.targetFrameRate = 60;
     }
 
     private static void OpenSaveData()
@@ -164,7 +192,8 @@ internal static class OptionsMenuBehaviourPatch
         // Create content container for the new tab
         var content = new GameObject($"{name}Tab");
         content.SetActive(false);
-        content.transform.SetParent(tab.Content.transform.parent);
+        content.transform.SetParent(tab.Content.transform.parent, false);
+        content.transform.localPosition = tab.Content.transform.localPosition;
         content.transform.localScale = Vector3.one;
         tab.Content = content;
 
@@ -178,7 +207,8 @@ internal static class OptionsMenuBehaviourPatch
         button.OnClick = new();
         button.OnClick.AddListener(() =>
         {
-            tab.Rollover.SetEnabledColors();
+            if (tab == null || __instance == null) return;
+            if (tab.Rollover != null) tab.Rollover.SetEnabledColors();
             __instance.OpenTabGroup(index);
         });
 
@@ -196,7 +226,7 @@ internal static class OptionsMenuBehaviourPatch
         int activeCount = 0;
         foreach (var tabButton in __instance.Tabs)
         {
-            if (tabButton.gameObject.activeInHierarchy) activeCount++;
+            if (tabButton != null && tabButton.gameObject.activeInHierarchy) activeCount++;
         }
 
         if (activeCount == 0)
@@ -210,7 +240,7 @@ internal static class OptionsMenuBehaviourPatch
         int activeIndex = 0;
         foreach (var tabButton in __instance.Tabs)
         {
-            if (!tabButton.gameObject.activeInHierarchy) continue;
+            if (tabButton == null || !tabButton.gameObject.activeInHierarchy) continue;
 
             float xPos = startX + activeIndex * (buttonWidth + buttonSpacing);
             tabButton.transform.localPosition = new Vector3(xPos, basePos.y, basePos.z);

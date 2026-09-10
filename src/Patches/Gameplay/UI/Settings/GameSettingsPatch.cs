@@ -52,6 +52,7 @@ internal static class GameSettingsPatch
     // Creates all custom game settings and organizes them in tabs
     internal static void SetupSettings(bool IsPreload = false)
     {
+        OptionItem.AllOptionsTemp.Clear();
         // Note: Use 2200 next ID
 
         // Create main settings tab
@@ -114,7 +115,8 @@ internal static class GameSettingsPatch
 
         // Adjust menu layout
         __instance.gameObject.transform.SetLocalY(-0.1f);
-        GameObject PanelSprite = __instance.gameObject.transform.Find("PanelSprite").gameObject;
+        var panelTransform = __instance.gameObject.transform.Find("PanelSprite");
+        GameObject? PanelSprite = panelTransform != null ? panelTransform.gameObject : null;
         if (PanelSprite != null)
         {
             PanelSprite.transform.SetLocalY(-0.32f);
@@ -190,7 +192,7 @@ internal static class GameSettingsPatch
         if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllGameOptions)) return true;
 
         // Skip creation if this is our custom tab
-        if (__instance == BetterSettingsTab.AUTab)
+        if (BetterSettingsTab != null && __instance == BetterSettingsTab.AUTab)
         {
             return false;
         }

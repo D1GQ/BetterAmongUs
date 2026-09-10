@@ -61,7 +61,9 @@ internal static class InnerNetClientPatch
         if (ban && BetterGameSettings.UseBanPlayerList.GetBool())
         {
             // Get player info from client ID
-            NetworkedPlayerInfo info = Utils.PlayerFromClientId(clientId).Data;
+            var player = Utils.PlayerFromClientId(clientId);
+            if (player == null || player.Data == null) return;
+            NetworkedPlayerInfo info = player.Data;
 
             // Add player to ban list using both friend code and PUID
             BetterDataManager.AddToBanList(info.FriendCode, info.Puid);

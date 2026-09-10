@@ -68,11 +68,6 @@ internal interface IMonoExtension
 
                 if (baseIsDead || extensionIsDead)
                 {
-                    if (pair.Extension != null && !extensionIsDead)
-                    {
-                        pair.Extension.OnDestroy();
-                    }
-
                     extensions.RemoveAt(i);
                 }
             }
@@ -182,14 +177,6 @@ internal interface IMonoExtension
             return existingComponent;
         }
 
-        var existingExtensions = monoBehaviour.GetComponentsInChildren(Il2CppType.From(typeof(T)), true);
-        if (existingExtensions.Length > 0)
-        {
-            var found = existingExtensions.FirstOrDefault() as T;
-            if (found != null)
-                return found;
-        }
-
         T? monoExtension = monoBehaviour.gameObject.AddComponent<T>();
         if (monoExtension != null)
         {
@@ -224,28 +211,24 @@ internal interface IMonoExtension
         if (monoExtension == null)
             return;
 
-        CleanupLookups();
-
-        if (monoExtension.BaseMono != null)
+        foreach (var entry in _extensionsByBaseType.ToArray())
         {
-            var baseType = monoExtension.BaseMono.GetType();
+            entry.Value.RemoveAll(pair => ReferenceEquals(pair.Extension, monoExtension));
+            if (entry.Value.Count == 0)
+                _extensionsByBaseType.Remove(entry.Key);
+        }
+    }
 
-            if (_extensionsByBaseType.TryGetValue(baseType, out var extensions))
-            {
-                for (int i = extensions.Count - 1; i >= 0; i--)
-                {
-                    if (extensions[i].Extension == monoExtension)
-                    {
-                        extensions.RemoveAt(i);
-                        break;
-                    }
-                }
-
-                if (extensions.Count == 0)
-                {
-                    _extensionsByBaseType.Remove(baseType);
-                }
-            }
+    internal static void ClearExtensions()
+    {
+        var extensions = _extensionsByBaseType.Values.SelectMany(items => items)
+            .Select(pair => pair.Extension).OfType<MonoBehaviour>().ToArray();
+        _extensionsByBaseType.Clear();
+        foreach (var extension in extensions)
+        {
+            if (extension == null) continue;
+            extension.enabled = false;
+            UnityEngine.Object.Destroy(extension);
         }
     }
 

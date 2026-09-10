@@ -47,7 +47,7 @@ internal class ExtendedPassiveButton : MonoBehaviour, IMonoExtension<PassiveButt
 
     public void Update()
     {
-        if (m_isHolding)
+        if (m_isHolding && BaseMono != null)
         {
             m_holdTimer += Time.deltaTime;
             if (m_holdTimer >= HoldTriggerTime)
@@ -55,6 +55,13 @@ internal class ExtendedPassiveButton : MonoBehaviour, IMonoExtension<PassiveButt
                 BaseMono.ReceiveClickUp();
             }
         }
+    }
+
+    public void OnDisable()
+    {
+        m_isHolding = false;
+        m_suppressClick = false;
+        m_holdTimer = 0f;
     }
 
     public void OnDestroy()

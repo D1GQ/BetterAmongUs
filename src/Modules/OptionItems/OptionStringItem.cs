@@ -131,6 +131,8 @@ public class OptionStringItem : OptionItem<int>
     /// <param name="updateTabVisuals">Whether to update the parent tab visuals as well.</param>
     internal sealed override void UpdateVisuals(bool updateTabVisuals = true)
     {
+        if (Option == null || Tab == null || Tab.AUTab == null) return;
+
         if (Option is NumberOption numberOption)
         {
             numberOption.PlusBtn.SetInteractable(false);

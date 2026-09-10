@@ -17,7 +17,12 @@ internal static class CosmeticsLayerPatch
         }
 
         // Skip for custom colors not in vanilla palette
-        if (__instance.bodyMatProperties.ColorId > Palette.PlayerColors.Length) return true;
+        int colorId = __instance.bodyMatProperties.ColorId;
+        if (colorId < 0 || colorId >= Palette.PlayerColors.Length)
+        {
+            __result = string.Empty;
+            return false;
+        }
 
         // Get color name from palette
         string colorName = Palette.GetColorName(__instance.bodyMatProperties.ColorId);

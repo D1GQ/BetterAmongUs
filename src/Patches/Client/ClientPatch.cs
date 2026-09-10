@@ -100,11 +100,13 @@ internal static class ClientPatch
 
     private static IEnumerator CoMovePlayerData()
     {
-        foreach (var data in GameData.Instance.AllPlayers)
+        if (GameData.Instance == null) yield break;
+        var gameData = GameData.Instance;
+        var players = new List<NetworkedPlayerInfo>();
+        foreach (var player in gameData.AllPlayers) players.Add(player);
+        foreach (var data in players)
         {
-            if (data == null || data.gameObject == null)
-                continue;
-
+            if (data == null || data.gameObject == null) continue;
             UnityEngine.Object.DontDestroyOnLoad(data.gameObject);
         }
 
@@ -115,7 +117,7 @@ internal static class ClientPatch
 
         if (SceneManager.GetActiveScene().name == "EndGame")
         {
-            foreach (var data in GameData.Instance.AllPlayers)
+            foreach (var data in players)
             {
                 if (data == null || data.gameObject == null)
                     continue;
@@ -125,14 +127,15 @@ internal static class ClientPatch
         }
         else
         {
-            foreach (var data in GameData.Instance.AllPlayers)
+            foreach (var data in players)
             {
                 if (data == null || data.gameObject == null)
                     continue;
 
                 UnityEngine.Object.Destroy(data.gameObject);
             }
-            GameData.Instance.AllPlayers.Clear();
+            if (gameData != null && GameData.Instance == gameData)
+                gameData.AllPlayers.Clear();
         }
     }
 

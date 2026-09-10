@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using BetterAmongUs.Generated;
 using BetterAmongUs.Patches.Client;
+using BetterAmongUs.Utilities;
 using BetterAmongUs.Utilities.Extension;
 using UnityEngine;
 
@@ -84,7 +85,9 @@ internal sealed class ClientOptionItem
         var mouseMoveToggle = optionsMenuBehaviour.DisableMouseMovement;
         var toggleButton = UnityEngine.Object.Instantiate(mouseMoveToggle, parent);
         toggleButton.name = translationStringName.LocalizedString;
+        toggleButton.DestroyTextTranslators();
         toggleButton.Text.text = translationStringName.LocalizedString;
+        toggleButton.gameObject.SetActive(true);
 
         return toggleButton;
     }
@@ -165,7 +168,7 @@ internal sealed class ClientOptionItem
 
         // Style for button (not toggle)
         ToggleButton.Text.text = ToggleButton.name;
-        ToggleButton.Rollover?.ChangeOutColor(new Color32(0, 150, 0, 255));
+        if (ToggleButton.Rollover != null) ToggleButton.Rollover.ChangeOutColor(new Color32(0, 150, 0, 255));
         ToggleButton.Text.color = new Color(1f, 1f, 1f, 1f);
 
         passiveButton.OnClick.AddListener(() =>
@@ -202,7 +205,7 @@ internal sealed class ClientOptionItem
             new Color(1f, 1f, 1f, 0.5f);
 
         ToggleButton.Background.color = color;
-        ToggleButton.Rollover?.ChangeOutColor(color);
+        if (ToggleButton.Rollover != null) ToggleButton.Rollover.ChangeOutColor(color);
         ToggleButton.Text.color = textColor;
         ToggleButton.Text.text = $"{ToggleButton.name}: {(isEnabled ? "On" : "Off")}";
     }

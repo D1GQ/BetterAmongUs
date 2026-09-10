@@ -34,7 +34,7 @@ internal sealed class OptionTab
     /// <summary>
     /// Gets the translated description of this tab.
     /// </summary>
-    internal string Description => TranslationName.LocalizedString;
+    internal string Description => TranslationDescription.LocalizedString;
 
     /// <summary>
     /// Gets or sets the translation key for the tab description.
@@ -131,6 +131,7 @@ internal sealed class OptionTab
 
         var SettingsTab = UnityEngine.Object.Instantiate(GameSettingMenu.Instance.GameSettingsTab, GameSettingMenu.Instance.GameSettingsTab.transform.parent);
         AUTab = SettingsTab;
+        SettingsTab.enabled = false;
         SettingsTab.name = Name;
         if (!doNotDestroyMapPicker) SettingsTab.scrollBar.Inner.DestroyChildren();
 
@@ -197,8 +198,11 @@ internal sealed class OptionTab
             opt.UpdateVisuals(false);
         }
 
-        AUTab?.scrollBar?.SetYBoundsMax(spacingNum - 2.5f);
-        AUTab?.scrollBar?.ScrollRelative(new(0f, 0f));
+        if (AUTab.scrollBar != null)
+        {
+            AUTab.scrollBar.SetYBoundsMax(Mathf.Max(0f, spacingNum - 2.5f));
+            AUTab.scrollBar.ScrollRelative(new(0f, 0f));
+        }
     }
 
     /// <summary>

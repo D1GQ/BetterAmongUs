@@ -18,7 +18,7 @@ public sealed class OptionPlayerItem : OptionItem<int>
     /// <summary>
     /// Gets the maximum player index based on the number of players in the game.
     /// </summary>
-    private int Max => BAUPlugin.AllPlayerControls.Count - 1;
+    private int Max => Math.Max(Min, BAUPlugin.AllPlayerControls.Count - 1);
 
     /// <summary>
     /// Gets the minimum player index (-1 for random selection, 0 for first player).
@@ -204,6 +204,8 @@ public sealed class OptionPlayerItem : OptionItem<int>
     /// <param name="updateTabVisuals">Whether to update the parent tab visuals as well.</param>
     internal sealed override void UpdateVisuals(bool updateTabVisuals = true)
     {
+        if (Option == null || Tab == null || Tab.AUTab == null) return;
+
         if (!GameSettingMenu.Instance)
             return;
 

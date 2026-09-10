@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Data;
 using BetterAmongUs.Data.Config;
@@ -25,9 +25,10 @@ internal static class PlayerJoinAndLeftPatch
         // Fix host icon color display on modded servers
         if (!GameState.IsVanillaServer)
         {
-            var host = AmongUsClient.Instance.GetHost().Character;
-            host?.SetColor(-2);
-            host?.SetColor(host.CurrentOutfit.ColorId);
+            var hostClient = AmongUsClient.Instance.GetHost();
+            var host = hostClient != null ? hostClient.Character : null;
+            if (host != null && host.cosmetics != null)
+                host.cosmetics.SetColor(host.CurrentOutfit.ColorId);
         }
 
         Logger_.Log($"Successfully joined {GameCode.IntToGameName(AmongUsClient.Instance.GameId)}", "OnGameJoinedPatch");

@@ -16,7 +16,11 @@ internal static class ModInfo
     /// <summary>
     /// Gets the Git commit hash from assembly metadata.
     /// </summary>
+#if BAU_GIT_METADATA
     public static string CommitHash = ThisAssembly.Git.Commit;
+#else
+    public static string CommitHash = "source-archive";
+#endif
 
     /// <summary>
     /// Gets the build date from assembly metadata.
@@ -64,7 +68,11 @@ internal static class ModInfo
     /// <summary>
     /// The GitHub repository URL for BAU.
     /// </summary>
+#if BAU_GIT_METADATA
     internal const string GITHUB = ThisAssembly.Git.RepositoryUrl;
+#else
+    internal const string GITHUB = "https://github.com/D1GQ/BetterAmongUs";
+#endif
 
     /// <summary>
     /// The Discord invite URL for BAU.

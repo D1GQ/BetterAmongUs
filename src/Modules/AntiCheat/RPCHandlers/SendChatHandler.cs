@@ -1,4 +1,4 @@
-using AmongUs.Data;
+﻿using AmongUs.Data;
 using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
 using BetterAmongUs.Utilities;
@@ -17,9 +17,11 @@ internal sealed class SendChatHandler : RPCHandler
     {
         var text = reader.ReadString();
 
+        if (sender == null || !GameState.IsHost || sender.IsLocalPlayer()) return;
+
         if (BetterGameSettings.UseBanWordList.GetBool() && (!BetterGameSettings.UseBanWordListOnlyLobby.GetBool() || GameState.IsLobby))
         {
-            if (TextFileHandler.CompareStringFilters(BetterDataManager.Files.banWordListFilePath, text.Split(' ')))
+            if (TextFileHandler.CompareChatFilters(BetterDataManager.Files.banWordListFilePath, text))
             {
                 sender.Kick(false, $"has been kicked due to\nchat message containing a banned word!");
             }
@@ -28,7 +30,7 @@ internal sealed class SendChatHandler : RPCHandler
 
     internal override void HandleAntiCheat(PlayerControl? sender, MessageReader reader)
     {
-        if (sender.IsAlive() && GameState.IsInGamePlay && !GameState.IsMeeting && !GameState.IsExilling || DataManager.Settings.Multiplayer.ChatMode == InnerNet.QuickChatModes.QuickChatOnly)
+        if (sender.IsAlive() && GameState.IsInGamePlay && !GameState.IsMeeting && !GameState.IsExilling)
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {

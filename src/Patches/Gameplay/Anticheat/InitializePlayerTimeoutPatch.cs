@@ -1,5 +1,7 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils.Collections;
 using BetterAmongUs.Generated;
+using BetterAmongUs.Data.Config;
+using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Utilities;
 using HarmonyLib;
@@ -14,6 +16,9 @@ internal static class InitializePlayerTimeoutPatch
     [HarmonyPostfix]
     private static void PlayerControl_ClientInitialize_Postfix(PlayerControl __instance, ref Il2CppSystem.Collections.IEnumerator __result)
     {
+        if (!BAUConfigs.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat))
+            return;
+
         __result = CoClientInitialize(__instance, __result).WrapToIl2Cpp();
     }
 
@@ -21,35 +26,15 @@ internal static class InitializePlayerTimeoutPatch
     {
         player.Visible = false;
         bool exit = false;
-        yield return player.AssertWithTimeout((Func<bool>)(() => GameData.Instance != null && player.Data != null && !player.Data.IsIncomplete), (Action)(() =>
+        yield return player.AssertWithTimeout((Func<bool>)(() => player == null || (GameData.Instance != null && player.Data != null && !player.Data.IsIncomplete)), (Action)(() =>
         {
-            if (GameState.IsHost)
-            {
-                player.Kick(true, TranslationStrings.AntiCheat_Reason_Initialize.LocalizedString, true, forceBan: true);
-                exit = true;
-            }
-            else
-            {
-                if (GameData.Instance != null && player.Data != null)
-                {
-                    player.Data.PlayerLevel = 0;
-                    var outfit = player.Data.DefaultOutfit;
-                    outfit.PlayerName = TranslationStrings.Player_Loading.LocalizedString;
-                    outfit.HatId = HatData.EmptyId;
-                    outfit.VisorId = VisorData.EmptyId;
-                    outfit.SkinId = SkinData.EmptyId;
-                    outfit.PetId = PetData.EmptyId;
-                    outfit.NamePlateId = NamePlateData.EmptyId;
-                    outfit.ColorId = 18;
-                }
-                else
-                {
-                    exit = true;
-                }
-            }
+            exit = GameState.IsHost && player != null && !player.AmOwner;
+            if (player != null && GameState.IsHost && !player.AmOwner)
+                player.Kick(false, TranslationStrings.AntiCheat_Reason_Initialize.LocalizedString,
+                    bypassDataCheck: true);
         }), 25f);
 
-        if (exit)
+        if (exit || player == null)
         {
             yield break;
         }
