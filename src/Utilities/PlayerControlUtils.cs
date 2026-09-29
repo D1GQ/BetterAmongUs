@@ -198,10 +198,22 @@ internal static class PlayerControlUtils
         if (!GameState.IsHost || player.IsLocalPlayer() || (!player.DataIsCollected() && !bypassDataCheck) || player.IsHost() || player.isDummy)
             return false;
 
+        if (player.IsKickPreventedByWhitelist()) return false;
+        
         if (forceBan || !antiCheatBan) return true;
 
         return HandleAntiCheatBanCheck(shouldBan, out shouldBan);
     }
+    
+    /// <summary>
+    /// Determines whether the specified player is protected from being kicked due to whitelist.
+    /// </summary>
+    /// <param name="player">The player to evaluate.</param>
+    /// <returns><c>true</c> if the player is present on the whitelist and kicking is prevented, <c>false</c> otherwise.</returns>
+    private static bool IsKickPreventedByWhitelist(this PlayerControl player)
+    {
+        return BetterGameSettings.UseWhiteList.GetBool() && TextFileHandler.CompareStringMatch(BetterDataManager.Files.whiteListFilePath, [player.Data.FriendCode, player.GetHashPuid()]);
+    }   
 
     /// <summary>
     /// Determines whether a player should be banned when an anti‑cheat check is performed.

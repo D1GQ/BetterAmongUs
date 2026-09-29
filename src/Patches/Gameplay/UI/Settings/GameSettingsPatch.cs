@@ -19,6 +19,7 @@ internal sealed class BetterGameSettings
     internal static OptionCheckboxItem? UseBanChatList;
     internal static OptionCheckboxItem? UseBanChatListOnlyLobby;
     internal static OptionCheckboxItem? UseBanChatListBan;
+    internal static OptionCheckboxItem? UseWhiteList;
     internal static OptionCheckboxItem? DetectedLevel;
     internal static OptionIntItem? DetectedLevelAbove;
     internal static OptionCheckboxItem? KickLevel;
@@ -78,6 +79,7 @@ internal static class GameSettingsPatch
                 BetterGameSettings.UseBanChatList = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanChatList, true);
                 BetterGameSettings.UseBanChatListOnlyLobby = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanChatListOnlyLobby, true, BetterGameSettings.UseBanChatList);
                 BetterGameSettings.UseBanChatListBan = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseBanChatListBan, false, BetterGameSettings.UseBanChatList);
+                BetterGameSettings.UseWhiteList = OptionCheckboxItem.Create(BetterSettingsTab, TranslationStrings.BetterSetting_Setting_UseWhiteList, true);
             }
 
             // General detection settings
