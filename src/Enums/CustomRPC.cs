@@ -3,7 +3,7 @@
 /// <summary>
 /// Defines custom Remote Procedure Call (RPC) identifiers used in BetterAmongUs for cheat detection and communication.
 /// </summary>
-internal enum CustomRPC : int
+internal enum CustomRpc : int
 {
     // ========================================
     //            Known Cheat RPCS

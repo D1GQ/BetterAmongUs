@@ -110,7 +110,7 @@
   "AntiCheat": "Anti-Cheat",
   "AntiCheat.Ban": "Banned",
   "AntiCheat.Kick": "Kicked",
-  "AntiCheat.PlayerDetected": "Player",
+  "AntiCheat.PlayerFlagged": "{0} Flagged:",
   "AntiCheat.DisabledModdedProtocol": "Anti-Cheat has been temporarily disabled on modded protocol!",
   "AntiCheat.UnauthorizedAction": "Has been detected doing an unauthorized action",
   "AntiCheat.ByAntiCheat": "{0} by <color=#4f92ff>Anti-Cheat</color>",

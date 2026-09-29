@@ -16,7 +16,7 @@ namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers.Cheats;
 [RegisterRPCHandler]
 internal sealed class SickoHandler : RPCHandler
 {
-    internal override byte CallId => unchecked((byte)CustomRPC.Sicko);
+    internal override byte CallId => unchecked((byte)CustomRpc.Sicko);
 
     internal override void HandleCheatRpcCheck(PlayerControl? sender, MessageReader reader)
     {

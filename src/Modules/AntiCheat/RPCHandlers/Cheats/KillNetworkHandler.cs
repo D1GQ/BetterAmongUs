@@ -16,7 +16,7 @@ namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers.Cheats;
 [RegisterRPCHandler]
 internal sealed class KillNetworkHandler : RPCHandler
 {
-    internal override byte CallId => unchecked((byte)CustomRPC.KillNetwork);
+    internal override byte CallId => unchecked((byte)CustomRpc.KillNetwork);
 
     internal override void HandleCheatRpcCheck(PlayerControl? sender, MessageReader reader)
     {

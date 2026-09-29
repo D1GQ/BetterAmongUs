@@ -16,7 +16,7 @@ namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers.Cheats;
 [RegisterRPCHandler]
 internal sealed class AUMHandler : RPCHandler
 {
-    internal override byte CallId => unchecked((byte)CustomRPC.AUM);
+    internal override byte CallId => unchecked((byte)CustomRpc.AUM);
 
     internal override void HandleCheatRpcCheck(PlayerControl? sender, MessageReader reader)
     {

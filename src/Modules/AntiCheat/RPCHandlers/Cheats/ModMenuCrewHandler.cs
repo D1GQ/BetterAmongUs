@@ -16,7 +16,7 @@ namespace BetterAmongUs.Modules.AntiCheat.RPCHandlers.Cheats;
 [RegisterRPCHandler]
 internal sealed class ModMenuCrewHandler : RPCHandler
 {
-    internal override byte CallId => unchecked((byte)CustomRPC.ModMenuCrew);
+    internal override byte CallId => unchecked((byte)CustomRpc.ModMenuCrew);
 
     internal override void HandleCheatRpcCheck(PlayerControl? sender, MessageReader reader)
     {

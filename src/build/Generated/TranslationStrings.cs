@@ -539,9 +539,9 @@ public static class TranslationStrings
     public static readonly TranslationString AntiCheat_Kick = new("AntiCheat.Kick");
 
     /// <summary>
-    /// Base Translation: Player
+    /// Base Translation: {0} Flagged:
     /// </summary>
-    public static readonly TranslationString AntiCheat_PlayerDetected = new("AntiCheat.PlayerDetected");
+    public static readonly TranslationString AntiCheat_PlayerFlagged = new("AntiCheat.PlayerFlagged");
 
     /// <summary>
     /// Base Translation: Anti-Cheat has been temporarily disabled on modded protocol!

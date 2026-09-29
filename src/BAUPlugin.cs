@@ -126,7 +126,7 @@ internal partial class BAUPlugin : BasePlugin
         Harmony.PatchAll();
         GameSettingsPatch.SetupSettings(true);
         BAUModdedSupportEvents.OnBAUOptionsLoadedEvent.InvokeAll([.. OptionItem.AllOptions.Cast<object>()]);
-        AutoRegisterAttribute.Initialize();
+        AutoRegisterAttribute.RegisterAll();
         OutfitData.Initialize();
         SceneManager.add_sceneLoaded((Action<Scene, LoadSceneMode>)OnSceneLoaded);
 

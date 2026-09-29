@@ -179,7 +179,7 @@ internal abstract class RPCHandler
     /// <param name="player">Optional player to log information for.</param>
     internal void LogRpcInfo(string info, PlayerControl? player = null)
     {
-        string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRPC)CallId) ?? $"Unregistered({CallId})";
+        string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRpc)CallId) ?? $"Unregistered({CallId})";
         Name = $"[{Enum.GetName(catchedHandlerFlag)}] > " + Name;
         BAUPlugin.Logger.LogCheat($"{catchedSender?.ExtendedData()?.RealName ?? player.ExtendedData()?.RealName ?? string.Empty} {Name}: {info}");
     }
@@ -190,7 +190,7 @@ internal abstract class RPCHandler
     /// <returns>A formatted string for displaying invalid action RPC messages.</returns>
     internal string GetFormatActionText()
     {
-        string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRPC)CallId) ?? $"Unregistered({CallId})";
+        string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRpc)CallId) ?? $"Unregistered({CallId})";
         return TranslationStrings.AntiCheat_InvalidActionRPC.Format(Name);
     }
 
@@ -200,7 +200,7 @@ internal abstract class RPCHandler
     /// <returns>A formatted string for displaying invalid set RPC messages.</returns>
     internal string GetFormatSetText()
     {
-        string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRPC)CallId) ?? $"Unregistered({CallId})";
+        string Name = Enum.GetName((RpcCalls)CallId) ?? Enum.GetName((CustomRpc)CallId) ?? $"Unregistered({CallId})";
         return TranslationStrings.AntiCheat_InvalidSetRPC.Format(Name);
     }
 }
