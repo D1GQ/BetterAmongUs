@@ -11,29 +11,29 @@ namespace BetterAmongUs.Attributes;
 internal abstract class AutoRegisterAttribute : Attribute
 {
     /// <summary>
+    /// Gets the identifier value associated with this attribute.
+    /// </summary>
+    /// <returns>The identifier value for this attribute instance.</returns>
+    internal virtual object? GetIdentifier() => null;
+
+    /// <summary>
     /// Scans the entire assembly and registers all instances of classes marked with <see cref="AutoRegisterAttribute"/> subclasses.
     /// </summary>
-    internal static void Initialize()
+    internal static void RegisterAll()
     {
-        var types = BAUPlugin.ModInfo.Assembly.GetTypes();
+        var types = BAUPlugin.ModInfo.Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(AutoRegisterAttribute)) && !t.IsAbstract && t.IsSealed).ToArray();
 
         foreach (var type in types)
         {
-            if (type.IsAbstract || !type.IsSealed)
-                continue;
-
-            if (!typeof(AutoRegisterAttribute).IsAssignableFrom(type))
-                continue;
-
             var tempAttribute = (AutoRegisterAttribute)FormatterServices.GetUninitializedObject(type);
-            tempAttribute.Register();
+            tempAttribute.RegisterInstances();
         }
     }
 
     /// <summary>
-    /// When implemented in a derived class, registers individual instances.
+    /// When implemented in a derived class, registers instances of a specific type discovered through reflection.
     /// </summary>
-    protected abstract void Register();
+    protected abstract void RegisterInstances();
 }
 
 /// <summary>
@@ -61,20 +61,16 @@ internal abstract class AutoRegisterAttribute<T> : AutoRegisterAttribute where T
     internal static J? GetInstance<J>() where J : T => (J?)_instances.FirstOrDefault(instance => instance.GetType() == typeof(J));
 
     /// <inheritdoc/>
-    protected override void Register()
+    protected override void RegisterInstances()
     {
-        var types = BAUPlugin.ModInfo.Assembly.GetTypes();
+        var attributedTypes = BAUPlugin.ModInfo.Assembly.GetTypes().Where(t => t.GetCustomAttributes(GetType(), false).Any()).Where(t => !t.IsAbstract && !t.IsInterface);
 
-        foreach (var type in types)
+        foreach (var type in attributedTypes)
         {
-            if (type.GetCustomAttribute(GetType()) == null)
-                continue;
-
-            if (type.IsAbstract || type.IsInterface)
-                continue;
-
+            // Check if the type implements the interface or inherits from the base class
             if (typeof(T).IsAssignableFrom(type))
             {
+                // Try to get any parameterless constructor (public, private, or internal)
                 var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, Type.EmptyTypes, null);
 
                 if (constructor != null)
@@ -89,7 +85,6 @@ internal abstract class AutoRegisterAttribute<T> : AutoRegisterAttribute where T
     }
 }
 
-// Class instances
 internal sealed class RegisterCommandAttribute : AutoRegisterAttribute<BaseCommand>
 {
 }

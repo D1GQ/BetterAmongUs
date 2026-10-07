@@ -80,7 +80,7 @@ internal sealed class HandshakeHandler
 
         HasSendSharedSecret = true;
 
-        RPC.SendCustomRpcPacked(CustomRPC.SendSecretToPlayer, writer =>
+        RPC.SendCustomRpcPacked(CustomRpc.SendSecretToPlayer, writer =>
         {
             writer.Write(SharedSecret.CryptoAvailable);
             writer.WriteBytes(SharedSecret.GetPublicKey());
@@ -134,7 +134,7 @@ internal sealed class HandshakeHandler
         int hash = SharedSecret.GetSharedSecretHash();
         // Logger.Log($"Sending secret hash: {hash} (tempKey: {tempKey})");
 
-        RPC.SendCustomRpcPacked(CustomRPC.CheckSecretHashFromPlayer, writer =>
+        RPC.SendCustomRpcPacked(CustomRpc.CheckSecretHashFromPlayer, writer =>
         {
             writer.Write(tempKey);
             writer.Write(hash);

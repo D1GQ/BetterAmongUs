@@ -1,4 +1,5 @@
-﻿using BetterAmongUs.Attributes;
+﻿using AmongUs.InnerNet.GameDataMessages;
+using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
 using BetterAmongUs.Data.Config;
 using BetterAmongUs.Enums;
@@ -10,6 +11,8 @@ using BetterAmongUs.MonoScripts.Extended;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using BetterAmongUs.Utilities;
 using Hazel;
+using InnerNet;
+using System.Collections;
 
 namespace BetterAmongUs.Modules.AntiCheat;
 
@@ -76,6 +79,56 @@ internal static class BetterAntiCheat
                     string reason = TranslationStrings.AntiCheat_Reason_KnownCheater.LocalizedString;
                     string kickMessage = TranslationStrings.AntiCheat_KickMessage.Format(TranslationStrings.AntiCheat_ByAntiCheat, reason);
                     player.TryKick(true, kickMessage, true);
+                }
+            }
+        }
+    }
+
+    internal static IEnumerator CoHandleGameDataInner(InnerNetClient innerNetClient, MessageReader originalMessageReader, int msgNum, Il2CppSystem.Collections.IEnumerator original)
+    {
+        MessageReader messageReader = MessageReader.Get(originalMessageReader);
+
+        NetId netId = NetId.InvalidNetId;
+        RpcCalls rpcCall = (RpcCalls)byte.MaxValue;
+
+        if (messageReader.Tag == (byte)GameDataTypes.RpcFlag)
+        {
+            netId = messageReader.ReadPackedUInt32();
+            rpcCall = (RpcCalls)messageReader.ReadByte();
+
+            if (innerNetClient.allObjects.AllObjectsFast.TryGetValue(netId, out var innerNetObject))
+            {
+                var rpcHandler = RegisterRpcHandler.GetInstanceFromLookup(rpcCall);
+                if (rpcHandler != null)
+                {
+                    MessageReader rpcHandlerMessageReader = MessageReader.Get(messageReader);
+                    TranslationStrings.TranslationString translationReason = new();
+                    AntiCheatFlags anticheatFlag = rpcHandler.TryCheckRpc(innerNetObject, rpcHandlerMessageReader, ref translationReason);
+
+                    if (anticheatFlag.HasFlag(AntiCheatFlags.Cancel))
+                    {
+                        yield break;
+                    }
+                }
+            }
+        }
+
+        yield return original;
+
+        var gameDataHandler = RegisterGameDataHandler.GetInstanceFromLookup((GameDataTypes)messageReader.Tag);
+        if (gameDataHandler != null)
+        {
+            gameDataHandler.Handle(messageReader);
+        }
+
+        if (messageReader.Tag == (byte)GameDataTypes.RpcFlag)
+        {
+            if (innerNetClient.allObjects.AllObjectsFast.TryGetValue(netId, out var innerNetObject))
+            {
+                var rpcHandler = RegisterRpcHandler.GetInstanceFromLookup(rpcCall);
+                if (rpcHandler != null)
+                {
+                    rpcHandler.TryHandleRpc(innerNetObject, messageReader);
                 }
             }
         }
@@ -297,7 +350,7 @@ internal static class BetterAntiCheat
         foreach (RpcCalls rpc in Enum.GetValues(typeof(RpcCalls)))
             if ((byte)rpc == RPCId || unchecked((byte)rpc) == RPCId || unchecked((byte)(short)rpc) == RPCId)
                 return true;
-        foreach (CustomRPC rpc in Enum.GetValues(typeof(CustomRPC)))
+        foreach (CustomRpc rpc in Enum.GetValues(typeof(CustomRpc)))
             if ((byte)rpc == RPCId || unchecked((byte)rpc) == RPCId || unchecked((byte)(short)rpc) == RPCId)
                 return true;
 

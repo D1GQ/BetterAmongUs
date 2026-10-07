@@ -1,8 +1,9 @@
-﻿using BetterAmongUs.Data;
-using BetterAmongUs.Utilities;
-using BetterAmongUs.Managers;
+﻿using BepInEx.Unity.IL2CPP.Utils.Collections;
+using BetterAmongUs.Data;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Modules.AntiCheat;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
+using BetterAmongUs.Utilities;
 using HarmonyLib;
 using Hazel;
 using InnerNet;
@@ -12,24 +13,11 @@ namespace BetterAmongUs.Patches.Client;
 [HarmonyPatch]
 internal static class InnerNetClientPatch
 {
-    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendOrDisconnect))]
-    [HarmonyPrefix]
-    private static bool InnerNetClient_SendOrDisconnect_Prefix(InnerNetClient __instance, MessageWriter msg)
+    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleGameDataInner))]
+    [HarmonyPostfix]
+    private static void InnerNetClient_HandleGameDataInner_Postfix(InnerNetClient __instance, MessageReader reader, int msgNum, ref Il2CppSystem.Collections.IEnumerator __result)
     {
-        // Route all outgoing messages through custom NetworkManager
-        // This allows BAU to intercept/modify network traffic
-        NetworkManager.SendToServer(msg);
-        return false;
-    }
-
-    [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleGameData))]
-    [HarmonyPrefix]
-    private static bool InnerNetClient_HandleGameDataInner_Prefix([HarmonyArgument(0)] MessageReader oldReader)
-    {
-        // Route all incoming game data through custom NetworkManager
-        // This allows BAU to process/modify incoming network messages
-        NetworkManager.HandleGameData(oldReader);
-        return false;
+        __result = BetterAntiCheat.CoHandleGameDataInner(__instance, reader, msgNum, __result).WrapToIl2Cpp();
     }
 
     [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.CanBan))]

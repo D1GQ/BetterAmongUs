@@ -1,5 +1,6 @@
 ﻿using BetterAmongUs.Data;
 using BetterAmongUs.Data.Config;
+using BetterAmongUs.Enums;
 using BetterAmongUs.Generated;
 using BetterAmongUs.Modules;
 using BetterAmongUs.MonoScripts.Extended;
@@ -111,6 +112,48 @@ internal static class BetterNotificationManager
         TextArea.text = text;
         SoundManager.Instance.PlaySound(HudManager.Instance.TaskCompleteSound, false, 1f);
         Notifying = true;
+    }
+
+    internal static bool NotifyAndWarn(PlayerControl player, TranslationStrings.TranslationString reasonTranslationString, AntiCheatFlags antiCheatFlags)
+    {
+        if (player == null)
+            return false;
+
+        if (player.Data == null)
+            return false;
+
+        string text = TranslationStrings.AntiCheat_PlayerFlagged.Format(player.GetPlayerNameAndColor());
+        string reason = reasonTranslationString.LocalizedString;
+        if (BetterGameSettings.CensorDetectionReason.GetBool())
+        {
+            reason = string.Concat('*').Repeat(reason.Length);
+        }
+
+        string textConsole = Translator.GetString(TranslationStrings.AntiCheat_PlayerFlagged, formatting: [player.GetPlayerNameAndColor()], useConsoleLanguage: true);
+        string reasonConsole = Translator.GetString(reasonTranslationString, useConsoleLanguage: true);
+        if (BetterGameSettings.CensorDetectionReason.GetBool())
+        {
+            reason = string.Concat('*').Repeat(reason.Length);
+        }
+
+        if (!BetterDataManager.Files.BetterDataFile.CheatData.Any(info => info.CheckPlayerData(player.Data)))
+        {
+            BetterDataManager.Files.BetterDataFile.CheatData.Add(new(player?.ExtendedData().RealName ?? player.Data.PlayerName, player.GetHashPuid(), player.Data.FriendCode, reason));
+            BetterDataManager.Files.BetterDataFile.Save();
+            Notify(text + " " + reason, time: 8f);
+        }
+
+        BAUPlugin.Logger.LogCheat($"{player.cosmetics.nameText.text} Info: {player.Data.PlayerName} - {player.Data.FriendCode} - {player.GetHashPuid()}");
+        BAUPlugin.Logger.LogCheat(Utils.RemoveHtmlText(textConsole + " " + reasonConsole));
+
+        if (antiCheatFlags.HasFlag(AntiCheatFlags.High))
+        {
+            string byAntiCheat = TranslationStrings.AntiCheat_ByAntiCheat.LocalizedString;
+            string kickMessage = string.Format(TranslationStrings.AntiCheat_KickMessage.LocalizedString, byAntiCheat, reason);
+            player.Kick(false, kickMessage, true, false);
+        }
+
+        return false;
     }
 
     /// <summary>

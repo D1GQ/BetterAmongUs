@@ -24,7 +24,7 @@ internal static class RPC
     /// <param name="customRPC">The custom RPC type to send.</param>
     /// <param name="action">A delegate that writes the custom RPC payload to the message writer.</param>
     /// <param name="targetClientId">The specific client ID to target, or -1 to broadcast to all clients.</param>
-    internal static void SendCustomRpcPacked(CustomRPC customRPC, Action<MessageWriter> action, int targetClientId = -1)
+    internal static void SendCustomRpcPacked(CustomRpc customRPC, Action<MessageWriter> action, int targetClientId = -1)
     {
         AmongUsClient.Instance.SendRpcImmediately(PlayerControl.LocalPlayer.MyPhysics.NetId, CUSTOM_RPC_CALL, SendOption.Reliable, writer =>
         {
@@ -49,15 +49,15 @@ internal static class RPC
 
         if (IsPackedCustomRpc(reader))
         {
-            CustomRPC customRPC = (CustomRPC)reader.ReadByte();
+            CustomRpc customRPC = (CustomRpc)reader.ReadByte();
             switch (customRPC)
             {
-                case CustomRPC.SendSecretToPlayer:
+                case CustomRpc.SendSecretToPlayer:
                     {
                         player.ExtendedData().HandshakeHandler.HandleSecretFromSender(reader);
                     }
                     break;
-                case CustomRPC.CheckSecretHashFromPlayer:
+                case CustomRpc.CheckSecretHashFromPlayer:
                     {
                         player.ExtendedData().HandshakeHandler.HandleSecretHashFromPlayer(reader);
                     }
@@ -86,18 +86,18 @@ internal static class RPC
         if (player == null || player.IsLocalPlayer() || player.Data == null || Enum.IsDefined(typeof(RpcCalls), callId))
             return;
 
-        if (Enum.IsDefined(typeof(CustomRPC), (int)unchecked(callId)))
+        if (Enum.IsDefined(typeof(CustomRpc), (int)unchecked(callId)))
         {
             MessageReader reader = MessageReader.Get(oldReader);
 
             switch (callId)
             {
-                case (byte)CustomRPC.SendSecretToPlayer:
+                case (byte)CustomRpc.SendSecretToPlayer:
                     {
                         player.ExtendedData().HandshakeHandler.HandleSecretFromSender(reader);
                     }
                     break;
-                case (byte)CustomRPC.CheckSecretHashFromPlayer:
+                case (byte)CustomRpc.CheckSecretHashFromPlayer:
                     {
                         player.ExtendedData().HandshakeHandler.HandleSecretHashFromPlayer(reader);
                     }
